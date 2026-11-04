@@ -199,5 +199,125 @@
     {"must": "Power rule: the derivative of x to the n is n times x to the n minus 1.", "fix": "Bring the power down in front, then lower the power by one."},
     {"must": "The derivative of a constant is zero.", "fix": "A constant doesn't change, so its derivative is zero."},
     {"must": "You differentiate a sum term by term.", "fix": "Differentiate each piece separately, then add them."}
+  ],
+  "what-is-a-program": [
+    {"must": "A program is a list of exact steps the computer follows.", "fix": "A program is exact steps; the computer follows them literally."},
+    {"must": "Steps run in order, top to bottom, unless the code jumps.", "fix": "Lines run top to bottom, one at a time."},
+    {"must": "The computer does what you wrote, not what you meant.", "common_wrong": "the computer understands what you meant", "fix": "It never guesses: it does exactly what the code says."}
+  ],
+  "variables-values": [
+    {"must": "A variable is a name that refers to a value.", "fix": "A variable is a name tag on a value."},
+    {"must": "Assigning again replaces the old value.", "common_wrong": "a variable keeps all its old values", "fix": "After x = 5 then x = 7, x is only 7."},
+    {"must": "The right side of = is worked out first.", "fix": "The right side is calculated first, then named."}
+  ],
+  "data-types": [
+    {"must": "Values have types such as int, float, string and boolean.", "fix": "Every value has a kind: number, text, or true/false."},
+    {"must": "Text and numbers are different even if they look alike.", "common_wrong": "\"7\" and 7 are the same", "fix": "\"7\" is text; 7 is a number."},
+    {"must": "Mixing types can cause errors unless you convert.", "fix": "Convert first, like int(\"7\"), before adding to a number."}
+  ],
+  "operators-expressions": [
+    {"must": "Operators combine values into an expression that gives one value.", "fix": "An expression works out to a single value."},
+    {"must": "Multiply and divide come before add and subtract.", "common_wrong": "always work left to right", "fix": "3 + 4 * 2 is 11: times goes first."},
+    {"must": "% gives the remainder.", "fix": "7 % 3 is 1: the remainder after dividing."}
+  ],
+  "booleans-comparisons": [
+    {"must": "Comparisons give True or False.", "fix": "A comparison answers yes or no: True or False."},
+    {"must": "== compares; = assigns.", "common_wrong": "= checks if things are equal", "fix": "Use == to compare and = to give a value."},
+    {"must": "and needs both true; or needs at least one.", "fix": "and: both must be true. or: one is enough."}
+  ],
+  "strings-text": [
+    {"must": "A string is text in quotes, a row of characters.", "fix": "A string is text: characters in a row, in quotes."},
+    {"must": "Positions start at 0.", "common_wrong": "the first character is at position 1", "fix": "The first character is at position 0."},
+    {"must": "+ joins strings.", "fix": "\"ab\" + \"cd\" makes \"abcd\"."}
+  ],
+  "input-output": [
+    {"must": "Input is data going into a program; output is what comes out.", "fix": "Input goes in, output comes out."},
+    {"must": "input() gives text, so numbers need converting.", "common_wrong": "input() gives a number", "fix": "Wrap input() in int() to get a number."},
+    {"must": "print() shows output on the screen.", "fix": "print() displays text; it doesn't return it."}
+  ],
+  "conditionals": [
+    {"must": "An if runs its code only when the condition is True.", "fix": "The if block runs only when its condition is True."},
+    {"must": "else runs when the condition is False.", "fix": "else is the other path, for when the condition fails."},
+    {"must": "Only one branch of an if-elif-else chain runs.", "common_wrong": "several elif branches can run", "fix": "The first true branch runs, then the rest are skipped."}
+  ],
+  "loops": [
+    {"must": "A loop repeats a block of code.", "fix": "A loop runs the same code again and again."},
+    {"must": "for repeats a set number of times or once per item.", "fix": "for goes through a range or each item in a list."},
+    {"must": "while repeats until its condition becomes False.", "common_wrong": "a while loop stops by itself", "fix": "while keeps going until its condition turns False; it must be able to change."}
+  ],
+  "lists-arrays": [
+    {"must": "A list stores many values in order.", "fix": "A list keeps values in order in one place."},
+    {"must": "Items are found by index, starting at 0.", "common_wrong": "the first item is at index 1", "fix": "The first item is xs[0]."},
+    {"must": "len() gives the number of items.", "fix": "len(xs) tells you how many items there are."}
+  ],
+  "functions-programming": [
+    {"must": "A function is a named, reusable set of steps.", "fix": "Write the steps once, then call them by name."},
+    {"must": "Parameters are inputs; return sends a result back.", "fix": "Inputs go in as parameters; return gives the answer back."},
+    {"must": "Defining a function doesn't run it; calling it does.", "common_wrong": "defining a function runs it", "fix": "def only defines it; call it to run it."}
+  ],
+  "scope": [
+    {"must": "Variables made inside a function are local to it.", "fix": "Names made inside a function stay inside it."},
+    {"must": "Code outside a function can't see its local variables.", "common_wrong": "you can use a function's variables anywhere", "fix": "Outside the function, its local names don't exist."},
+    {"must": "Functions share results by returning them.", "fix": "Return the value to use it outside."}
+  ],
+  "dictionaries": [
+    {"must": "A dictionary stores values under unique keys.", "fix": "Each value sits under its own key, like a labelled drawer."},
+    {"must": "You look values up by key, not position.", "common_wrong": "dictionaries are looked up by position", "fix": "Use d[key], not a number position."},
+    {"must": "Setting an existing key replaces its value.", "fix": "Assigning to a key that exists overwrites it."}
+  ],
+  "debugging": [
+    {"must": "Read the error message first: it names the problem and line.", "fix": "Start with the error message and its line number."},
+    {"must": "Test one guess at a time.", "fix": "Change one thing, re-run, and see what changed."},
+    {"must": "Print values to check what the program really holds.", "common_wrong": "you can tell what a value is by reading the code", "fix": "Print the value instead of assuming it."}
+  ],
+  "algorithms-basics": [
+    {"must": "An algorithm is clear steps that always finish and solve the problem.", "fix": "Clear steps, always ending with an answer."},
+    {"must": "Correctness comes before speed.", "fix": "First make it right, then make it fast."},
+    {"must": "Test edge cases like an empty list.", "fix": "Try the unusual inputs too, like empty or one item."}
+  ],
+  "recursion": [
+    {"must": "Recursion is a function calling itself on a smaller problem.", "fix": "It solves a big problem by solving a smaller copy."},
+    {"must": "It needs a base case that stops the calls.", "common_wrong": "recursion stops by itself", "fix": "The base case answers directly and stops it."},
+    {"must": "Each step must move closer to the base case.", "fix": "Each call must make the problem smaller."}
+  ],
+  "searching-sorting": [
+    {"must": "Sorting puts items in order.", "fix": "Sorting arranges items from smallest to largest, or by another rule."},
+    {"must": "Binary search halves a sorted list each step.", "fix": "Check the middle and throw away half, again and again."},
+    {"must": "Binary search only works on sorted data.", "common_wrong": "binary search works on any list", "fix": "Sort first, or binary search gives wrong answers."}
+  ],
+  "big-o": [
+    {"must": "Big O describes how work grows as input grows.", "common_wrong": "Big O is the exact running time", "fix": "Big O is about growth, not exact seconds."},
+    {"must": "A loop inside a loop over n is O(n squared).", "fix": "Nested loops over n items do about n times n steps."},
+    {"must": "O(log n) grows much slower than O(n).", "fix": "Halving each step grows very slowly: log n."}
+  ],
+  "objects-classes": [
+    {"must": "A class is a template; objects are made from it.", "fix": "The class is the cutter; objects are the cookies."},
+    {"must": "Each object has its own attribute values.", "common_wrong": "changing one object changes all of them", "fix": "Changing one object doesn't change the others."},
+    {"must": "Methods are functions that belong to the class.", "fix": "Methods are the actions objects can do."}
+  ],
+  "stacks-queues": [
+    {"must": "A stack is last in, first out.", "fix": "The newest item on a stack leaves first."},
+    {"must": "A queue is first in, first out.", "common_wrong": "a queue takes the newest item first", "fix": "The oldest item in a queue leaves first."},
+    {"must": "Function calls are kept on a stack.", "fix": "Each call waits on the stack until the one above it finishes."}
+  ],
+  "trees-graphs": [
+    {"must": "A graph is nodes joined by edges.", "fix": "Dots are nodes, lines are edges."},
+    {"must": "A tree has one root and no loops.", "common_wrong": "every graph is a tree", "fix": "A tree has a single root and never loops back."},
+    {"must": "Leaves are tree nodes with no children.", "fix": "Leaves are at the ends: they have no children."}
+  ],
+  "files-databases": [
+    {"must": "Files keep data after the program ends.", "fix": "Save to a file so the data survives a restart."},
+    {"must": "A database stores records you can search and update.", "fix": "A database is organised records with the same fields."},
+    {"must": "Opening a file for writing replaces its contents.", "common_wrong": "writing to a file always adds to it", "fix": "Mode \"w\" wipes the file; use \"a\" to add."}
+  ],
+  "internet-web": [
+    {"must": "The browser sends a request; the server sends a response.", "fix": "Browser asks, server answers."},
+    {"must": "DNS turns a website name into an address.", "fix": "DNS works like phone contacts: name to number."},
+    {"must": "Data travels in small packets.", "common_wrong": "a page is sent in one piece", "fix": "Pages arrive in many small packets, put back together."}
+  ],
+  "version-control-git": [
+    {"must": "A commit is a saved snapshot with a message.", "fix": "Each commit saves the project's state, with a note."},
+    {"must": "Branches let you work separately; merging combines them.", "fix": "Try ideas on a branch, then merge them back."},
+    {"must": "A merge conflict means two changes touched the same lines.", "common_wrong": "a merge conflict means the project is broken", "fix": "Conflicts are normal: choose which change to keep."}
   ]
 }

@@ -24,7 +24,7 @@ Why: Zarif wants Nibley for universal learning ("coding or any stuff"), which ne
 ## Honest limits
 - Search results were mostly summaries; the TWA step wording varies between sources. The Hermans 2018 result is from the paper's abstract and summary pages, not a re-analysis.
 - Most analogies come from common teaching practice, not from studies of each one. They're checked for correct mapping and a stated break, not tested on learners. Log which ones land (style.js outcomes) and drop the ones that don't.
-- Coding now has 24 topics with notes and a prerequisite tree (added the same day); no teach-back points for them yet.
+- Coding now has 24 topics with notes, a prerequisite tree and teach-back points (added the same day).
 
 ## Sources
 - [Glynn 1995, The Science Teacher (TWA)](https://www.scribd.com/doc/48480905/Glynn-1995) · [TWA steps summary (CSUN)](https://csun.edu/science/ref/analogy/analogy.htm) · [Yener 2012, APFSLT](https://www.eduhk.hk/apfslt/v13_issue1/yener/page2.htm)

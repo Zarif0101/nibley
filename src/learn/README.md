@@ -128,7 +128,7 @@ Order: asked style ("like a story") > fixed mode > same thread (same topic withi
 
 ### teachback.js: teach it back (built 2026-11-04)
 ```
-loadTeachback(file?) -> {topicId: [{must, common_wrong?, fix}]}      (library/teachback.json: 40 most-used physics + maths topics, 121 points)
+loadTeachback(file?) -> {topicId: [{must, common_wrong?, fix}]}      (library/teachback.json: 40 most-used physics + maths topics + 24 programming topics, 193 points)
 teachbackPrompt(title, points, transcript) -> the one instruction for Haiku (one "<n> fine|missing|wrong" line per point)
 parseVerdicts(text, n) -> ['fine'|'missing'|'wrong', ...]            (unclear or absent = missing, never wrong)
 gradeTeachback(verdicts, points) -> {correct, fine, missing, wrong, score, grade 1..4, fixes (≤ 2, wrong first)}
