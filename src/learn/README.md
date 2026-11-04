@@ -125,3 +125,17 @@ Order: asked style ("like a story") > fixed mode > same thread (same topic withi
 
 ### snapshot.js: the per-question header for Haiku
 `snapshot({style, pace, topic, lib, model, worked, now}) -> string` (≤ 120 tokens; empty fields left out) ; `addWorked(worked, {topic, analogy, at})`. Goes at the top of the user message.
+
+### teachback.js: teach it back (built 2026-11-04)
+```
+loadTeachback(file?) -> {topicId: [{must, common_wrong?, fix}]}      (library/teachback.json: 40 most-used physics + maths topics, 121 points)
+teachbackPrompt(title, points, transcript) -> the one instruction for Haiku (one "<n> fine|missing|wrong" line per point)
+parseVerdicts(text, n) -> ['fine'|'missing'|'wrong', ...]            (unclear or absent = missing, never wrong)
+gradeTeachback(verdicts, points) -> {correct, fine, missing, wrong, score, grade 1..4, fixes (≤ 2, wrong first)}
+applyTeachback(model, topic, result, {at}) -> model                  (kind 'teach-back'; a wrong point = sure-and-wrong = misconception)
+feedbackScript(result, points, title) -> Nibley script               (right things first, ≤ 3 say lines)
+```
+Topics chosen by how many other topics build on them (all descendants in the prerequisite graph): arithmetic-basics (189) down to differentiation-rules (13).
+
+### analogies.js: an analogy for any question (built 2026-11-04)
+`loadAnalogies()`, `findAnalogies(list, question, {topic, domain, exclude, limit})` (needs the concept, a phrase or two keywords; plural-aware), `analogyLine(a)` for the snapshot header.
