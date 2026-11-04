@@ -1,0 +1,14 @@
+{
+  "frames": 30,
+  "T": 2.5,
+  "size": 128,
+  "moods": [
+    "happy",
+    "listening",
+    "thinking",
+    "speaking",
+    "confused",
+    "excited",
+    "error"
+  ]
+}
