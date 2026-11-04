@@ -16,6 +16,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Build order (Q4, confirmed): 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS flashcards + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading (last, needs new per-topic content). Plus one spec doc for the local session. Start building now.
 - Next (Q5): social media: 2 animated videos + 10 posts. Teach-back deferred. Context questions first.
 - Post goals (Q7): main = launch Nibley on GitHub. Also: introduce Nibley; find users, targeting LEARNERS in general (students included, not students only); PR built on Nibley's cuteness (the mascot); "many other things" (not yet named).
+- Platforms (Q8): Instagram (feed posts + Reels) and X. Formats (assistant): posts 1080x1350 (4:5, works on both), videos 1080x1920 vertical (Reels; X plays vertical too).
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -70,6 +71,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured (his words): "Launch Niblay on GitHub." "We are also going to find students, but we are not going to target students. We are going to target learners, including students." "We are also going to be introducing Nibley." "We are going to do the PR with the cuteness of Nibley." "And many other things".
 - Tentative / suggested: none.
 - Flags: "many other things": which ones -> Zarif (ask in the completeness check at the end).
+
+### Q8 - Platforms
+- Asked: X, LinkedIn, Instagram, TikTok/Shorts, Reddit, other; which matters most.
+- Captured: "Like reels and Instagram X also" -> Instagram (Reels + posts) first, X also. Not LinkedIn, TikTok, Reddit.
+- Tentative / suggested (assistant): one size per type that works on both: posts 1080x1350 (4:5), videos 1080x1920 (9:16).
+- Flags: none new.
 
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
