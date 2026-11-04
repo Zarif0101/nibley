@@ -23,15 +23,16 @@ State: `{ version, topics: {id: {p, seen, right, days, last, asked, inferred, mi
 - Gaps close automatically when the topic is answered right on a later day with p ≥ 0.85; a closed gap reopens on a wrong answer that drops p below 0.5. `history` keeps every open/close/reopen.
 - `gaps(state, {status})`, `worthChecking(state)`, `mastery(state, id)`, `isKnown(state, id)`, `PARAMS`.
 
-### gapfinder.js: find the weak basic in ≤ 4 questions
+### gapfinder.js: find the weak basic in ≤ 6 questions
 ```
-startGapFinder(lib, state, failedTopic, {maxQuestions = 4}) -> session
+startGapFinder(lib, state, failedTopic, {maxQuestions = 6}) -> session
 nextStep(lib, state, session) -> {done:false, ask, question} | {done:true, weak, rootCause, checked, untested}
 answer(session, correct) -> session
 applyGapFinder(state, session, {at}) -> state
 ```
 - Suspects = ancestors of the failed topic that are not known (`isKnown`) and have at least one question (`questionsFor`). Untestable ancestors go to `untested`.
-- Each step asks the suspect `s` that minimises the expected number of suspects left: P(fail) = 1 − p(s); fail → suspects ∩ ({s} ∪ ancestors(s)) minus s; pass → suspects − ({s} ∪ ancestors(s)). Ties: the larger `depth(s)` (closer to the failed topic).
+- Each step asks the suspect `s` that minimises the expected number of suspects left: P(fail) = 1 − p(s), where unseen basics count as 0.5 (the model's low prior would make it test the deepest roots first); fail → suspects ∩ ancestors(s); pass → suspects − ({s} ∪ ancestors(s)). Ties: smaller worst case (this makes it a binary search when there is no evidence), then larger `depth(s)`.
+- Simulation over every topic × every one of its basics, one weak basic: found in 100% of cases with 6 questions (4.3 on average); 77% with 4.
 - Never ask the same topic twice. Use the first unused question for `s`, preferring a root check written by a topic inside the failed topic's ancestry.
 - Done when no suspects remain or `maxQuestions` reached. `weak` = the failed topic with the lowest depth among failures whose own prerequisites were not failed (if nothing below failed, `weak` is the original topic itself). `rootCause` = true if all of `weak`'s prerequisites were passed or already known.
 - `applyGapFinder`: `observe` every answer with `kind:'root-check'`, `markKnown` each passed topic's ancestors, then `openGap(weak, {source:'gap-finder', under: failedTopic})` unless `weak` is the failed topic itself and nothing below failed (then no gap: he just needs the topic).
@@ -45,7 +46,7 @@ rate(card, grade, now, {retention = 0.9}) -> card
 interval(stability, retention) -> days (rounded, min 1, max 36500)
 gradeFromAnswer({correct, hintLevel = 0, sure, tooEasy}) -> 1..4
 ```
-Formulas exactly as in `research/2026-11-04-spaced-repetition.md` section 1 (checked against ts-fsrs 6.0.0, MIT). Same-day re-reviews use the short-term formula. `gradeFromAnswer`: wrong or hint level 3 → 1; right with a hint or `sure:false` → 2; `tooEasy` → 4; otherwise 3. A bare "got it" is not an answer: the app must have the model judge `correct`.
+Formulas exactly as in `research/2026-11-04-spaced-repetition.md` section 1. Cross-checked against ts-fsrs 6.0.0 (MIT): stability and difficulty match exactly over 9 review histories (not a dependency). Lapse stability uses the source rule min(Sf, S / e^(w17·w18)); the same-day multiplier is clamped to ≥ 1 for grades ≥ 2, as in ts-fsrs. Same-day re-reviews use the short-term formula. `gradeFromAnswer`: wrong or hint level 3 → 1; right with a hint or `sure:false` → 2; `tooEasy` → 4; otherwise 3. A bare "got it" is not an answer: the app must have the model judge `correct`.
 
 ### review.js: daily review queue (~5 min on app start)
 ```
@@ -91,7 +92,7 @@ createHints(question, at) ; nextHint(h, {at}) -> h  (h.level 1..3, h.rapid) ; hi
 ### confusion.js: confusion detector
 ```
 createDetector() ; addEvent(d, event) -> d ; score(d, now) -> number ; shouldOffer(d, now) -> bool ; recordOffer(d, {at, accepted}) -> d
-event: {type: 'seek-back' | 'pause' | 'speed-down' | 'wrong' | 'silence' | 'slide-change', at, from?, to?, duration?}
+event: {type: 'seek-back' | 'pause' | 'speed-down' | 'wrong' | 'silence' | 'slide-change', at, from?, to?, duration?}  (from/to: video seconds; duration: ms)
 ```
 - Score over the last 3 minutes **(guess)**: seek-back into a span already rewatched 2, other seek-back 1, pause > 20 s 1, speed-down 1, wrong answer 2, silence > 15 s after a question 1. A seek-back landing within 2 s after a slide change scores 0 (people rewind to re-read slides).
 - Offer when score ≥ 3, ≤ 3 offers per session, ≥ 5 min since the last offer, and 15 min quiet after two dismissals in a row. Offer = a dismissible chip ("Want a quick explanation of that part?"); never auto-speak.

@@ -1,6 +1,6 @@
 # Nibley enhancement plan ($78 cloud credit): Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: decide how to spend the remaining ~$78 of Claude Code cloud credit on research, advanced feature planning, and building what can be built and tested in a cloud session.
-Status: paused (2026-11-04) for the build. Resume point: after the build, ask about social media posts + animations (Q1 flag), then the open flags.
+Status: paused (2026-11-04). Build items 1-7 done in `src/learn/` (93 tests). Resume point: decide item 8 (teach-back, needs per-topic key points) vs social media posts + animations (Q1 flag), then the open flags.
 Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP features, 4 build phases, Q13), docs/PRD.md (v1, hard constraints), docs/briefs/local-app.md, library/README.md (study library, PR Zarif0101/nibley#1)
 
 ## Known from context (not asked)
@@ -52,6 +52,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Asked: confirm order 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading; plus a spec doc. Assistant suggested keeping it.
 - Captured: "keep that order, start building".
 - Flags: none new.
+
+## Build log (after Q4)
+- Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
+- Changed from research: gap finder limit 4 -> 6 questions (simulation over 2,751 topic/basic cases: 77% found with 4, 100% with 6, 4.3 asked on average); unseen basics count as 50/50 so it binary-searches. Pre-video check skips basics already "okay", so it doesn't nag before every video.
+- FSRS cross-checked against ts-fsrs 6.0.0: stability and difficulty match exactly on 9 histories (not a dependency).
+- Not done: item 8 teach-back (needs 3-5 key points per topic first).
 
 ## Open flags (pending input)
 - Learner data storage: Zarif said "inside the app" (Q3); PRD v1 says vault. Resolve in PRD v2 -> Zarif
