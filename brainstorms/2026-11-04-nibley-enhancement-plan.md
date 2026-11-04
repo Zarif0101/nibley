@@ -91,6 +91,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - So: video 1 = A (Meet Nibley), video 2 = C (hook / problem / solution / CTA). Get his direction (script, storyboard) before any rendering. Use skills in the process.
 - Flags: which skills to run -> asking Zarif (his preference: ask before using a skill).
 
+### Q10 - Which skills to run
+- Asked: 1 find-skills (video/animation + social post skills on skills.sh), 2 ux-copy (hooks, captions, CTAs), 3 design-critique (storyboards + posts before render), 4 accessibility-review (text size/contrast). Order: 1 -> scripts + storyboards -> 2 -> his direction -> 3 + 4 on drafts -> final render. Assistant suggested all 4.
+- Captured: "run all 4".
+- Flags: none new.
+
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
 - Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
