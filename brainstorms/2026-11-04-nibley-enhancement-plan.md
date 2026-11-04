@@ -15,6 +15,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Gaps (Q3): Nibley does NOT force a fix. It saves the gap inside the app, shows it on the mind map / knowledge map, tells him "you have a learning gap on this topic", and he starts learning it when he wants. It keeps tracking over time whether the gap is still there, from his interactions.
 - Build order (Q4, confirmed): 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS flashcards + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading (last, needs new per-topic content). Plus one spec doc for the local session. Start building now.
 - Next (Q5): social media: 2 animated videos + 10 posts. Teach-back deferred. Context questions first.
+- Post goals (Q7): main = launch Nibley on GitHub. Also: introduce Nibley; find users, targeting LEARNERS in general (students included, not students only); PR built on Nibley's cuteness (the mascot); "many other things" (not yet named).
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -64,6 +65,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "no anchor audit". Instead: "ask me for the frameworks of the scripts. And the goal of the posts".
 - Flags: script frameworks + goal of the posts -> asking Zarif next.
 
+### Q7 - Goal of the posts
+- Asked: A launch on GitHub, B grow his own brand, C find students, D other. Asked neutrally (his goal, no suggestion).
+- Captured (his words): "Launch Niblay on GitHub." "We are also going to find students, but we are not going to target students. We are going to target learners, including students." "We are also going to be introducing Nibley." "We are going to do the PR with the cuteness of Nibley." "And many other things".
+- Tentative / suggested: none.
+- Flags: "many other things": which ones -> Zarif (ask in the completeness check at the end).
+
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
 - Changed from research: gap finder limit 4 -> 6 questions (simulation over 2,751 topic/basic cases: 77% found with 4, 100% with 6, 4.3 asked on average); unseen basics count as 50/50 so it binary-searches. Pre-video check skips basics already "okay", so it doesn't nag before every video.
@@ -71,5 +78,6 @@ Reports in `research/` (2026-11-04). Highlights:
 - Not done: item 8 teach-back (needs 3-5 key points per topic first).
 
 ## Open flags (pending input)
+- Post goals: "many other things" not named yet -> Zarif
 - Learner data storage: Zarif said "inside the app" (Q3); PRD v1 says vault. Resolve in PRD v2 -> Zarif
 - Social media posts + animations: platforms, content, purpose -> Zarif (after the build, if credit remains)
