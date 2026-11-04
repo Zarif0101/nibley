@@ -85,6 +85,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Tentative / suggested (assistant): split each file into its single effects (by silence) and map them to mascot faces (DESIGN.md has happy, listening, thinking, speaking, confused, error).
 - Flags: framework choice still open -> Zarif. ElevenLabs licence for public/commercial posts depends on his plan (free plan may need attribution / be non-commercial) -> Zarif to check. Getting the files into this cloud session -> Zarif.
 
+### Sounds received (2026-11-04)
+- Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct).
+- Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
+- Limits: the assistant cannot hear moods; it checked count, length, loudness and spectrograms only.
+
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
 - Changed from research: gap finder limit 4 -> 6 questions (simulation over 2,751 topic/basic cases: 77% found with 4, 100% with 6, 4.3 asked on average); unseen basics count as 50/50 so it binary-searches. Pre-video check skips basics already "okay", so it doesn't nag before every video.
