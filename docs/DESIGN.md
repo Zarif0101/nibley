@@ -30,6 +30,7 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 ## Mascot
 - Pixel spark (20x20 grid, `src/overlay/mascot.js`), crisp pixels, faces: happy, listening, thinking, speaking, confused, error (X eyes + `error` mark).
 - Uses: status pill, tray icon (happy; error face when something needs fixing), lessons header and empty state, app icon (mascot on an `ink` rounded square).
+- 3D version (`design/mascot-3d/`, Zarif 2026-11-04): same sky blues. Extras for cuteness: blush cheeks (`error` coral at ~60%, soft edge), a small `swipe`-yellow spark star beside the tuft, nub hands, second eye glint. For marketing, onboarding and mood loops; the 16 px tray icon stays pixel art.
 
 ## Marks on screen
 - **Ring:** a hand-drawn loop, not a perfect ellipse. Starts at ~10 o'clock, goes round once, overshoots ~25° so the ends cross. Radius jitter ±4%. Seeded per mark, so replays look identical.

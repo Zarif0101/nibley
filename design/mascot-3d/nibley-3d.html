@@ -124,21 +124,22 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- palette (sampled from the brand board) ----------
 const COL = {
   top: '#8BD9FC', low: '#2B88FA', rim: '#0E5BD0', eye: '#0C2561', mouth: '#062463', glint: '#F4FAFF',
-  arc: '#E4FBFF', bit: '#318EFC', bitLight: '#6CCCFF', error: '#FF8B7A',
+  arc: '#E4FBFF', bit: '#318EFC', bitLight: '#6CCCFF', error: '#FF8B7A', eyeLow: '#1C3F92', blush: '#FF8B7A', star: '#FFD98C',
 };
 
 // ---------- shape: smooth signed-distance blend (units: body half-width = 1, y up, face looks along +z) ----------
-// Lower half: a soft box (flat-ish sides and bottom, like the pixel outline). Upper half: a rounded diamond whose
-// top-left edge runs straight up to the flame tuft. Each is averaged with an ellipsoid so it stays puffy.
+// Body: a puffy rounded-square core, a crown that tapers into a flame tuft curling right, a shoulder step, two toe
+// nubs. Hands are separate meshes so they can move. Units: body half-width ≈ 0.9, y up, face looks along +z.
 const SHAPE = {
-  box: [0, -0.12, 0, 0.97, 0.62, 0.62, 0.42], boxSoft: [0, -0.1, 0, 0.98, 0.66, 0.64],
-  diamond: [0.02, 0.04, -0.02, 0.68, 0.68, 0.56, 0.3], diamondSoft: [0.02, 0.04, -0.02, 0.9, 0.84, 0.56],
-  tuftA: [0.1, 0.56, 0.0], tuftB: [0.18, 0.95, -0.02], tuftR: [0.33, 0.19],
-  shoulder: [0.4, 0.68, 0.0, 0.12],
-  notch: [-1.04, -0.1, 0.05, 0.09, 0.08, 0.4],
-  feet: [[-0.3, -0.76, 0.05], [0.3, -0.76, 0.05]], footR: [0.2, 0.14, 0.2],
+  core: [0, -0.04, 0, 0.88, 0.7, 0.64], coreBox: [0, -0.04, 0, 0.86, 0.68, 0.62, 0.46],
+  crown: [0.05, 0.34, -0.02, 0.6, 0.5, 0.5],
+  tuft: [[0.06, 0.5, 0.0], [0.15, 0.82, -0.02], [0.28, 0.99, -0.03]], tuftR: [0.31, 0.22, 0.155],
+  shoulder: [0.36, 0.66, 0.0, 0.1],
+  feet: [[-0.29, -0.74, 0.1], [0.29, -0.74, 0.1]], footR: [0.18, 0.12, 0.18],
 };
-const FACE = { cx: 0.08, eyeY: -0.03, eyeDX: 0.355, eyeR: [0.13, 0.175, 0.07], mouthY: -0.14, mouthW: 0.085, mouthDip: 0.055 };
+const BODY_CY = -0.04;
+// Baby-face proportions: big eyes set low and wide, tiny mouth between them.
+const FACE = { cx: 0.06, eyeY: -0.07, eyeDX: 0.33, eyeR: [0.145, 0.19, 0.075], mouthY: -0.18, mouthW: 0.09, mouthDip: 0.06 };
 
 const smin = (a, b, k) => { const h = Math.max(k - Math.abs(a - b), 0) / k; return Math.min(a, b) - h * h * k * 0.25; };
 const smax = (a, b, k) => -smin(-a, -b, k);
@@ -169,13 +170,21 @@ function sdRoundCone(px, py, pz, a, b, r1, r2) {
 }
 function sdf(x, y, z) {
   const S = SHAPE;
-  const lower = 0.5 * (sdRoundBox(x, y, z, ...S.box) + sdEllipsoid(x, y, z, ...S.boxSoft));
-  const upper = 0.55 * sdRoundBox(x, y, z, ...S.diamond, Math.PI / 4) + 0.45 * sdEllipsoid(x, y, z, ...S.diamondSoft);
-  let d = smin(lower, upper, 0.18);
-  d = smin(d, sdRoundCone(x, y, z, S.tuftA, S.tuftB, S.tuftR[0], S.tuftR[1]), 0.16);
+  let d = 0.6 * sdEllipsoid(x, y, z, ...S.core) + 0.4 * sdRoundBox(x, y, z, ...S.coreBox);
+  d = smin(d, sdEllipsoid(x, y, z, ...S.crown), 0.25);
+  d = smin(d, sdRoundCone(x, y, z, S.tuft[0], S.tuft[1], S.tuftR[0], S.tuftR[1]), 0.14);
+  d = smin(d, sdRoundCone(x, y, z, S.tuft[1], S.tuft[2], S.tuftR[1], S.tuftR[2]), 0.05);
   d = smin(d, sdSphere(x, y, z, S.shoulder), 0.07);
-  for (const f of S.feet) d = smin(d, sdEllipsoid(x, y, z, ...f, ...S.footR), 0.1);
-  return smax(d, -sdEllipsoid(x, y, z, ...S.notch), 0.05);
+  for (const f of S.feet) d = smin(d, sdEllipsoid(x, y, z, ...f, ...S.footR), 0.08);
+  return d;
+}
+// Distance from (0, cy, 0) to the body surface along a direction.
+function surfaceRadius(dx, dy, dz, cy = 0) {
+  let r = 1.35, prev = r;
+  while (r > 0 && sdf(dx * r, cy + dy * r, dz * r) > 0) { prev = r; r -= 0.012; }
+  let lo = r, hi = prev;
+  for (let k = 0; k < 10; k++) { const m = (lo + hi) / 2; if (sdf(dx * m, cy + dy * m, dz * m) > 0) hi = m; else lo = m; }
+  return (lo + hi) / 2;
 }
 function grad(x, y, z, e = 0.002) {
   const nx = sdf(x + e, y, z) - sdf(x - e, y, z), ny = sdf(x, y + e, z) - sdf(x, y - e, z), nz = sdf(x, y, z + e) - sdf(x, y, z - e);
@@ -302,9 +311,22 @@ function bodyMaterial() {
   };
   return m;
 }
+// Soft round spot (blush, toy shine): white centre fading to clear.
+const softDot = (() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 128;
+  const g = cv.getContext('2d'), r = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  r.addColorStop(0, 'rgba(255,255,255,1)'); r.addColorStop(0.45, 'rgba(255,255,255,.8)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = r; g.fillRect(0, 0, 128, 128);
+  const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+})();
+const decal = (color, opacity) => new THREE.MeshBasicMaterial({ color, map: softDot, transparent: true, opacity, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
 const mat = {
   body: bodyMaterial(),
-  eye: new THREE.MeshPhysicalMaterial({ color: COL.eye, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.1 }),
+  blush: decal(COL.blush, 0.62),
+  shine: decal('#FFFFFF', 0.5),
+  star: new THREE.MeshStandardMaterial({ color: COL.star, roughness: 0.35, emissive: COL.star, emissiveIntensity: 0.6 }),
+  eye: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.1 }),
   mouth: new THREE.MeshStandardMaterial({ color: COL.mouth, roughness: 0.5 }),
   glint: new THREE.MeshBasicMaterial({ color: COL.glint }),
   arc: new THREE.MeshBasicMaterial({ color: COL.arc }),
@@ -326,18 +348,37 @@ body.name = 'body';
 bobber.add(body);
 
 const face = new THREE.Group(); face.name = 'face'; bobber.add(face);
+const planeGeo = new THREE.PlaneGeometry(1, 1);
+const dotGeo = new THREE.SphereGeometry(1, 20, 12);
 const eyeX = [FACE.cx - FACE.eyeDX, FACE.cx + FACE.eyeDX];
-const eyes = eyeX.map((ex, i) => {
-  const g = anchored(ex, FACE.eyeY, -0.016);
-  const ball = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), mat.eye);
-  ball.scale.set(...FACE.eyeR);
-  const glint = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 12), mat.glint);
-  glint.scale.set(i ? 0.032 : 0.036, i ? 0.04 : 0.044, 0.01);
-  glint.position.set(0.045, 0.072, 0.06);
-  const open = new THREE.Group(); open.add(ball, glint);
+const [erx, ery, erz] = FACE.eyeR;
+// Eyes: navy, a touch lighter at the bottom so they read as glossy domes.
+const eyeGeo = (() => {
+  const g = new THREE.SphereGeometry(1, 48, 32), p = g.attributes.position, c = new Float32Array(p.count * 3);
+  const top = new THREE.Color(COL.eye), low = new THREE.Color(COL.eyeLow), t = new THREE.Color();
+  for (let i = 0; i < p.count; i++) { t.copy(top).lerp(low, smooth(0.1, -0.95, p.getY(i))); c.set([t.r, t.g, t.b], i * 3); }
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  return g;
+})();
+// Places a flat piece on the eye dome at (x, y), facing out of the dome.
+function onEye(m, x, y) {
+  const z = erz * Math.sqrt(Math.max(0, 1 - (x / erx) ** 2 - (y / ery) ** 2));
+  m.position.set(x, y, z + 0.002);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), new THREE.Vector3(x / erx ** 2, y / ery ** 2, z / erz ** 2).normalize());
+  return m;
+}
+const eyes = eyeX.map((ex) => {
+  const g = anchored(ex, FACE.eyeY, -0.018);
+  const ball = new THREE.Mesh(eyeGeo, mat.eye);
+  ball.scale.set(erx, ery, erz);
+  const glint = onEye(new THREE.Mesh(dotGeo, mat.glint), 0.05, 0.085);
+  glint.scale.set(0.046, 0.054, 0.01);
+  const glint2 = onEye(new THREE.Mesh(dotGeo, mat.glint), -0.05, -0.09);
+  glint2.scale.set(0.021, 0.021, 0.008);
+  const open = new THREE.Group(); open.add(ball, glint, glint2);
   const cross = new THREE.Group(); cross.visible = false;
   for (const a of [Math.PI / 4, -Math.PI / 4]) {
-    const bar = new THREE.Mesh(new THREE.CapsuleGeometry(0.026, 0.17, 6, 12), mat.eye);
+    const bar = new THREE.Mesh(new THREE.CapsuleGeometry(0.028, 0.18, 6, 12), mat.mouth);
     bar.rotation.z = a; bar.position.z = 0.03; cross.add(bar);
   }
   g.add(open, cross);
@@ -347,19 +388,28 @@ const eyes = eyeX.map((ex, i) => {
 });
 // Eye-shine arc over the right eye (brand board detail).
 const ex = eyeX[1];
-const arc = surfaceTube(sampleCurve(24, (s) => { const a = Math.PI / 2 + s * 1.05; return [ex - 0.02 + 0.2 * Math.cos(a), FACE.eyeY + 0.06 + 0.2 * Math.sin(a)]; }), 0.016, 0.012, mat.arc);
+const arc = surfaceTube(sampleCurve(24, (s) => { const a = Math.PI / 2 + s * 1.05; return [ex - 0.02 + 0.23 * Math.cos(a), FACE.eyeY + 0.06 + 0.23 * Math.sin(a)]; }), 0.017, 0.012, mat.arc);
 arc.name = 'shine-arc';
 face.add(arc);
+// Blush cheeks and a vinyl-toy shine spot on the upper left.
+for (const side of [-1, 1]) {
+  const g = anchored(FACE.cx + side * 0.54, FACE.eyeY - 0.16, 0.008);
+  const m = new THREE.Mesh(planeGeo, mat.blush); m.scale.set(0.26, 0.14, 1); m.renderOrder = 2;
+  g.add(m); face.add(g);
+}
+const shine = anchored(-0.36, 0.4, 0.008);
+const shineSpot = new THREE.Mesh(planeGeo, mat.shine); shineSpot.scale.set(0.36, 0.2, 1); shineSpot.rotation.z = 0.75; shineSpot.renderOrder = 2;
+shine.add(shineSpot); bobber.add(shine);
 
 const mx = FACE.cx, my = FACE.mouthY, mw = FACE.mouthW;
 const mouths = {
-  smile: surfaceTube(sampleCurve(17, (s) => [mx + s * mw, my - FACE.mouthDip * (1 - s * s)]), 0.017, 0.004, mat.mouth),
+  smile: surfaceTube(sampleCurve(17, (s) => [mx + s * mw, my - FACE.mouthDip * (1 - s * s)]), 0.018, 0.004, mat.mouth),
   flat: surfaceTube(sampleCurve(9, (s) => [mx + s * 0.05, my - 0.03]), 0.016, 0.004, mat.mouth),
   wavy: surfaceTube(sampleCurve(21, (s) => [mx + s * 0.08, my - 0.03 + 0.018 * Math.sin(s * Math.PI * 2)]), 0.015, 0.004, mat.mouth),
   frown: surfaceTube(sampleCurve(17, (s) => [mx + s * 0.07, my - 0.06 + 0.035 * (1 - s * s)]), 0.016, 0.004, mat.mouth),
 };
 const oMouth = anchored(mx, my - 0.03, -0.004);
-const oShape = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 16), mat.mouth);
+const oShape = new THREE.Mesh(dotGeo, mat.mouth);
 oShape.scale.set(0.036, 0.042, 0.014);
 oMouth.add(oShape);
 const openMouth = anchored(mx, my - 0.035, -0.004);
@@ -369,13 +419,50 @@ openMouth.add(openShape);
 Object.assign(mouths, { o: oMouth, open: openMouth });
 for (const m of Object.values(mouths)) { m.visible = false; face.add(m); }
 
-// Floating pixel bits (rounded cubes), placed like the brand board.
+// Little nub hands. They slide along the body side to act out each mood (wave, think, cheer, droop).
+const handGeo = (() => {
+  const g = new THREE.SphereGeometry(1, 32, 20), p = g.attributes.position, c = new Float32Array(p.count * 3);
+  const cTop = new THREE.Color(COL.top), cLow = new THREE.Color(COL.low), t = new THREE.Color();
+  for (let i = 0; i < p.count; i++) { t.copy(cLow).lerp(cTop, smooth(-0.75, 0.3, -0.1 + 0.12 * p.getY(i) + 0.45 * p.getZ(i))); c.set([t.r, t.g, t.b], i * 3); }
+  g.setAttribute('color', new THREE.BufferAttribute(c, 3));
+  return g;
+})();
+const hands = [-1, 1].map((side) => {
+  const mesh = new THREE.Mesh(handGeo, mat.body);
+  mesh.scale.set(0.135, 0.105, 0.12);
+  mesh.name = side < 0 ? 'hand-left' : 'hand-right';
+  bobber.add(mesh);
+  return { mesh, side, a: -0.28 };
+});
+const handDir = new THREE.Vector3();
+function placeHand(h) {
+  handDir.set(h.side * Math.cos(h.a), Math.sin(h.a), 0.32).normalize();
+  const R = surfaceRadius(handDir.x, handDir.y, handDir.z, BODY_CY) + 0.01;
+  h.mesh.position.set(handDir.x * R, BODY_CY + handDir.y * R, handDir.z * R);
+  h.mesh.rotation.set(0, -h.side * 0.35, h.side * (h.a - 0.35));
+}
+
+// Signature spark: a small twinkling star beside the tuft ("small spark, big explanations").
+const starGeo = (() => {
+  const sh = new THREE.Shape(), k = 0.14;
+  sh.moveTo(0, 1); sh.quadraticCurveTo(k, k, 1, 0); sh.quadraticCurveTo(k, -k, 0, -1); sh.quadraticCurveTo(-k, -k, -1, 0); sh.quadraticCurveTo(-k, k, 0, 1);
+  const g = new THREE.ExtrudeGeometry(sh, { depth: 0.16, bevelEnabled: true, bevelThickness: 0.1, bevelSize: 0.07, bevelSegments: 3, curveSegments: 12 });
+  g.center();
+  return g;
+})();
+const star = new THREE.Mesh(starGeo, mat.star);
+star.name = 'spark';
+star.position.set(0.62, 1.12, 0.08);
+star.scale.setScalar(0.1);
+bobber.add(star);
+
+// Floating pixel bits: crisp little cubes, a nod to the pixel-art original.
 const BITS = [
-  [-0.72, 0.91, 0.22, 0.15, 0], [0.78, 1.08, -0.12, 0.15, 0], [-1.05, 0.6, -0.22, 0.14, 1], [0.95, 0.62, 0.3, 0.11, 0],
-  [-1.22, -0.17, 0.12, 0.13, 0], [1.12, -0.4, 0.2, 0.11, 1], [-0.84, -0.8, 0.32, 0.11, 0], [0.82, -0.78, 0.26, 0.13, 0],
-  [-0.2, 1.3, -0.35, 0.08, 1],
+  [-0.74, 0.92, 0.22, 0.15, 0], [1.0, 0.9, -0.12, 0.13, 0], [-1.06, 0.58, -0.22, 0.14, 1], [1.04, 0.46, 0.3, 0.11, 0],
+  [-1.32, -0.22, 0.12, 0.13, 0], [1.2, -0.42, 0.2, 0.11, 1], [-0.86, -0.82, 0.32, 0.11, 0], [0.84, -0.8, 0.26, 0.13, 0],
+  [-0.22, 1.3, -0.35, 0.08, 1],
 ];
-const bitGeo = new RoundedBoxGeometry(1, 1, 1, 3, 0.2);
+const bitGeo = new RoundedBoxGeometry(1, 1, 1, 2, 0.1);
 const bits = BITS.map(([x, y, z, s, light], i) => {
   const b = new THREE.Mesh(bitGeo, light ? mat.bitLight : mat.bit);
   b.scale.setScalar(s * 1.3); b.position.set(x, y, z);
@@ -414,14 +501,15 @@ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeShado
 new MutationObserver(themeShadow).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
 // ---------- moods ----------
+// hands: angle of each hand along the body side (radians, 0 = level, + = up), [left, right].
 const MOODS = {
-  happy:     { label: 'Happy',     mouth: 'smile', tilt: 0,     lean: 0,    look: [0, 0],       eyeScale: 1,    bob: 1 },
-  listening: { label: 'Listening', mouth: 'o',     tilt: 0.05,  lean: 0.07, look: [0, 0],       eyeScale: 1.08, bob: 0.6 },
-  thinking:  { label: 'Thinking',  mouth: 'flat',  tilt: -0.09, lean: 0,    look: [0.03, 0.045], eyeScale: 1,   bob: 0.5 },
-  speaking:  { label: 'Speaking',  mouth: 'open',  tilt: 0,     lean: 0.03, look: [0, 0],       eyeScale: 1,    bob: 1 },
-  confused:  { label: 'Confused',  mouth: 'wavy',  tilt: 0.14,  lean: 0,    look: [-0.02, 0.01], eyeScale: 0.94, bob: 0.4 },
-  excited:   { label: 'Excited',   mouth: 'open',  tilt: 0,     lean: 0,    look: [0, 0.01],    eyeScale: 1.1,  bob: 2.4 },
-  error:     { label: 'Error',     mouth: 'frown', tilt: 0.06,  lean: -0.04, look: [0, 0],      eyeScale: 1,    bob: 0.2, xEyes: true },
+  happy:     { label: 'Happy',     mouth: 'smile', tilt: 0,     lean: 0,     look: [0, 0],        eyeScale: 1,    bob: 1,   hands: [-0.28, -0.28] },
+  listening: { label: 'Listening', mouth: 'o',     tilt: 0.06,  lean: 0.07,  look: [0, 0],        eyeScale: 1.08, bob: 0.6, hands: [0.25, -0.1] },
+  thinking:  { label: 'Thinking',  mouth: 'flat',  tilt: -0.09, lean: 0,     look: [0.03, 0.045], eyeScale: 1,    bob: 0.5, hands: [-0.2, 0.55] },
+  speaking:  { label: 'Speaking',  mouth: 'open',  tilt: 0,     lean: 0.03,  look: [0, 0],        eyeScale: 1,    bob: 1,   hands: [0.05, 0.05], gesture: 0.3 },
+  confused:  { label: 'Confused',  mouth: 'wavy',  tilt: 0.14,  lean: 0,     look: [-0.02, 0.01], eyeScale: 0.94, bob: 0.4, hands: [0.8, -0.2] },
+  excited:   { label: 'Excited',   mouth: 'open',  tilt: 0,     lean: 0,     look: [0, 0.01],     eyeScale: 1.1,  bob: 2.4, hands: [0.95, 0.95], gesture: 0.25 },
+  error:     { label: 'Error',     mouth: 'frown', tilt: 0.06,  lean: -0.04, look: [0, 0],        eyeScale: 1,    bob: 0.2, hands: [-0.6, -0.6], xEyes: true },
 };
 let mood = 'happy';
 const live = { tilt: 0, lean: 0, lookX: 0, lookY: 0, eyeScale: 1, yaw: 0 };
@@ -433,32 +521,43 @@ function setMood(name) {
   for (const [k, m] of Object.entries(mouths)) m.visible = k === M.mouth;
   for (const e of eyes) { e.userData.open.visible = !M.xEyes; e.userData.cross.visible = !!M.xEyes; }
   errorMark.visible = !!M.xEyes;
+  star.visible = !M.xEyes;
   stateTag.textContent = M.label;
   document.querySelectorAll('[data-mood]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mood === name)));
 }
 setMood('happy');
 
 // ---------- animation ----------
-let blinkAt = 2.5, frozen = null;
+let blinkAt = 2.5, glanceAt = 1.5, glance = [0, 0], frozen = null;
 function update(t, dt, snap = false) {
   const M = MOODS[mood], k = snap ? 1 : 1 - Math.exp(-dt * 8);
+  const still = reduced || snap;
+  const idle = mood === 'happy' || mood === 'listening';
+  if (still || !idle) glance = [0, 0];
+  else if (t > glanceAt) { glance = [(Math.random() - 0.5) * 0.05, (Math.random() - 0.5) * 0.03]; glanceAt = t + 1.8 + Math.random() * 2.4; }
   live.tilt += (M.tilt - live.tilt) * k;
   live.lean += (M.lean - live.lean) * k;
-  live.lookX += (M.look[0] - live.lookX) * k;
-  live.lookY += (M.look[1] - live.lookY) * k;
+  live.lookX += (M.look[0] + glance[0] - live.lookX) * k;
+  live.lookY += (M.look[1] + glance[1] - live.lookY) * k;
   live.eyeScale += (M.eyeScale - live.eyeScale) * k;
   if (spinning && !snap) yawTarget += dt * 0.9;
-  let dy = yawTarget - live.yaw;
+  const dy = yawTarget - live.yaw;
   live.yaw += snap ? dy : dy * (1 - Math.exp(-dt * 5));
   model.rotation.y = live.yaw;
 
-  const still = reduced || snap;
+  // Float, plus a little hop now and then when idle (squash on take-off and landing).
   const bobAmp = still ? 0 : 0.045 * M.bob;
   const phase = t * (mood === 'excited' ? 5.2 : 2.4);
-  const bob = mood === 'excited' ? Math.abs(Math.sin(phase)) * bobAmp : Math.sin(phase) * bobAmp;
+  let bob = mood === 'excited' ? Math.abs(Math.sin(phase)) * bobAmp : Math.sin(phase) * bobAmp;
+  let stretch = still ? 0 : Math.sin(t * 2.4 + 1) * 0.012;
+  const hp = (t % 6.4) - 5.7;
+  if (!still && mood === 'happy' && hp > 0 && hp < 0.5) {
+    const p = hp / 0.5;
+    bob += 0.16 * Math.sin(Math.PI * p);
+    stretch += p < 0.12 || p > 0.88 ? -0.05 : 0.05 * Math.sin(Math.PI * p);
+  }
   bobber.position.y = bob;
-  const breathe = still ? 0 : Math.sin(t * 2.4 + 1) * 0.012;
-  bobber.scale.set(1 - breathe * 0.5, 1 + breathe, 1 - breathe * 0.5);
+  bobber.scale.set(1 - stretch * 0.5, 1 + stretch, 1 - stretch * 0.5);
   bobber.rotation.z = live.tilt;
   bobber.rotation.x = live.lean;
   shadow.scale.set(1.5 * (1 - bob * 1.6), 0.2 * (1 - bob * 1.6), 1);
@@ -479,6 +578,27 @@ function update(t, dt, snap = false) {
     const big = mood === 'excited' ? 1.35 : 1;
     openShape.scale.set(0.075 * big, 0.055 * big * Math.max(0.25, talk), 0.018);
   }
+
+  // Hands: mood pose + gentle sway; gestures while speaking; a hello-wave every ~9 s when idle.
+  const waving = !still && mood === 'happy' && t % 9 > 3 && t % 9 < 4.4;
+  hands.forEach((h, i) => {
+    let a = M.hands[i];
+    if (!still) {
+      a += Math.sin(t * 1.4 + i * 1.9) * 0.05;
+      if (M.gesture) a += Math.sin(t * (mood === 'excited' ? 12 : 5.5) + i * Math.PI) * M.gesture;
+      if (mood === 'thinking' && i === 1) a += Math.sin(t * 8) * 0.04;
+      if (waving && i === 1) a = 0.95 + Math.sin(t * 13) * 0.22;
+    }
+    h.a += (a - h.a) * (snap ? 1 : 1 - Math.exp(-dt * 12));
+    placeHand(h);
+  });
+
+  // Spark star: always faces the viewer, twinkles with a quick flash every few seconds.
+  const flash = still ? 0 : t % 4.2 < 0.3 ? 0.3 * Math.sin((t % 4.2) / 0.3 * Math.PI) : 0;
+  star.scale.setScalar(0.12 * (still ? 1 : 0.9 + 0.1 * Math.sin(t * 3.2) + flash));
+  star.lookAt(camera.position);
+  star.rotateZ(0.2 + (still ? 0 : Math.sin(t * 0.9) * 0.25));
+
   bits.forEach((b, i) => {
     const u = b.userData, amp = still ? 0 : mood === 'excited' ? 0.1 : 0.05;
     b.position.copy(u.base);
@@ -522,7 +642,7 @@ document.querySelectorAll('[data-yaw]').forEach((b) => b.addEventListener('click
 }));
 
 const tris = bodyGeo.index.count / 3;
-meta.textContent = `Body: ${Math.round(tris / 1000)}k triangles from 8 blended shapes, built in ${Math.round(performance.now() - t0)} ms. Colours sampled from the brand board.`;
+meta.textContent = `Body: ${Math.round(tris / 1000)}k triangles from 8 blended shapes (plus hands, face and spark), built in ${Math.round(performance.now() - t0)} ms. Colours sampled from the brand board.`;
 
 // ---------- hooks for design/mascot-3d/render.js (turnaround renders + GLB export) ----------
 window.nibley = {

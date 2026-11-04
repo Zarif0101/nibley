@@ -64,4 +64,7 @@ Newest at the bottom. A new session reads this to resume.
   - Checked: rendered colours measured against the board (face ≈ #8BD9FC, lower body ≈ #2B88FA); side-by-side compared on 5 views; page loads with no script errors (headless Chromium, SwiftShader).
   - Deviation: three.js 0.170.0 is used, but only in this design page (from jsDelivr) and in `render.js` (dev tool, `npm i --no-save`). Not an app dependency; package.json unchanged.
   - Not checked: on Zarif's laptop or a phone; real GPU speed (built in ~1.2 s here in software rendering).
+- Zarif: shapes felt odd, no hands. Audit: no hands; body flared like an onion/bell; centred pointy tuft; lumpy feet; side dent; eyes small and high.
+  - DONE v2: rounder core widest at eye level, chunky tuft curling right, toe nubs, moving nub hands (pose per mood, hello-wave, hop), bigger low eyes with 2 glints, blush, toy shine, yellow spark star, crisper pixel cubes. DESIGN.md mascot section notes the 3D extras.
+  - Checked: 5-view side-by-side with the board, 7 mood renders, no page errors.
 - NEXT: quality plan + teaching bible (Zarif asked: quality first, small tweaks, 5 teacher styles, layouts, personalization plan, blueprints for the local session). Then, if wanted, mood sprite loops for the overlay.
