@@ -154,3 +154,19 @@ Newest at the bottom. A new session reads this to resume.
   - Built + tested: `src/overlay/pill-sequence.js` (5 tests), `src/overlay/pill-motion.js`, `src/overlay/choices.js`, `choices` script command (+ test). Browser modules wrapped in their own scope (plain scripts share one namespace: `EASE` clashed). Sim: `ask-with-buttons` scenario + `--pill` frames. Previews: `test/out/pill-motion-preview.webp`, `test/out/sim-ask-with-buttons-1.png`. QUALITY-PLAN T12/T13, DESIGN.md proposals, wiring rows. 194/195 tests pass.
 - Zarif: pill goes in the same spot every time, only while active (bottom-centre, 184 px up, above buttons and subtitle). DESIGN.md "Status pill", TEACHING-BIBLE and QUALITY-PLAN T12 updated; sim and previews re-rendered.
 - OPEN (Zarif, 2026-11-04, not investigated yet): rings and boxes land in the wrong place on the real screen, much worse than HeyClicky. Hand-off to the local session (hypotheses in the kickoff prompt: display scaling / coordinate mapping, Haiku pointing limits, no UI Automation snapping for marks).
+
+## 2026-11-05 local session (quality pass: T0, P0, mark placement)
+- Branch: `quality-pass` (local, not pushed) = `main` + merged `origin/claude/brave-cori-ykrswn` (the plan docs and cloud modules were only on that branch). Conflicts: BUILD-LOG (kept both), DESIGN.md Subtitles (kept the built overlay values; cloud `subtitles.js` uses 72 px / 120 ms, reconcile at T2).
+- Fixed: `src/styles.js` read CRLF style cards wrong on this Windows checkout (git autocrlf), 3 tests failed. Now 204/204 pass.
+- DONE T0 + P0 logging:
+  - `line_voice` per spoken line: `{turn, i, src, voice, synth_ms, wait_ms}` (`wait_ms` = silence the overlay waited for that line's audio). Replaces `voice_line` / `backup_voice`.
+  - `feedback_ms` in the `turn` log: press -> first pill on screen.
+  - `first_say` in the `turn` log: first full say line parsed.
+  - `claude_usage` per answer from the `result` line (`turn, image, n, input, cache_write, cache_read, output, thinking, cost, api_ms, ttft_ms`); warm-ups log as `claude_warmup_usage`. Field names checked on a real result line. Cache writes are 1-hour (`ephemeral_1h_input_tokens`), not 5-minute: SPEED-TOKEN-PLAN P2's "cache goes cold after 5 min" needs re-checking before P2.
+  - New `test/turns.js`: N real turns (real Claude Haiku, real Edge/Piper voice, real overlay; fixture screenshots and typed questions, so no STT or hotkey time).
+- Scorecard after 5 turns (`test/turns.js 5`, 20 s apart):
+  - Q1 voice FAIL: 15% of 13 lines Edge. Line 1 missed Edge's 3 s budget in 4 of 5 turns ("no audio in 3000 ms, connected 0 ms"), then the whole answer went to Piper. T1 input.
+  - Q2 speed FAIL: first word 4.17 s median, 4.68 s p90 (from "release", no STT in this harness).
+  - Where the time goes (median): Claude first text 973 ms, first say line +186 ms, voice 3,051 ms (= the Edge timeout).
+  - Q11 tokens PASS: 1,557 fresh tokens per answer (median). Q12 cache PASS: 79% of input read from cache. History grows ~1,500 tokens per turn (cache_read 2,854 at turn 1 -> 9,209 at turn 5). Each warm-up writes 3,253 tokens.
+  - Q7 0 errors in 5 turns. Q3 no data (harness has no hotkey).

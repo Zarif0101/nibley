@@ -173,11 +173,13 @@ function sayLine(ctx, text) {
   send('item', ctx.id, { kind: 'say', i, text });
   // Edge voice, else Piper (offline), else the Windows voice.
   ctx.voice = ctx.voice.then(async () => {
+    const t0 = Date.now(), ms = () => Date.now() - t0; // synth_ms for the line_voice log (T0)
     // First sentence: Piper starts at once in parallel, so it is ready the moment Edge's budget runs out
     const early = i === 0 ? piper.synth(text).catch(() => null) : null;
     if (!ttsBackup && !ctx.backup) {
       try {
-        send('item', ctx.id, { kind: 'audio', i, buf: await tts.synth(text, i === 0 ? EDGE_FIRST_MS : EDGE_NEXT_MS), mime: 'audio/mpeg', src: 'edge' });
+        const buf = await tts.synth(text, i === 0 ? EDGE_FIRST_MS : EDGE_NEXT_MS);
+        send('item', ctx.id, { kind: 'audio', i, buf, mime: 'audio/mpeg', src: 'edge', synth_ms: ms() });
         return;
       } catch (e) {
         ttsBackup = true; // backup voice for the rest of this answer
@@ -186,10 +188,11 @@ function sayLine(ctx, text) {
       }
     }
     try {
-      send('item', ctx.id, { kind: 'audio', i, buf: (await early) || await piper.synth(text), mime: 'audio/wav', src: 'piper' });
+      const buf = (await early) || await piper.synth(text);
+      send('item', ctx.id, { kind: 'audio', i, buf, mime: 'audio/wav', src: 'piper', synth_ms: ms() });
     } catch (e) {
       log({ ev: 'piper_error', err: e.message });
-      send('item', ctx.id, { kind: 'audio', i, fallback: true, src: 'windows' });
+      send('item', ctx.id, { kind: 'audio', i, fallback: true, src: 'windows', synth_ms: ms() });
     }
   });
 }
@@ -236,12 +239,13 @@ function onPtt(ev) {
     reassertTop();
     const id = turnId;
     shot = captureClean();
-    shot.then(() => { if (id === turnId && !timing.ptt_up) say('listening', 'Listening'); }, (e) => log({ ev: 'shot_error', err: e.message }));
+    shot.then(() => { if (id === turnId && !timing.ptt_up) { timing.feedback_ms ??= Date.now() - pttDownAt; say('listening', 'Listening'); } }, (e) => log({ ev: 'shot_error', err: e.message }));
     setTray('listening');
   } else if (ev === 'ptt_up') {
     timing.ptt_up = Date.now();
     if (Date.now() - pttDownAt < 250) { send('rec:cancel'); say('none'); setTray('ready'); return; } // accidental tap
     send('rec:stop');
+    timing.feedback_ms ??= Date.now() - pttDownAt; // first pill on screen (scorecard Q3); Listening was skipped
     say('thinking', 'Thinking');
     setTray('thinking');
   } else if (ev === 'win_up') {
@@ -313,7 +317,7 @@ async function ask(text, id) {
     { onBad: (b) => log({ ev: 'bad_line', line: b.line, why: b.why }) });
   ctx.handle = brain.ask({
     // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when the extension has them, else the sound
-    png: s.png, text, video: youtube.context() || ear.context(),
+    png: s.png, text, turn: id, video: youtube.context() || ear.context(),
     onText: (d) => { timing.claude_first_token ||= Date.now(); parser.push(d); },
     onEnd: (full) => { ctx.full = full; parser.end(); chain = chain.then(() => endTurn(ctx)); },
     onError: (kind, detail) => { chain = chain.then(() => brainError(ctx, kind, detail)); },
@@ -323,7 +327,11 @@ async function ask(text, id) {
 async function onCmd(ctx, cmd) {
   if (ctx.id !== turnId && !ctx.replay) return;
   if (cmd.prose) log({ ev: 'prose_line', text: cmd.text });
-  if (cmd.type === 'say') { ctx.sayLines.push(cmd.text); return sayLine(ctx, cmd.text); }
+  if (cmd.type === 'say') {
+    if (!ctx.replay) timing.first_say ||= Date.now(); // SPEED-TOKEN-PLAN P0: first full say line parsed
+    ctx.sayLines.push(cmd.text);
+    return sayLine(ctx, cmd.text);
+  }
   if (cmd.type === 'title') { ctx.title = cmd.text; return; }
   if (cmd.type === 'clear') return send('item', ctx.id, { kind: 'clear' });
   if (cmd.type === 'wait_click') return ctx.replay || send('item', ctx.id, { kind: 'wait', x: cmd.x, y: cmd.y });
@@ -449,10 +457,10 @@ function closeReplay() {
 
 // ---------- IPC ----------
 ipcMain.on('rec:data', (_e, buf, dur) => onUtterance(buf, dur));
-ipcMain.on('voice:start', (_e, { turn, i, src }) => {
+ipcMain.on('voice:start', (_e, { turn, i, src, synth_ms, wait_ms }) => {
   if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now(); // the overlay switches the pill to Speaking
-  // One line per spoken sentence, so the log shows which voice really played (local brief, task 1).
-  log(src === 'edge' ? { ev: 'voice_line', turn, i, voice: settings.voice } : { ev: 'backup_voice', turn, i, src });
+  // One line per spoken sentence, so the log shows which voice really played (QUALITY-PLAN T0, scorecard Q1).
+  log({ ev: 'line_voice', turn, i, src, voice: src === 'edge' ? settings.voice : undefined, synth_ms, wait_ms });
 });
 ipcMain.on('turn:done', (_e, id) => {
   events.emit('turn:done', id);

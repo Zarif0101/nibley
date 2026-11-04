@@ -269,6 +269,7 @@ async function run(id) {
     while (k >= items.length) { await changed(); if (!alive()) return; }
     const it = items[k++];
     if (it.kind === 'say') {
+      const w0 = performance.now(); // wait_ms: silence before this line, waiting for its audio
       const a = await audioFor(it.i, id);
       if (!alive()) return;
       earHold();
@@ -276,7 +277,7 @@ async function run(id) {
       const dur = await h.started;
       if (!alive()) return;
       showSub(it.text, dur);
-      ipcRenderer.send('voice:start', { turn: id, i: it.i, src: a.src || (a.buf ? 'edge' : 'windows') });
+      ipcRenderer.send('voice:start', { turn: id, i: it.i, src: a.src || (a.buf ? 'edge' : 'windows'), synth_ms: a.synth_ms, wait_ms: Math.round(performance.now() - w0) });
       if (!replay && ['listening', 'thinking', 'none'].includes(statusKind)) status('speaking', 'Speaking');
       // Marks after this say line appear while it is spoken, spaced across the line.
       const t0 = performance.now(), gap = Math.min(600, (dur * 1000) / 3);
