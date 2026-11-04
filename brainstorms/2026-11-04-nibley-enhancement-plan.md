@@ -12,6 +12,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 
 ## Summary / key decisions
 - Spend plan (Q1b, corrects Q1): A + C. Full research and feature specs (C) AND build the brain modules with tests (A). If credit is left after that: social media posts and animations.
+- Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Q&A log
 ### Q1 - What the $78 should mainly buy
@@ -25,5 +26,12 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Still holds from Q1: social media posts + animations only if credit remains afterwards.
 - Flags: none new.
 
+### Q2 - What the research and specs cover
+- Asked: (1) only the brain features, (2) all 14 MVP features, (3) brain features + new-ideas scan. Assistant suggested 3.
+- Captured: "start 1 and 3" -> brain features plus the new-ideas scan, and start now.
+- Tentative / suggested (assistant): research reports go in a new top-level `research/` folder (not `docs/`, which the local session is editing). Brain modules are pure functions (state in, state out) so storage can be decided later in PRD v2.
+- Flags: where learner data is stored (vault markdown vs app JSON) -> PRD v2 / Zarif, later.
+
 ## Open flags (pending input)
+- Learner data storage (vault markdown vs app JSON vs both) -> Zarif, during PRD v2
 - Social media posts + animations: platforms, content, purpose -> Zarif (after the build, if credit remains)
