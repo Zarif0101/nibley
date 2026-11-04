@@ -11,7 +11,7 @@ The derivative tells you how steep a curve is at each point. For powers of x the
 
 ## Picture it
 Draw `graph-tangent`. Label the dot `graph-tangent.touch-point` "slope = f′(x)". Label `graph-tangent.curve-end` "y = xⁿ".
-Draw `graph-parabola` and write "y = x²" near `graph-parabola.arm-right`, then "slope 0 here" at `graph-parabola.vertex`.
+Draw `graph-parabola` and write "y = x² − 4" near `graph-parabola.arm-right`, then "slope 0 here" at `graph-parabola.vertex`.
 
 ## Common mistakes
 - Forgetting to lower the power: 3x⁴ becomes 12x³, not 12x⁴.
