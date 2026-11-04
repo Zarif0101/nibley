@@ -1,6 +1,6 @@
 # Nibley enhancement plan ($78 cloud credit): Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: decide how to spend the remaining ~$78 of Claude Code cloud credit on research, advanced feature planning, and building what can be built and tested in a cloud session.
-Status: in progress
+Status: paused (2026-11-04) for the build. Resume point: after the build, ask about social media posts + animations (Q1 flag), then the open flags.
 Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP features, 4 build phases, Q13), docs/PRD.md (v1, hard constraints), docs/briefs/local-app.md, library/README.md (study library, PR Zarif0101/nibley#1)
 
 ## Known from context (not asked)
@@ -13,6 +13,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 ## Summary / key decisions
 - Spend plan (Q1b, corrects Q1): A + C. Full research and feature specs (C) AND build the brain modules with tests (A). If credit is left after that: social media posts and animations.
 - Gaps (Q3): Nibley does NOT force a fix. It saves the gap inside the app, shows it on the mind map / knowledge map, tells him "you have a learning gap on this topic", and he starts learning it when he wants. It keeps tracking over time whether the gap is still there, from his interactions.
+- Build order (Q4, confirmed): 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS flashcards + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading (last, needs new per-topic content). Plus one spec doc for the local session. Start building now.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -46,6 +47,11 @@ Reports in `research/` (2026-11-04). Highlights:
   - So: save the gap in the app; show it on a mind map; tell him he has a gap; learning it is his choice, when he wants; keep checking over time whether the gap is still there.
 - Tentative / suggested (assistant): yes, the learner model does this. Every graded answer (pause quiz, daily review, root check, teach-back) updates the topic's score, and the gap closes when answers show it's fixed. Caution: only GRADED answers count as evidence. Just asking about a topic in chat should not mark a gap (asking is not failing); at most it makes the topic "worth checking".
 - Flags: storage: he said "inside the app", but PRD v1 4.6 keeps memory in the vault (`Second Brain/nibley/`). Conflict, resolve in PRD v2 -> Zarif.
+
+### Q4 - Build order
+- Asked: confirm order 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading; plus a spec doc. Assistant suggested keeping it.
+- Captured: "keep that order, start building".
+- Flags: none new.
 
 ## Open flags (pending input)
 - Learner data storage: Zarif said "inside the app" (Q3); PRD v1 says vault. Resolve in PRD v2 -> Zarif
