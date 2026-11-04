@@ -1,6 +1,6 @@
 # Nibley enhancement plan ($78 cloud credit): Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: decide how to spend the remaining ~$78 of Claude Code cloud credit on research, advanced feature planning, and building what can be built and tested in a cloud session.
-Status: paused (2026-11-04). Build items 1-7 done in `src/learn/` (93 tests). Resume point: decide item 8 (teach-back, needs per-topic key points) vs social media posts + animations (Q1 flag), then the open flags.
+Status: in progress (social media part). Build items 1-7 done in `src/learn/` (93 tests); item 8 teach-back deferred.
 Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP features, 4 build phases, Q13), docs/PRD.md (v1, hard constraints), docs/briefs/local-app.md, library/README.md (study library, PR Zarif0101/nibley#1)
 
 ## Known from context (not asked)
@@ -14,6 +14,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Spend plan (Q1b, corrects Q1): A + C. Full research and feature specs (C) AND build the brain modules with tests (A). If credit is left after that: social media posts and animations.
 - Gaps (Q3): Nibley does NOT force a fix. It saves the gap inside the app, shows it on the mind map / knowledge map, tells him "you have a learning gap on this topic", and he starts learning it when he wants. It keeps tracking over time whether the gap is still there, from his interactions.
 - Build order (Q4, confirmed): 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS flashcards + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading (last, needs new per-topic content). Plus one spec doc for the local session. Start building now.
+- Next (Q5): social media: 2 animated videos + 10 posts. Teach-back deferred. Context questions first.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -52,6 +53,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Asked: confirm order 1 learner model + gap tracker, 2 gap finder, 3 knowledge map data, 4 FSRS + daily review, 5 pre-video check, 6 pause quiz + hint ladder, 7 confusion detector, 8 teach-back grading; plus a spec doc. Assistant suggested keeping it.
 - Captured: "keep that order, start building".
 - Flags: none new.
+
+### Q5 - Teach-back or social media next
+- Asked: A teach-back (content + grading) or B social media posts + animations. Assistant suggested B if credit < ~$40.
+- Captured: "B, lets do the social media posts". Wants **2 animated videos and 10 posts**. "ask me questions for context and clarification".
+- Flags: none new (social media context questions follow).
 
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
