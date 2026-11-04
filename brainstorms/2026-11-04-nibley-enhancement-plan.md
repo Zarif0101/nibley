@@ -17,6 +17,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Next (Q5): social media: 2 animated videos + 10 posts. Teach-back deferred. Context questions first.
 - Post goals (Q7): main = launch Nibley on GitHub. Also: introduce Nibley; find users, targeting LEARNERS in general (students included, not students only); PR built on Nibley's cuteness (the mascot); "many other things" (not yet named).
 - Platforms (Q8): Instagram (feed posts + Reels) and X. Formats (assistant): posts 1080x1350 (4:5, works on both), videos 1080x1920 vertical (Reels; X plays vertical too).
+- Sound (Q9 reply): Nibley has no voice of its own; the videos use cute sound effects Zarif generated with ElevenLabs: 8 mp3 files, each with 4-5 effects, in this order: magical, sleepy, sad, mischievous, shy, confused, surprised, excited. Files are in his Downloads folder (on his laptop).
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -77,6 +78,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "Like reels and Instagram X also" -> Instagram (Reels + posts) first, X also. Not LinkedIn, TikTok, Reddit.
 - Tentative / suggested (assistant): one size per type that works on both: posts 1080x1350 (4:5), videos 1080x1920 (9:16).
 - Flags: none new.
+
+### Q9 - Video script frameworks (still open) + sounds
+- Asked: frameworks for the 2 videos: A Meet Nibley, B Stuck -> saved story, C Hook/problem/solution/CTA, D Before/after. Assistant suggested video 1 = A, video 2 = B.
+- Captured: framework not answered yet. Instead: "Niblay doesn't have a voice for him himself now, so I'll add the cute sounds". Generated with ElevenLabs. 8 mp3 files, "Each file already has 4 to 5 types of sound effects", in order: 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited. "You should also check these files". "its in my download folder".
+- Tentative / suggested (assistant): split each file into its single effects (by silence) and map them to mascot faces (DESIGN.md has happy, listening, thinking, speaking, confused, error).
+- Flags: framework choice still open -> Zarif. ElevenLabs licence for public/commercial posts depends on his plan (free plan may need attribution / be non-commercial) -> Zarif to check. Getting the files into this cloud session -> Zarif.
 
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
