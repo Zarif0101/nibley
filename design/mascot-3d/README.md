@@ -12,7 +12,7 @@ Smooth 3D version of the pixel mascot from Zarif's brand board (`reference/`, se
 - Body = 8 smooth shapes blended together (puffy rounded-square core, crown, two-part flame tuft curling right, shoulder step, two toe nubs). Numbers in `SHAPE`.
 - Hands are separate nubs that slide along the body side, so each mood has a pose (wave, think, cheer, droop).
 - Face (eyes with 2 glints, shine arc, blush, mouths) is placed on the body surface in `FACE`. Baby-face proportions: big eyes set low and wide.
-- Signature details: a small yellow spark star beside the tuft (twinkles), a toy-shine spot top-left, crisp pixel-cube confetti.
+- Signature details: a small white-blue spark star beside the tuft (twinkles), a toy-shine spot top-left, crisp pixel-cube confetti.
 - Idle life: float, blink, glances, a little hop every ~6 s, a hello-wave every ~9 s.
 - Colours sampled from the board. Lights (`LOOK`) tuned by measuring rendered pixels: face ≈ #8BD9FC, lower body ≈ #2B88FA (`window.nibley.probe`).
 - Moods match the app's states: happy, listening, thinking, speaking, confused, excited, error.

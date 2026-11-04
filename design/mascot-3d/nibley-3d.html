@@ -124,7 +124,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- palette (sampled from the brand board) ----------
 const COL = {
   top: '#8BD9FC', low: '#2B88FA', rim: '#0E5BD0', eye: '#0C2561', mouth: '#062463', glint: '#F4FAFF',
-  arc: '#E4FBFF', bit: '#318EFC', bitLight: '#6CCCFF', error: '#FF8B7A', eyeLow: '#1C3F92', blush: '#FF8B7A', star: '#FFD98C',
+  arc: '#E4FBFF', bit: '#318EFC', bitLight: '#6CCCFF', error: '#FF8B7A', eyeLow: '#1C3F92', blush: '#FF8B7A', star: '#BDE9FF', starGlow: '#8BD9FC',
 };
 
 // ---------- shape: smooth signed-distance blend (units: body half-width = 1, y up, face looks along +z) ----------
@@ -325,7 +325,7 @@ const mat = {
   body: bodyMaterial(),
   blush: decal(COL.blush, 0.62),
   shine: decal('#FFFFFF', 0.5),
-  star: new THREE.MeshStandardMaterial({ color: COL.star, roughness: 0.35, emissive: COL.star, emissiveIntensity: 0.6 }),
+  star: new THREE.MeshPhysicalMaterial({ color: COL.star, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.1, emissive: COL.starGlow, emissiveIntensity: 0.45 }),
   eye: new THREE.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.16, clearcoat: 1, clearcoatRoughness: 0.08, envMapIntensity: 1.1 }),
   mouth: new THREE.MeshStandardMaterial({ color: COL.mouth, roughness: 0.5 }),
   glint: new THREE.MeshBasicMaterial({ color: COL.glint }),
