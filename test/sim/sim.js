@@ -33,11 +33,17 @@ const HOOK = `
 const __subs = window.subtitles.createSubtitles(document.body);
 const __choices = window.createChoices(document.body, (text) => window.__sent.push(['choice', text]));
 window.__choices = __choices;
+// Pill in its own spot (Zarif, 2026-11-04): a full-width centred row at the bottom, above buttons and subtitle.
+const __wrap = document.createElement('div'); __wrap.id = 'status-wrap'; document.body.appendChild(__wrap); __wrap.appendChild(document.getElementById('status'));
+const __pst = document.createElement('style');
+__pst.textContent = '#status-wrap { position: absolute; left: 0; right: 0; bottom: 184px; display: flex; justify-content: center; pointer-events: none; } #status-wrap.top { bottom: auto; top: 24px; } #status-wrap #status { position: static !important; }';
+document.head.appendChild(__pst);
 window.__say = {}; window.__marks = []; window.__ask = null;
 window.__onSend = (ch, d) => {
   const top = window.subtitles.inBottomQuarter(window.__marks);
   if (ch === 'voice:start') {
     __subs.show(window.__say[d.i], { top });
+    __wrap.classList.toggle('top', top);
     if (window.__ask && window.__ask.i === d.i) __choices.show(window.__ask.options, { top });
   }
   if (ch === 'turn:done') __subs.hideSoon();
@@ -129,7 +135,7 @@ async function pillFrames(page, port, dir) {
   await page.evaluate(() => document.fonts.ready);
   await page.evaluate(() => { document.getElementById('bg').src = '/test/fixtures/lecture.png'; document.getElementById('bg').style.display = 'block'; });
   fs.mkdirSync(dir, { recursive: true });
-  const clip = { x: 560, y: 360, width: 260, height: 80 };
+  const clip = { x: 553, y: 520, width: 260, height: 80 };
   let n = 0;
   const phase = async (kind, text, ms, steps) => {
     await page.evaluate(([k, t]) => { window.__pill(k, t, 560, 360); document.getAnimations().forEach((a) => a.pause()); }, [kind, text]);

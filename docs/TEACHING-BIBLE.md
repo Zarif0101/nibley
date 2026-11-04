@@ -129,7 +129,7 @@ Screen: 1366×768. The video stays the main thing; Nibley's surface never covers
 - Body text ≥ 16 px; subtitles 20/28. Contrast ≥ 4.5:1.
 - One surface at a time. Esc or a hotkey tap always closes it.
 - Enter/exit ≤ 250 ms; none with reduced motion. Nothing flashes faster than once a second.
-- The status pill always appears in the same place relative to the cursor.
+- The status pill always appears in the same spot: bottom-centre, above the buttons and subtitle (Zarif, 2026-11-04).
 - The user picks a default layout; Nibley only suggests switching (brainstorm Q10b).
 
 **Style ↔ layout pairing:** each style has a default layout (table in section 2); in a fixed layout the style adapts. Doodle Story in L0 draws on the video instead of paper, and Board Builder in L1 writes on the sheet.

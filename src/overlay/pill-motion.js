@@ -6,7 +6,7 @@
 (function (root) { // own scope: overlay.js loads these as plain scripts, which share one namespace
 const EASE = 'cubic-bezier(.3,.7,.2,1)';
 const PILL_CSS = `
-#status { transform-origin: 18px 50%; will-change: transform, opacity; }
+#status { transform-origin: 50% 50%; will-change: transform, opacity; }
 #status .face { display: block; }
 #status.listening, #status { transition: background-color 180ms ${EASE}, color 180ms ${EASE}; }
 @media (prefers-reduced-motion: reduce) { #status { transition: none; } }`;

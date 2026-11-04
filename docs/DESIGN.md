@@ -47,8 +47,8 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 - Chips slide 6 px from the left and fade in (180 ms).
 - `prefers-reduced-motion`: marks appear whole, no animation, mascot doesn't animate.
 
-## Status pill near the cursor
-White pill, 18 px below-right of where the cursor was at the hotkey press:
+## Status pill
+White pill, centred at the bottom of the screen, 184 px above the screen bottom (above the answer buttons and the subtitle): the same spot every time, shown only while Nibley is active (Zarif, 2026-11-04: it felt random next to the mouse). When a mark sits in the bottom quarter, pill, buttons and subtitle move to the top together (pill 24 px from the top). The pill sits in a full-width centred row, so its width can change without it moving off centre.
 - Listening: `deep` pill, mascot listening face, 3 white bars moving with the mic level, "Listening".
 - Thinking: mascot thinking face, 3 `ink` dots pulsing, "Thinking".
 - Speaking: mascot mouth opening and closing, "Speaking". Hides when the answer ends.
