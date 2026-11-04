@@ -86,7 +86,7 @@ Reports in `research/` (2026-11-04). Highlights:
 - Flags: framework choice still open -> Zarif. ElevenLabs licence for public/commercial posts depends on his plan (free plan may need attribution / be non-commercial) -> Zarif to check. Getting the files into this cloud session -> Zarif.
 
 ### Sounds received (2026-11-04)
-- Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct).
+- Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
 - Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
 - Limits: the assistant cannot hear moods; it checked count, length, loudness and spectrograms only.
 
