@@ -1,6 +1,6 @@
 # Nibley enhancement plan ($78 cloud credit): Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: decide how to spend the remaining ~$78 of Claude Code cloud credit on research, advanced feature planning, and building what can be built and tested in a cloud session.
-Status: in progress (social media part: building). Build items 1-7 done in `src/learn/` (93 tests); item 8 teach-back deferred.
+Status: paused (2026-11-04). Social media content delivered: 2 videos + 10 posts (19 images) + captions. Resume point: Zarif posts; open flags below (install guide + voice fix before launch, ElevenLabs licence, Anthropic terms, storage decision, "many other things"). Build items 1-7 done in `src/learn/` (93 tests); item 8 teach-back deferred.
 Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP features, 4 build phases, Q13), docs/PRD.md (v1, hard constraints), docs/briefs/local-app.md, library/README.md (study library, PR Zarif0101/nibley#1)
 
 ## Known from context (not asked)
@@ -157,6 +157,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
 - Prompts (Zarif's ElevenLabs history screenshot): magical "Bli-bli! Woop-wip! Ting! Bloop-blo..."; sleepy "Mmmmmm... Hmmm... Prrrr... Zzz..."; sad "Aww... Mmm... Pwoo... Oh..."; mischievous "Hehehe! Boop! Nyehehe! Bip-bip!"; shy "M-mip... Hehe... Pip... Eep..."; confused "Uhhh? Bip... bip? Hmmmmm? Wut?"; surprised "EEP! Wah! Ooh-WOAH! BWOOP?!"; excited "WOO-pip! Yay-yay-yay! Bweee-woo! Tadaa! Hm...". Split pieces labelled in this order (by order, not by ear).
 - Limits: the assistant cannot hear moods; it checked count, length, loudness and spectrograms only.
+
+### Content delivered (2026-11-04)
+- Videos: video1.mp4 (Meet Nibley, 20 s) and video2.mp4 (hook/problem/solution/CTA, 24 s), 1080x1920 30 fps, about -14.5 LUFS. Two review rounds: push-in for phone legibility, text ≥ 40 px, centred end card, clearer rewind hook.
+- Posts: 19 images (posts 2, 3, 5 are carousels), captions.md with Instagram + X versions and alt text. Review fixed: clone URL, ink-blue text contrast, small text, keycap, template-looking cover, alt text.
+- Files sent to Zarif directly (kept out of the public repo until the ElevenLabs licence is confirmed). Render code in marketing/render/ (re-run: posts `node build.js`, videos `node render.js video1|video2`).
 
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.

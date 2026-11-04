@@ -32,15 +32,26 @@ function sv(tag, attrs, parent) {
 
 // Laptop: neutral flat device, no logos.
 function buildLaptop(parent) {
-  const lap = h('div', { id: 'laptop' }, parent);
+  const wrap = h('div', { id: 'camwrap' }, parent);
+  const lap = h('div', { id: 'laptop' }, wrap);
   const lid = h('div', { id: 'lid' }, lap);
   h('div', { id: 'cam' }, lid);
   const screen = h('div', { id: 'screen' }, lid);
   const base = h('div', { id: 'base' }, lap);
   h('div', { id: 'notch' }, base);
-  return { lap, screen };
+  return { lap, screen, wrap };
 }
-function laptopTilt(lap, t, exit0 = 1e9) {
+// Camera: laptop sits at the frame's middle (scale 1.1); during the drawing beats it eases to 1.3x more,
+// keeping focal point F (laptop-local px) at the frame target. cubic-bezier(.3,.7,.2,1), 600 ms each way.
+function laptopTilt(lap, t, exit0 = 1e9, cam) {
+  if (cam) {
+    const k = 1.1, c = [470, 313], C = [540, 740], T = cam.T || [540, 730], F = cam.F;
+    const z = ease(pr(t, cam.in, 0.6)) * (1 - ease(pr(t, cam.out, 0.6)));
+    const B = [C[0] + k * (F[0] - c[0]), C[1] + k * (F[1] - c[1])];
+    const G = [B[0] * (1 - z) + T[0] * z, B[1] * (1 - z) + T[1] * z];
+    const S = k * (1 + 0.3 * z);
+    cam.wrap.style.transform = `translate(${G[0].toFixed(2)}px,${G[1].toFixed(2)}px) scale(${S.toFixed(4)}) translate(${-F[0]}px,${-F[1]}px)`;
+  }
   const e = ease(pr(t, 0, 1.5));
   const ex = ease(pr(t, exit0, 0.55));
   lap.style.transform = `perspective(2400px) rotateX(${(7 * (1 - e)).toFixed(3)}deg) rotateY(${(-11 * (1 - e)).toFixed(3)}deg) translateY(${(ex * 260).toFixed(1)}px)`;
@@ -55,8 +66,8 @@ class Mark {
     this.fr = fractions || paths.map(() => 1 / paths.length);
     this.g = sv('g', { fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }, svg);
     const mk = (stroke, w) => paths.map((d) => sv('path', { d, pathLength: 1, stroke, 'stroke-width': w, 'stroke-dasharray': '1 2', 'stroke-dashoffset': 1 }, this.g));
-    this.edge = mk('#2B3A4B', 12);
-    this.ink = mk('#2F8BFF', 7);
+    this.edge = mk('#2B3A4B', 9.5);
+    this.ink = mk('#2F8BFF', 5.5);
   }
   set(t, t0, dur, erase0 = 1e9, eraseDur = 0.2) {
     let p = pr(t, t0, dur);
@@ -108,7 +119,7 @@ function captions(list) {
   return (t) => {
     const c = list.find((c) => t >= c.a && t < c.b);
     if (!c) { el.style.opacity = 0; return; }
-    if (shown !== c) { el.textContent = c.text; shown = c; }
+    if (shown !== c) { el.textContent = c.text; shown = c; el.style.top = (c.top || 1130) + 'px'; }
     const p = ease(pr(t, c.a, 0.22)), o = 1 - pr(t, c.b - 0.12, 0.12);
     el.style.opacity = p * o;
     el.style.transform = `translateY(${((1 - p) * 14).toFixed(1)}px)`;
@@ -148,13 +159,14 @@ function printedPath(slideSvg, d) {
 
 // End card (left aligned): Nibley, wordmark, url with a pen underline, small print.
 function buildEndCard(stage) {
+  // block centred in the safe zone (y 220..1500): top of Nibley at 435, caption card ends near 1294
   const root = h('div', { className: 'abs', style: { left: 0, top: 0, width: '1080px', height: '1920px' } }, stage);
-  const m = new Mascot(root, 14);
-  const word = h('div', { className: 'abs', style: { left: '80px', top: '700px', fontWeight: 700, fontSize: '84px', lineHeight: '96px' } }, root, 'Nibley');
-  const url = h('div', { className: 'abs', style: { left: '80px', top: '830px', fontWeight: 600, fontSize: '50px', lineHeight: '64px', color: '#1E6FEB', whiteSpace: 'nowrap' } }, root, 'github.com/Zarif0101/nibley');
-  const small = h('div', { className: 'abs', style: { left: '80px', top: '930px', fontWeight: 400, fontSize: '32px', lineHeight: '44px', color: '#6B7A90' } }, root, 'Windows · uses your Claude subscription');
+  const m = new Mascot(root, 18);
+  const word = h('div', { className: 'abs', style: { left: '80px', top: '835px', fontWeight: 700, fontSize: '96px', lineHeight: '108px' } }, root, 'Nibley');
+  const url = h('div', { className: 'abs', style: { left: '80px', top: '955px', fontWeight: 600, fontSize: '60px', lineHeight: '72px', color: '#1E6FEB', whiteSpace: 'nowrap' } }, root, 'github.com/Zarif0101/nibley');
+  const small = h('div', { className: 'abs', style: { left: '80px', top: '1041px', fontWeight: 400, fontSize: '40px', lineHeight: '52px', color: '#6B7A90', whiteSpace: 'nowrap' } }, root, 'Windows \u00b7 uses your Claude subscription');
   const usvg = sv('svg', { class: 'pen', width: 1080, height: 1920, viewBox: '0 0 1080 1920' }, root);
-  const ug = sv('g', { transform: `translate(80 ${906}) scale(${0.9} 1)` }, usvg);
+  const ug = sv('g', { transform: 'translate(80 1028) scale(1 1)' }, usvg);
   const um = new Mark(ug, MARKS.underline);
   return { root, m, word, url, small, um };
 }
