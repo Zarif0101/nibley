@@ -5,7 +5,9 @@ const { loadLibrary, createLibrary, parseNote } = require('../src/learn/library'
 const lib = loadLibrary();
 
 test('loads every topic from the real library', () => {
-  assert.equal(lib.topics.length, 229);
+  const all = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'library', 'topics.json'), 'utf8'));
+  assert.equal(lib.topics.length, all.length);
+  assert.ok(all.length >= 229);
   assert.equal(lib.get('newtons-second-law').subject, 'physics');
   assert.equal(lib.get('nope'), null);
 });

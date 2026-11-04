@@ -13,7 +13,7 @@ const ROOT = __dirname;
 const PARTIAL = process.argv.includes('--partial') || process.argv.includes('--only');
 // --only id1,id2: check just these notes (implies --partial); for workers writing a batch
 const ONLY = process.argv.includes('--only') ? new Set((process.argv[process.argv.indexOf('--only') + 1] || '').split(',')) : null;
-const SUBJECTS = ['physics', 'maths', 'chemistry', 'biology'];
+const SUBJECTS = ['physics', 'maths', 'chemistry', 'biology', 'computing'];
 const ASSET_SUBJECTS = ['physics', 'maths', 'chemistry', 'biology', 'shared', 'everyday', 'computing', 'diagram'];
 const ANALOGY_DOMAINS = ['computing', 'maths', 'physics', 'chemistry', 'biology', 'economics', 'learning', 'everyday'];
 const LEVELS = ['foundation', '11', '12'];
