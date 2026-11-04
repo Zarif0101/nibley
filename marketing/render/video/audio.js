@@ -10,7 +10,7 @@ const PLAN = {
   video1: { dur: 25.8, items: [
     S('1-magical-5', 0.2, 0.55),      // Ting! ring draws (no voice)
     S('1-magical-1', 1.45, 0.55),     // Bli-bli! Nibley pops in
-    V('n1t', 2.45), S('5-shy-1', 5.1, 0.55),        // "Oh. Hi. I'm Nibley." / M-mip...
+    V('n1t', 2.45), S('5-shy-1', 5.1, 0.55),        // "This is Nibley." / M-mip...
     V('n2t', 6.4),
     V('n3t', 9.1), S('6-confused-3', 12.75, 0.55),  // Hmmmmm? while the bubble types
     S('1-magical-6', 14.0, 0.55),     // Ting! arrow
