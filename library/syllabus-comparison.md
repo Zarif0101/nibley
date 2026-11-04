@@ -8,6 +8,7 @@ Syllabi compared:
 - **A-L**: Cambridge International AS & A Level Physics (9702) and Mathematics (9709: Pure 1 and 3, Probability & Statistics 1 and 2).
 - **AP**: AP Physics 1, 2 and C, AP Precalculus, AP Calculus AB/BC, AP Statistics (treated as one family).
 - **IB**: IB Diploma Physics (SL/HL) and Mathematics: Analysis and Approaches (SL/HL).
+- Chemistry and biology (added 2026-11-04 at Zarif's request) use the same five families: CBSE/NCERT Chemistry and Biology 11-12, HSC Chemistry and Biology, Cambridge AS & A Level Chemistry (9701) and Biology (9700), AP Chemistry and AP Biology, IB Diploma Chemistry and Biology.
 
 Rule: a topic area is in the library if at least 3 of the 5 cover it (`Y` or `p`). Foundation topics (pre-11 basics such as fractions, units, Pythagoras) are included whenever an 11-12 topic depends on them.
 Level `11` or `12` follows the most common placement (CBSE and HSC split by class; A-Level AS ≈ 11, A2 ≈ 12). It is a guide, not a rule.
@@ -97,3 +98,65 @@ Level `11` or `12` follows the most common placement (CBSE and HSC split by clas
 | Hypothesis testing | - | - | Y | Y | - | no |
 | Numerical methods | - | - | Y | - | - | no |
 | Maclaurin series | - | - | - | p | p | no |
+
+## Chemistry
+
+| Topic area | CBSE | HSC | A-L | AP | IB | In library |
+|---|---|---|---|---|---|---|
+| Atomic structure, isotopes | Y | Y | Y | Y | Y | yes |
+| Electron configuration, orbitals | Y | Y | Y | Y | Y | yes |
+| Periodic trends | Y | Y | Y | Y | Y | yes |
+| Group 1, group 2, halogens | Y | Y | Y | p | p | yes |
+| Ionic and covalent bonding | Y | Y | Y | Y | Y | yes |
+| Shapes of molecules | Y | Y | Y | Y | Y | yes |
+| Intermolecular forces | Y | Y | Y | Y | Y | yes |
+| Mole, reacting masses, titration | Y | Y | Y | Y | Y | yes |
+| Enthalpy, Hess's law, bond enthalpy | Y | Y | Y | Y | Y | yes |
+| Equilibrium, Kc, Le Chatelier | Y | Y | Y | Y | Y | yes |
+| Acids, bases, pH | Y | Y | Y | Y | Y | yes |
+| Buffers | Y | p | Y | Y | p | yes |
+| Redox, oxidation numbers | Y | Y | Y | Y | Y | yes |
+| Rates, rate equations, activation energy | Y | Y | Y | Y | Y | yes |
+| Entropy, Gibbs free energy | Y | p | Y | Y | p | yes |
+| Electrochemical cells, electrolysis | Y | Y | Y | Y | Y | yes |
+| Transition metals, complex ions | Y | Y | Y | - | p | yes |
+| Organic basics, isomerism | Y | Y | Y | p | Y | yes |
+| Alkanes, alkenes, alcohols, haloalkanes | Y | Y | Y | p | Y | yes |
+| Carbonyls, acids, esters, amines | Y | Y | Y | p | p | yes |
+| Benzene and aromatics | Y | Y | Y | - | p | yes |
+| Polymers | Y | Y | Y | p | p | yes |
+| Mass, IR and NMR spectroscopy | - | - | Y | p | Y | yes |
+| Solutions and colligative properties | Y | Y | - | - | - | no |
+| Metallurgy, surface chemistry | Y | p | - | - | - | no |
+
+## Biology
+
+| Topic area | CBSE | HSC | A-L | AP | IB | In library |
+|---|---|---|---|---|---|---|
+| Cell structure, prokaryotes and eukaryotes | Y | Y | Y | Y | Y | yes |
+| Membranes and transport | Y | Y | Y | Y | Y | yes |
+| Biological molecules, enzymes | Y | Y | Y | Y | Y | yes |
+| Mitosis, meiosis | Y | Y | Y | Y | Y | yes |
+| Respiration, photosynthesis | Y | Y | Y | Y | Y | yes |
+| Classification, biodiversity | Y | Y | Y | p | Y | yes |
+| Transport in plants | Y | Y | Y | p | Y | yes |
+| Digestion | Y | Y | - | - | Y | yes |
+| Gas exchange, heart and circulation | Y | Y | Y | p | Y | yes |
+| Kidneys and excretion | Y | Y | Y | p | Y | yes |
+| Nerves, hormones, homeostasis | Y | Y | Y | Y | Y | yes |
+| DNA, replication, protein synthesis | Y | Y | Y | Y | Y | yes |
+| Control of gene expression | Y | p | Y | Y | p | yes |
+| Mendelian genetics, inheritance patterns | Y | Y | Y | Y | Y | yes |
+| Mutations | Y | Y | Y | Y | Y | yes |
+| Biotechnology | Y | Y | Y | Y | Y | yes |
+| Evolution, natural selection | Y | Y | Y | Y | Y | yes |
+| Human reproduction | Y | Y | - | - | Y | yes |
+| Plant reproduction | Y | Y | - | - | p | yes |
+| Immunity | Y | Y | Y | Y | Y | yes |
+| Ecosystems, energy flow, nutrient cycles | Y | Y | p | Y | Y | yes |
+| Population growth | Y | p | p | Y | Y | yes |
+| Plant hormones and tropisms | Y | Y | p | p | p | gap |
+| Muscles and movement | Y | Y | - | - | p | gap |
+| Animal behaviour | - | - | - | Y | p | no |
+
+`gap` = meets the rule but is not in this first version (see README, Known gaps).
