@@ -12,6 +12,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 
 ## Summary / key decisions
 - Spend plan (Q1b, corrects Q1): A + C. Full research and feature specs (C) AND build the brain modules with tests (A). If credit is left after that: social media posts and animations.
+- Gaps (Q3): Nibley does NOT force a fix. It saves the gap inside the app, shows it on the mind map / knowledge map, tells him "you have a learning gap on this topic", and he starts learning it when he wants. It keeps tracking over time whether the gap is still there, from his interactions.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -39,6 +40,13 @@ Reports in `research/` (2026-11-04). Highlights:
 - Tentative / suggested (assistant): research reports go in a new top-level `research/` folder (not `docs/`, which the local session is editing). Brain modules are pure functions (state in, state out) so storage can be decided later in PRD v2.
 - Flags: where learner data is stored (vault markdown vs app JSON) -> PRD v2 / Zarif, later.
 
+### Q3 - What happens when a weak basic is found
+- Asked: A fix now (~1 min), B fix later in daily review, C ask each time (default now). Assistant suggested C.
+- Captured (his words): "It saves the data inside of the harness or the like interface of the app and creates mind maps and gaps. Then we can start learning those if the user wants to. We can also inform them that you have a learning gap on this topic, and we will also track if they still have the gap in the future. via their interaction?"
+  - So: save the gap in the app; show it on a mind map; tell him he has a gap; learning it is his choice, when he wants; keep checking over time whether the gap is still there.
+- Tentative / suggested (assistant): yes, the learner model does this. Every graded answer (pause quiz, daily review, root check, teach-back) updates the topic's score, and the gap closes when answers show it's fixed. Caution: only GRADED answers count as evidence. Just asking about a topic in chat should not mark a gap (asking is not failing); at most it makes the topic "worth checking".
+- Flags: storage: he said "inside the app", but PRD v1 4.6 keeps memory in the vault (`Second Brain/nibley/`). Conflict, resolve in PRD v2 -> Zarif.
+
 ## Open flags (pending input)
-- Learner data storage (vault markdown vs app JSON vs both) -> Zarif, during PRD v2
+- Learner data storage: Zarif said "inside the app" (Q3); PRD v1 says vault. Resolve in PRD v2 -> Zarif
 - Social media posts + animations: platforms, content, purpose -> Zarif (after the build, if credit remains)
