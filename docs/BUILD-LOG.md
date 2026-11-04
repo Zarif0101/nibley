@@ -71,3 +71,8 @@ Newest at the bottom. A new session reads this to resume.
   - Found while reading code: brain.js starts claude once with `--system-prompt-file`, so per-question style/pace must go in the user message; style cards go in the fixed system prompt.
   - Voice hypothesis for T1 (unverified): line 1 gets only 1.2 s for Edge, then the whole turn is locked to Piper.
 - NEXT (local session): QUALITY-PLAN T0 then T1. Zarif's open decisions: QUALITY-PLAN section 5.
+
+## 2026-11-04 cloud build ($35 credit, plan in brainstorms/2026-11-04-cloud-build-plan.md)
+- Merged PR #1's branch (`claude/sleepy-darwin-jy0kpp`: library, src/learn, research, marketing) into this branch. All tests still pass.
+- DONE Phase A (quality gates): `.github/workflows/test.yml` (unit tests + library check on every push/PR, no npm install), `test/scorecard.js` (Q1-Q10 table from logs + e2e + eval; old logs fall back to first-line voice), `src/lint.js` (answer guard: cut lines > 24 words, ≤ 6 say lines, filler opener, banned words logged, 4th mark fades oldest), `src/commands.js` (again/slower/faster/shorter/more/gotit/lost + one-answer style requests). 137/138 tests pass (1 skipped: Windows-only).
+  - Not wired into src/main.js (local session owns it): each module's header says the exact lines to add.
