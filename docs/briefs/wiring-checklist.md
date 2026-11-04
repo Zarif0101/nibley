@@ -11,6 +11,8 @@ Date: 2026-11-04 · Built in the cloud, tested with `npm test` (180 pass) and `n
 | T2 | `src/overlay/subtitles.js` (look approved 2026-11-04, DESIGN.md "Subtitles") | `overlay.html`: `<script src="subtitles.js">` before overlay.js (or `require`); `overlay.js run()`: after `await h.started` → `subs.show(it.text, { top: inBottomQuarter(visibleMarks) })`, on `h.ended` → `subs.hideSoon()`, `stopAll()` → `subs.hide()` | `node test/sim/sim.js` (pictures) + real turn on lecture and dark video; scorecard Q4 |
 | T9 | `test/eval/run.js` | Nothing to wire. Run `node test/eval/run.js --baseline` twice (uses ~60 Haiku questions) | Two `test/out/eval-*.json`; scorecard Q6 |
 | T10 | `src/overlay/mascot-loop.js` + `src/overlay/mascot3d/*.webp` (only after T0-T9 green) | `overlay.js status()`: replace the pixel face with `mascotLoop(FACE[kind] || 'happy', 28)` | CPU < 3% while the pill animates; preview `design/mascot-3d/renders/mood-loops-preview.webp` |
+| T12 | `src/overlay/pill-sequence.js`, `src/overlay/pill-motion.js` | see QUALITY-PLAN T12 (sequencer in `main.js`, motion in `overlay.js status()`); load as plain scripts before overlay.js | 20 presses, same order every time; `node test/sim/sim.js --pill <dir>` frames |
+| T13 | `src/overlay/choices.js`, `choices` command in `src/script.js` | see QUALITY-PLAN T13 (prompt line, app-made buttons, `choice` IPC → `handleText`, mouse forwarding, helper key grab) | click / Enter / typing / timeout checks in T13 |
 
 ## Speed and tokens (`docs/SPEED-TOKEN-PLAN.md`, do P0 together with QUALITY-PLAN T0)
 | Blueprint | Module (ready) | Connect in | Check |

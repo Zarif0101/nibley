@@ -2,6 +2,7 @@
 // each mood is one horizontal WebP strip (src/overlay/mascot3d/<mood>.webp, made by design/mascot-3d/render.js --loops),
 // stepped with a CSS animation. Costs almost nothing while idle. Reduced motion: first frame only.
 // Wiring (local session, overlay.js status()): face.innerHTML = ''; face.append(mascotLoop(FACE[kind] || 'happy', 28)).
+(function (root) { // own scope: overlay.js loads these as plain scripts, which share one namespace
 const LOOPS = { frames: 30, T: 2.5, moods: ['happy', 'listening', 'thinking', 'speaking', 'confused', 'excited', 'error'] };
 
 function loopCss(size = 28, dir = 'mascot3d') {
@@ -26,5 +27,7 @@ function mascotLoop(mood = 'happy', size = 28) {
   return el;
 }
 
-if (typeof module !== 'undefined') module.exports = { mascotLoop, loopCss, LOOPS };
-else window.mascotLoop = mascotLoop;
+const api = { mascotLoop, loopCss, LOOPS };
+if (typeof module !== 'undefined') module.exports = api;
+else Object.assign(root, api);
+})(typeof window !== 'undefined' ? window : globalThis);

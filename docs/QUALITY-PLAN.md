@@ -100,6 +100,25 @@ Each one: **Why** (evidence) · **Files** · **Change** · **Test** · **Done wh
 ### T11. Word highlight in subtitles (optional)
 - Only if msedge-tts gives word timings: the word being spoken turns `ink`. Skip if it costs more than a small change.
 
+### T12. Nibley shows up the same way every time (Zarif: "it feels like he appears randomly")
+- **Why (from the code):** the Listening pill waits for the screenshot (`captureClean`, ~0.9 s); if he lets go before that, Listening is skipped and Thinking appears first; the pill blinks on with no motion, wherever the mouse is, and snaps between states.
+- **Ready (built + tested in the cloud):** `src/overlay/pill-sequence.js` (fixed order listening → thinking → speaking → none, each ≥ 350 ms, never skips Listening, blocked until the screen is grabbed; 5 tests), `src/overlay/pill-motion.js` (pop in 170 ms, width glide + mascot hop on state change, fade out 140 ms; reduced motion = none). Preview: `test/out/pill-motion-preview.webp`.
+- **Change:** in `main.js` replace the direct `say('listening' | 'thinking' | ...)` calls with the sequencer (`press()` at `ptt_down`, `ready()` when the screenshot resolves, `push(...)` for the rest). In `overlay.js status()`: `enter` on first show, `morph` on a change, `leave` on none. With T3 (tick sound at once, no overlay hide when empty) the pill arrives ~0.45 s after the press.
+- **Test:** 20 presses, half released early: the log shows the same order every time; no pill in any screenshot.
+- **Done when:** Zarif says it no longer feels random.
+
+### T13. Answer Nibley's questions by click or Enter
+- **Why:** Zarif: when Nibley asks back, give options to click or Enter so he doesn't have to press the hotkey and speak again.
+- **Ready (built + tested in the cloud):** script command `choices A | B | C` (2-3 options, ≤ 4 words, `src/script.js` + test), `src/overlay/choices.js` (buttons above the subtitle; Enter = first, 2/3 = others, Esc = dismiss; gone after 15 s, a pick, or the next hotkey press). Preview: `test/out/sim-ask-with-buttons-1.png`.
+- **Change:**
+  1. Prompt (`prompt.js` CORE): "When you ask him a yes/no or pick-one question, add a `choices` line right after it with 2-3 short options, the most likely first. Not for open questions he should answer in his own words."
+  2. Buttons Nibley's own code adds without Claude: Ask-first actions → `Yes | No`; style or layout suggestions → `Yes | No`; pause quizzes → `Hint | Skip`; the mini-interview → `Skip`.
+  3. Overlay: show on item `{ kind: 'choices', options }` when the asking line starts speaking; `ipcRenderer.send('choice', text)` → main `handleText(text)`, exactly like speech. Log `{ ev: 'choice', text, how: 'click' | 'key' }`.
+  4. Clicks: the overlay ignores the mouse except over the buttons: `setIgnoreMouseEvents(true, { forward: true })`, and toggle it from `mouseenter`/`mouseleave` on the button row.
+  5. Keys: the overlay can't take focus (it would steal it from YouTube), so the C# helper grabs **Enter, Esc, 1, 2, 3 only while buttons are showing** (≤ 15 s), and lets go at once on any other key so typing is never blocked.
+- **Test:** an Ask-first pause: click Yes → paused; Enter → paused; type a letter while buttons show → typing works and the buttons go away; 15 s → gone; clicks elsewhere still reach YouTube.
+- **Done when:** 5/5 of each.
+
 ## 3. Stop rules for the local session
 - Two attempts at a root cause with no evidence → stop, write what you saw in `BUILD-LOG.md`, ask Zarif.
 - Never say "done" without the test output (numbers) in `BUILD-LOG.md`.

@@ -1,7 +1,7 @@
 // Parser for the line script Claude writes (ARCHITECTURE.md section 4). Pure: no I/O.
 
 const SCREEN = { w: 1366, h: 768 };
-const COMMANDS = new Set(['say', 'point', 'ring', 'arrow', 'highlight', 'label', 'step', 'wait_click', 'action', 'title', 'clear']);
+const COMMANDS = new Set(['say', 'point', 'ring', 'arrow', 'highlight', 'label', 'step', 'wait_click', 'action', 'title', 'clear', 'choices']);
 const ACTIONS = new Set(['click', 'type', 'key', 'scroll', 'open_url', 'open_app']);
 
 const nums = (s) => (s.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
@@ -21,6 +21,11 @@ function parseLine(raw, screen = SCREEN) {
 
   if (cmd === 'say' || cmd === 'title') return rest ? { type: cmd, text: rest } : bad('empty');
   if (cmd === 'clear') return { type: 'clear' };
+  // choices Yes | No  -> click-to-answer buttons for the question just asked (QUALITY-PLAN T13): 2-3 options, ≤ 4 words each.
+  if (cmd === 'choices') {
+    const options = [...new Set(rest.split('|').map((o) => words(o.trim().replace(/^["']|["']$/g, ''), 4)).filter(Boolean))].slice(0, 3);
+    return options.length >= 2 ? { type: 'choices', options } : bad('choices needs 2 or 3 options');
+  }
   if (cmd === 'action') return parseAction(rest, X, Y) || bad('bad action');
 
   const bar = rest.indexOf('|');

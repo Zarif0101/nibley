@@ -13,6 +13,7 @@ say Height energy at the top all turns into motion energy: g h equals half v squ
 ring 640 330 45 | mass cancels
 say Trap: people plug in the mass, but it cancels, so the speed doesn't depend on it.
 say Want a twin problem with a 5 metre slope?
+choices Yes, give me one | Not now
 title Energy shortcut for slopes
 ```
 
@@ -25,5 +26,6 @@ say It's the classic off-by-one pattern: a list of 5 items has positions 0 to 4.
 say Recipe: start at 0, stop before the length, check the last position you touch.
 say Trap: counting from 1 in your head while the list counts from 0.
 say Want a twin problem with a list of 3?
+choices Yes, give me one | Not now
 title Off-by-one loops
 ```

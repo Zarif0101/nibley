@@ -62,6 +62,14 @@ Approved by Zarif 2026-11-04 ("we can tweak the subtitles in the future"). Built
 - Shows when the line's audio starts, fades 120 ms after it ends; no fade with reduced motion.
 - Moves to top-centre when a mark sits in the bottom quarter of the screen.
 
+## Pill motion (proposed 2026-11-04, preview `test/out/pill-motion-preview.webp`)
+- Same order on every press: Listening → Thinking → Speaking, each at least 350 ms; never skips Listening.
+- Enter: pop from scale .82 to 1.04 to 1 with fade, 170 ms. State change: width glides to the new text, the mascot hops 3 px, colours cross-fade, 190 ms. Leave: fade + scale .92, 140 ms. Reduced motion: no animation.
+
+## Answer buttons (proposed 2026-11-04, preview `test/out/sim-ask-with-buttons-1.png`)
+- Up to 3 buttons centred just above the subtitle (follow it to the top when it moves). Inter 600 14/20, radius 8, chip shadow.
+- First option: `deep` fill, white text, key hint "Enter". Others: white fill, `deep` text and 1.5 px `deep` border, key hints "2", "3". Hover: `ink` border. Rise 6 px + fade in, 180 ms.
+
 ## Lessons window
 - `bg` background, header: mascot + "Lessons".
 - One card per lesson: screenshot thumbnail (radius 8), title, "You asked: …" (2 lines max), date and time. Newest first.

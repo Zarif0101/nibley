@@ -5,6 +5,7 @@ Zarif (2026-11-04): "create a plan that will make the app both fast and token-ef
 Works with `QUALITY-PLAN.md` (same blueprint format, same stop rules). Facts about caching and images come from the `claude-api` skill (Anthropic's docs), marked **(docs)**; my estimates are marked **(est.)**.
 
 ## 0. Rules
+0. **Speed wins, tokens second** (Zarif, 2026-11-04). When a change saves tokens but makes the first word slower in any measurable way, don't ship it (e.g. keep the spare Claude process warm).
 1. **Measure first.** Blueprint P0 comes before any change; every change quotes its numbers before and after.
 2. **Never trade away teaching quality.** A change ships only if the eval (QUALITY-PLAN T9) stays ≥ baseline − 0.02 and marks-on-target (S3) stays ≥ 0.9.
 3. **Speed and tokens together.** Most levers below help both: fewer tokens in means faster first words.
@@ -105,7 +106,7 @@ Format as in QUALITY-PLAN: **Why · Files · Change · Test · Done when**.
 
 ### P8. Keep idle at zero
 - **Why:** no tokens and no CPU when he isn't asking.
-- **Change:** QUALITY-PLAN T8 (start the spare only after the first answer); the learner stays at once per session after 5 idle minutes, text only (never screenshots); no tools in the Claude process (`--tools ''` stays), because every tool definition adds tokens to every request.
+- **Change:** QUALITY-PLAN T8 (start the spare only after the first answer, but only if the first word is not slower at all: speed wins); the learner stays at once per session after 5 idle minutes, text only (never screenshots); no tools in the Claude process (`--tools ''` stays), because every tool definition adds tokens to every request.
 - **Done when:** a 30-minute idle log shows 0 Claude calls after the learner.
 
 ## 5. Don't

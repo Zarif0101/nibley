@@ -31,10 +31,24 @@ window.require = (m) => m === 'electron' ? { ipcRenderer: __ipcRenderer } : m ==
   : /mascot\\.js$/.test(m) ? __mod.exports : {};`;
 const HOOK = `
 const __subs = window.subtitles.createSubtitles(document.body);
-window.__say = {}; window.__marks = [];
+const __choices = window.createChoices(document.body, (text) => window.__sent.push(['choice', text]));
+window.__choices = __choices;
+window.__say = {}; window.__marks = []; window.__ask = null;
 window.__onSend = (ch, d) => {
-  if (ch === 'voice:start') __subs.show(window.__say[d.i], { top: window.subtitles.inBottomQuarter(window.__marks) });
+  const top = window.subtitles.inBottomQuarter(window.__marks);
+  if (ch === 'voice:start') {
+    __subs.show(window.__say[d.i], { top });
+    if (window.__ask && window.__ask.i === d.i) __choices.show(window.__ask.options, { top });
+  }
   if (ch === 'turn:done') __subs.hideSoon();
+};
+// Proposed pill motion (QUALITY-PLAN T12) wrapped around the real status(): pop in, morph between states, fade out.
+const __status = status;
+window.__pill = function (kind, text, x, y) {
+  const s = document.getElementById('status'), visible = s.style.display === 'flex';
+  if (kind === 'none') { if (visible) window.pillMotion.leave(s, () => __status('none')); return; }
+  if (visible) window.pillMotion.morph(s, () => __status(kind, text, x, y));
+  else { __status(kind, text, x, y); window.pillMotion.enter(s); }
 };`;
 
 // Each scenario: a fixture, a Nibley script (real commands), the pen edge colour for that frame, when to take pictures (ms).
@@ -51,6 +65,10 @@ say Each circle is a neuron that takes in numbers and passes one on.
 arrow 360 330 -> 520 330 | weights
 say The lines are weights: how much each neuron listens to the one before.
 title How a neural network passes numbers` },
+  { name: 'ask-with-buttons', fixture: 'lecture', edge: '#2B3A4B', shots: [2200], script: `say That's the matrix form. Want a twin problem to try?
+ring 570 245 70 | try this one
+choices Yes, give me one | Not now | Explain again
+title Matrix form check` },
   { name: 'player-bottom-mark', fixture: 'player', edge: '#FFFFFF', shots: [2400], script: `say Click the CC button at the bottom right of the video.
 ring 768 566 34 | CC
 say Captions then show at the bottom of the video.
@@ -65,7 +83,7 @@ function serve() {
       let body = fs.readFileSync(p);
       if (p.endsWith(path.join('src', 'overlay', 'overlay.html'))) {
         body = Buffer.from(String(body).replace('<script src="overlay.js"></script>',
-          `<script>${SHIM}</script><script src="subtitles.js"></script><script src="overlay.js"></script><script>${HOOK}</script>`));
+          `<script>${SHIM}</script><script src="subtitles.js"></script><script src="pill-sequence.js"></script><script src="pill-motion.js"></script><script src="choices.js"></script><script src="overlay.js"></script><script>${HOOK}</script>`));
       }
       rsp.writeHead(200, { 'Content-Type': TYPES[path.extname(p)] || 'application/octet-stream' });
       rsp.end(body);
@@ -82,14 +100,17 @@ async function runScenario(page, port, sc) {
   for (const c of cmds) {
     if (c.type === 'say') { items.push({ kind: 'say', i, text: c.text }); items.push({ kind: 'audio', i, buf: wav(Math.max(1.6, c.text.split(/\s+/).length * 0.33)), mime: 'audio/wav', src: 'edge' }); i++; }
     else if (c.type === 'title') continue;
+    else if (c.type === 'choices') items.push({ kind: 'choices', i: i - 1, options: c.options });
     else if (c.type === 'step' || c.type === 'ring' || c.type === 'arrow' || c.type === 'point' || c.type === 'label' || c.type === 'highlight') items.push({ kind: 'mark', mark: { ...c, edge: sc.edge } });
   }
   items.push({ kind: 'end' });
   await page.evaluate(({ items, bg }) => {
     window.__marks = items.filter((x) => x.kind === 'mark').map((x) => x.mark);
+    window.__ask = items.find((x) => x.kind === 'choices') || null;
+    if (window.__ask) window.__pill('thinking', 'Thinking', 700, 330);
     for (const x of items) if (x.kind === 'say') window.__say[x.i] = x.text;
     window.__ipc.emit('turn', 1, { bg });
-    for (const x of items) window.__ipc.emit('item', 1, x.kind === 'audio' ? { ...x, buf: new Uint8Array(x.buf) } : x);
+    for (const x of items) if (x.kind !== 'choices') window.__ipc.emit('item', 1, x.kind === 'audio' ? { ...x, buf: new Uint8Array(x.buf) } : x);
   }, { items, bg: `/test/fixtures/${sc.fixture}.png` });
   const t0 = Date.now(), files = [];
   for (const [n, at] of sc.shots.entries()) {
@@ -102,13 +123,45 @@ async function runScenario(page, port, sc) {
   return { files, voiceStarts: sent.filter((c) => c === 'voice:start').length };
 }
 
+// --pill <dir>: frames of the proposed pill motion (pop in as Listening, morph to Thinking, then Speaking) for a preview.
+async function pillFrames(page, port, dir) {
+  await page.goto(`http://127.0.0.1:${port}/src/overlay/overlay.html`);
+  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => { document.getElementById('bg').src = '/test/fixtures/lecture.png'; document.getElementById('bg').style.display = 'block'; });
+  fs.mkdirSync(dir, { recursive: true });
+  const clip = { x: 560, y: 360, width: 260, height: 80 };
+  let n = 0;
+  const phase = async (kind, text, ms, steps) => {
+    await page.evaluate(([k, t]) => { window.__pill(k, t, 560, 360); document.getAnimations().forEach((a) => a.pause()); }, [kind, text]);
+    for (let i = 0; i <= steps; i++) {
+      await page.evaluate((t) => document.getAnimations().forEach((a) => { a.currentTime = t; }), (ms * i) / steps);
+      await page.screenshot({ path: path.join(dir, `f${String(n++).padStart(3, '0')}.png`), clip });
+    }
+    await page.evaluate(() => document.getAnimations().forEach((a) => (Number.isFinite(a.effect.getComputedTiming().endTime) ? a.finish() : a.play())));
+    for (let i = 0; i < 8; i++) await page.screenshot({ path: path.join(dir, `f${String(n++).padStart(3, '0')}.png`), clip }); // hold
+  };
+  await phase('listening', 'Listening', 170, 6);
+  await phase('thinking', 'Thinking', 220, 6);
+  await phase('speaking', 'Speaking', 220, 6);
+  return n;
+}
+
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
+  if (process.argv[2] === '--pill') {
+    const server = await serve();
+    const browser = await chromium.launch();
+    const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+    const n = await pillFrames(page, server.address().port, path.resolve(process.argv[3] || path.join(OUT, 'pill-frames')));
+    console.log(`pill frames: ${n}`);
+    await browser.close(); server.close();
+    return;
+  }
   const server = await serve();
   const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
   const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
   const errors = [];
-  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('pageerror', (e) => { errors.push(e.message); console.log('page error:', e.message); });
   const only = process.argv[2];
   for (const sc of SCENARIOS.filter((s) => !only || s.name === only)) {
     const r = await runScenario(page, server.address().port, sc);
