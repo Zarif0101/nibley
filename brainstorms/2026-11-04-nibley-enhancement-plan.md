@@ -22,6 +22,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Lean mode (Q11 reply): credit is tight ("I don't have that much space on me right now, so utilize it accordingly"). No Mac interfaces "for now". Assistant reading: install no new skills (use the built-in ux-copy, design-critique, accessibility-review) and render with the HTML -> MP4 pipeline already working here.
 - Voiceover (Q12): Groq TTS for video 2 ("I'm not using Grok TTS right now, so use it for this"); video 1 keeps Nibley's sounds. Voiceover optional if it doesn't work out.
 - Voices (Q13): Groq Orpheus voices austin and hannah both sound good to him.
+- Content plan (Q14): continue with the draft. Library counts are not final (more coming) -> say "200+ topics, 120+ diagrams" style, not exact numbers. Before building: more research on what people want to see, and check everything.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -133,6 +134,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "austin and hannah sounds good".
 - Tentative / suggested (assistant): use both in video 2: hannah = the stuck learner (problem), austin = narrator (solution + call to action).
 - Flags: confirm the two-voice split in the script review -> Zarif.
+
+### Q14 - Review of the content draft
+- Asked: render as written, or what to change? (Draft: marketing/2026-11-04-launch-content-draft.md, after ux-copy.) Assistant pushed back: the repo needs an install guide + configurable notes folder before posting.
+- Captured: "let's continue with it, but about those 229 topics and 124 diagrams, it's not confirmed. We are going to add more, so do something like more than these topics". "Do a bit more research about what people would like to see, research that, and check everything, then we'll proceed with the building."
+- Flags: launch-readiness push-back not answered -> Zarif (local session work).
 
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).

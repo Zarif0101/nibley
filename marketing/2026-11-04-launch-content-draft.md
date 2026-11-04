@@ -42,7 +42,7 @@ Honesty rule for all copy: claim only what v1 does today (voice question → rea
 4. **Made for ADHD brains.** "Made by a learner with ADHD. Answer first. One idea at a time. Short replies."
 5. **Nibley's moods.** Mascot faces grid: happy, listening, thinking, speaking, confused. "Which one are you today?"
 6. **Free and open source.** MIT licence, runs on your own Claude subscription. "Star it, fork it, make it yours."
-7. **It knows the basics.** The 124 hand-drawn diagrams grid. "229 topics. 124 diagrams. Ready when you are." (physics, maths, chemistry, biology)
+7. **It knows the basics.** The 124 hand-drawn diagrams grid. "200+ topics. 120+ diagrams. More on the way." (physics, maths, chemistry, biology; counts grow, so never print exact numbers)
 8. **Save the good ones.** "Say 'save this'. Replay it later. No extra AI use."
 9. **Built in public.** "One learner + Claude Code. Here's what Nibley is made of." (stack: Electron, Haiku, Whisper via Groq)
 10. **Coming soon.** Flashcards, gap finder, knowledge map. "Next: Nibley finds the basic you're missing."
