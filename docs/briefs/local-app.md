@@ -17,7 +17,7 @@ Do not touch `library/`. A cloud session is building it at the same time and wil
 
 ## Task 3: playback, then PRD v2 (no building yet)
 - The brainstorm changes the product: a learning app, not a screen pointer. Zarif's process: play back what you understood, wait for his OK, then write the PRD, then the architecture.
-- Play back in short points: YouTube transcript as context, note paper Nibley writes on, chat during explanations, interactive buttons, four layouts (user picks a default, Nibley suggests switches), flashcards with spaced repetition, pause quizzes, teach-it-back, gap finder, knowledge map on a prerequisite tree, free open-source version + paid version.
+- Play back in short points: YouTube transcript as context, note paper Nibley writes on, chat during explanations, interactive buttons, four layouts (user picks a default, Nibley suggests switches), flashcards with spaced repetition, pause quizzes, teach-it-back, gap finder, knowledge map on a prerequisite tree, confusion detector, hint ladder, daily review queue, video chapters with timestamped notes, free open-source version + paid version. Build phases (approved, brainstorm Q13): 1 core loop (voice, subtitles, transcript context, note paper, chat) -> 2 remember (flashcards + FSRS, daily review, chapters + notes) -> 3 check yourself (pause quizzes, hint ladder, teach-back) -> 4 smart layer (gap finder, knowledge map, confusion detector, layouts, buttons). The PRD v2 follows this order; build phase 1 only after Zarif OKs the PRD.
 - Open flags to raise (from the brainstorm): build order for v1, paid-version sources and their licences, PRD v1 says "no paid services".
 - Then write `docs/PRD-v2.md`. Keep `docs/PRD.md` as v1.
 

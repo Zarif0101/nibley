@@ -1,6 +1,6 @@
 # Pre-generated study assets: Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: decide if and how to spend the $100 credit on a ready-made library of study drawings (plants, balls, etc.), so the cheap model (Haiku) only picks and places assets instead of inventing drawings.
-Status: paused (2026-11-04). Resume point: v1 build order, paid-version sources/licences, GitHub public vs private. Briefs written: docs/briefs/cloud-library.md, docs/briefs/local-app.md.
+Status: paused (2026-11-04). Resume point: paid-version sources/licences. Build order decided (Q13). Repo public + MIT. Briefs written: docs/briefs/cloud-library.md, docs/briefs/local-app.md.
 Context sources: docs/PRD.md (4.4 draw on screen), docs/ARCHITECTURE.md (overlay, script format), docs/BUILD-PLAN.md 4.8, docs/DESIGN.md
 
 ## Summary / key decisions
@@ -13,6 +13,7 @@ Context sources: docs/PRD.md (4.4 draw on screen), docs/ARCHITECTURE.md (overlay
 - $100 = Claude Code cloud session credits, unused (Q4c). Use: cloud agents pre-build drawings + prerequisite trees (needs Nibley on GitHub).
 - First target level (Q6): 11th-12th standard. Subjects (Q7): Physics + Maths. No board (Q8): universal core of what 11th-12th curricula share.
 - User-selectable learning layouts (Q8/Q9): note paper over video, side panel, full whiteboard, focus card mode. User picks a default; Nibley only suggests switching (Q10b, corrected from B).
+- Advanced MVP features (Q12): confusion detector, hint ladder, daily review queue, video chapters + timestamped notes.
 - Two versions: free + open source on GitHub; paid version built on academic sources and curriculum that are not public or are expensive.
 
 ## Known from docs (not asked)
@@ -125,6 +126,30 @@ Context sources: docs/PRD.md (4.4 draw on screen), docs/ARCHITECTURE.md (overlay
 ### Pause - two sessions next
 - Captured: "I am gonna start the two session one on my subscription with opus at extra and 100 cloud credit opus extra with lower sub agents. So lets prepare."
 - Split (assistant proposal): local session = app code (TTS fix, subtitles, then PRD v2). Cloud session = study library content (topic list, prerequisite trees, SVG drawings, distilled topic notes for Haiku). Briefs in `docs/briefs/`.
+- Done after pause: repo public at github.com/Zarif0101/nibley, MIT license. Groq key moved from .env.example to gitignored .env.
+
+### Resume - advanced features for the MVP
+- Captured: "also lets decide on some advanced features in this mvp".
+- Already in v1 (Q1-Q10): note paper, chat during explanations, interactive buttons, subtitles, 4 layouts, flashcards + FSRS, pause quizzes, teach it back, gap finder, knowledge map on prerequisite tree.
+- Asking (Q12): which new advanced features to add.
+
+### Q12 - New advanced features
+- Asked (picker): confusion detector, hint ladder, daily review queue, video chapters + notes.
+- Captured: all four.
+  - Confusion detector: rewinds, long pauses, wrong answers -> Nibley offers help first. This is the "learning behaviour algorithm".
+  - Hint ladder: hint 1, hint 2, then the answer.
+  - Daily review queue: on app start, due cards + weak roots, ~5 min before new video.
+  - Video chapters + notes: chapters from the transcript, timestamped notes, click to jump.
+- Flags: MVP is now 14 features. Build order / phases needed. -> Zarif (Q13)
+
+### Q13 - Build order
+- Asked: 4 phases, each usable on its own.
+- Captured: "ok" -> approved.
+  1. Core loop: TTS fix, subtitles, video transcript as context, note paper, chat during explanations.
+  2. Remember: flashcards + FSRS, daily review queue, video chapters + notes.
+  3. Check yourself: pause quizzes, hint ladder, teach it back.
+  4. Smart layer: gap finder, knowledge map, confusion detector, 4 layouts, buttons (needs cloud library).
+- Coach note given: Zarif picked every option in 3 pickers; advised shipping one loop first.
 
 ## Open flags (pending input)
 - ~~What kind of $100 credit?~~ Resolved Q4c: Claude Code cloud session credits, $100 unused.
