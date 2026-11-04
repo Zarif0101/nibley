@@ -25,6 +25,10 @@ module.exports = {
     clickListeners.push(cb);
     return () => clickListeners.splice(clickListeners.indexOf(cb), 1);
   },
+  foregroundWin: { title: 'Lecture - YouTube - Brave', exe: 'brave' },
+  micApps: [],
+  async foreground() { return { ...module.exports.foregroundWin }; },
+  async micUsers() { return [...module.exports.micApps]; },
   async openUrl(url) { rec('openUrl', url); },
   async openApp(exe) { rec('openApp', exe); },
   async ping() {},

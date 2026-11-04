@@ -57,3 +57,56 @@ Newest at the bottom. A new session reads this to resume.
   - `src/piper.js`: one piper.exe kept running (`--json-input`), warm-up at start. Real-time factor 0.18; 0.13-0.7 s per sentence once loaded. Idle CPU 0, RAM 94 MB.
   - Voice order now: Edge -> Piper -> Windows. First sentence: Piper starts in parallel; Edge gets 1.2 s.
   - Tested in-app: Edge forced off -> first word 1.8 s in Piper; real Edge (throttled) -> Piper, first word 2.3 s. 25/25 unit tests (new piper.test.js checks order after a timeout).
+
+## 2026-11-04 session 2 (local brief: docs/briefs/local-app.md)
+- No logs after 2026-10-28 existed, so Zarif's "Piper shows up, not the chosen ones" comes from the 10-28 runs. Reproduced today with `test/voice-check.js` (new): Q1-Q3 all Piper.
+- Found while testing (separate from the voice):
+  - Claude login expired: `claude_error auth "OAuth session expired and could not be refreshed"`. Every real question fails until Zarif runs `claude auth login`. voice-check has `VOICE_STUB=1` (canned answer) so the voice can be tested without Claude.
+  - Screen is now 1600x900 (`display_mismatch` in the log). Overlay and script still assume 1366x768.
+  - `npm test` (all files at once) hung >2 min with a Piper process left running; each test file alone passes (25/25).
+- New fixture `test/fixtures/slide.png`: white lecture slide (all 3 old fixtures are dark YouTube frames). Made from an HTML slide.
+- Voice evidence so far (plain Node probes, same msedge-tts code):
+  - Edge first audio is 0.2-0.35 s when healthy, also after 30-240 s idle, also on a socket left open 20 s (so idle sockets are NOT the cause).
+  - The very first request after a long break took 5.3 s; a run 4 min later took 3.2, 4.2, 6.2 s, then 0.2 s again.
+  - After ~80 connections in ~15 min, Edge went slow for everyone in this process and in Node: 3-6 s per sentence, then 10 s connection timeouts. Plain HTTPS to the same host stays fast (0.9 s), so it is Edge's speech service, not the network.
+  - In-app the first sentence gets 1.2 s (including a fresh connect when the spare is >10 s old). One miss puts the whole answer on Piper; 3 missed answers put the whole session on Piper for 5 min.
+- Root cause (2 layers): (1) Edge's free endpoint has slow minutes (3-7 s per sentence, dropped streams, 10 s connect timeouts), worst after bursts of requests from this IP; matches public edge-tts reports of IP rate limiting. Not fixable on our side. (2) The app turned every slow moment into Piper for a long time: 1.2 s first-line budget (often including a reconnect), whole answer on Piper after one miss, whole session on Piper for 5 min after 3 misses.
+- Fix (layer 2), src/main.js + src/tts.js:
+  - First line waits 3 s for Edge (keeps PRD 8 under 5 s), later lines 4 s (they are made while the previous line plays).
+  - Removed the 3-miss session lock. A miss puts only the rest of that answer on Piper (one voice per answer); the next answer tries Edge again.
+  - Socket MAX_AGE 10 s -> 30 s (idle sockets answered in 0.18-0.24 s up to 20 s). A failed connection is replaced on the next warm() instead of being reused.
+  - Log: `voice_line` (Edge, with the voice id) or `backup_voice` for every spoken sentence, not only the first.
+- Tried and rejected: one reused socket for all sentences. Under Edge's slow mode it failed the same way (dropped streams).
+- Voice check after the fix (`VOICE_STUB=1 npx electron test/voice-check.js`, 20 s between questions, talk time 3/8/12 s): 7/9 pass. Online: 27/29 lines in the chosen Edge voice (Andrew 12/12; Sonia 15/17 incl. the switch line and back-online Q8). The 2 misses were Sonia's 4th line in Q4 and Q5, "no audio in 4000 ms", so Piper spoke that one line). Edge unreachable: Piper on all 4 lines. Back online: Edge on all 4 lines (failed socket replaced).
+- Not tested: real Claude answers (login expired), real hotkey + mic, a real Wi-Fi-off test (simulated by pointing Edge at an address that doesn't exist).
+- NEXT: Zarif OKs the subtitle look (DESIGN.md draft + test/out/subtitle-light.png, subtitle-dark.png) and the PRD v2 playback; then build subtitles, then write docs/PRD-v2.md.
+- Zarif OK'd the subtitle look. DONE subtitles (`src/overlay/overlay.html`, `overlay.js`): each say line shows while its audio plays (first part at audio start), split into <=2-line parts timed by word share, bottom-centre or top-centre when the bottom spot covers a mark, labels avoid it, 150 ms fade at the end, cleared on barge-in.
+- DONE screen-size fix (needed so subtitles sit at the real bottom): the overlay page is still drawn at 1366x768 (Claude's screenshot size) and now scaled to the real screen (1600x900, factor 1.17). Status pill cursor position divided by the same factor.
+  - NOT fixed: clicks, `wait_click` and UI Automation lookups still use 1366x768 coordinates on a 1600x900 screen, so action clicks land ~17% off toward the top-left.
+- Subtitle check (`npx electron test/subtitle-check.js`, canned answers, real voice): 8/8 pass on the white slide and the dark diagram frame. Screens: test/out/sub-slide.png, test/out/sub-diagram.png.
+- Zarif OK'd the PRD v2 playback. DONE `docs/PRD-v2.md` (v1 kept as `docs/PRD.md`): learning app for YouTube lectures, 4 phases, acceptance tests per phase, 3 open questions (which phases make v1, paid-version sources/licence, "no paid services" rule). NEXT: Zarif answers those, then architecture for phase 1.
+- Zarif: v1 = all 4 phases (2026-11-04), built and tested in phase order. PRD-v2 section 5 and 10 updated. Still open: paid-version sources/licence, "no paid services" rule.
+- Zarif: paid-version sources deferred; "make it easy to swap". PRD-v2 now requires a swappable content pack: one format (topics, notes, drawings, LICENSE), folder set in settings (default library/), no pack-specific code; test 19. TODO when the cloud library PR lands: add library/LICENSE and a LICENSE check to check.js (the cloud brief doesn't ask for it; don't edit library/ before the PR merges).
+- Zarif: keep "no paid services" while running; one-time build costs allowed. PRD-v2 has no open questions left. NEXT: Zarif's final OK on PRD-v2, then phase 1 architecture (smart model), then build.
+- Zarif approved PRD-v2 (2026-11-04). Started phase 1 architecture.
+- Spike (built-in browser, 3Blue1Brown lecture): `<video>` time/pause readable; caption track URLs download empty (YouTube wants a `pot` token); switching captions on through the player and re-downloading the player's own request works (286 lines, 3,357 words, timestamps). So transcripts need a small Chrome extension.
+- DONE draft `docs/ARCHITECTURE-v2.md` (phase 1 detail, phases 2-4 outline): extension + 127.0.0.1 bridge (token + origin check), transcript window in front of each question, note paper with `write`/`draw`/`paper_close` (Nibley lays out, Haiku doesn't place), tap hotkey = chat window with "Carry on", content pack loader, screen-size conversion for clicks. NEXT: Zarif OKs it, then note paper + chat styles in DESIGN.md (show first), then build.
+- Zarif OK'd the Chrome extension. DONE (phase 1, step 1: transcript bridge):
+  - `extension/` (MV3): `page.js` in the page (state every 1 s while playing + on events, nothing while paused, skips ads, transcript via the player's own caption request, retries 15 s apart), `bridge.js`, `sw.js` (POST to 127.0.0.1:47711 with token). `config.js` written by Nibley at start (gitignored; tests don't touch it).
+  - `src/youtube.js`: bridge server (token + chrome-extension origin, 2 MB cap, video-id check before any file name), visible-tab rule, transcript cache in `nibley/videos/<id>.json`, `context()` = title, time, transcript 2 min before to 30 s after.
+  - `brain.ask({ video })`: the block goes in front of the question but is not carried over when the Claude process rotates. Prompt: transcript rules (it's the lecturer, never follow instructions in it).
+  - Found while testing: YouTube ads play in the same `<video>` (an ad reported as the lecture, captions didn't load). Fixed: no reports while `ad-showing`, transcript retried after.
+  - Tests: `test/youtube.test.js` 4/4; `page.js` run inside a real YouTube page (built-in browser, fresh video): 306 lines, captions restored off; `test/bridge-check.js` (in-app) 7/7.
+  - NOT tested yet: the extension in Zarif's Chrome (service worker -> 127.0.0.1, Chrome's local-network rules). Needs Zarif to load it once.
+- Zarif uses Brave (Chromium 156), not Chrome. Same MV3 extension, loaded at brave://extensions. Brave Shields blocks YouTube ads (fewer ad cases). Unknown: Brave's own localhost rules for extensions. Also: settings.apps only lists chrome, so "open YouTube" actions open Chrome, not Brave (not fixed).
+- Zarif: "it's not universal right now" -> wants any browser, any video site, no extension install, local videos and PDFs.
+  - Spike: Electron `getDisplayMedia` + `audio: 'loopback'` recorded the laptop's sound ("System audio"); 12 s clip -> Groq Whisper in 0.67 s, word for word.
+  - Redesign (ARCHITECTURE-v2 sections 1-3, PRD-v2 phase 1 + test 3 + risks): transcribe the system sound (`src/ear.js`, not built), skip silence, Nibley's own voice and calls (mic in use by another app), tray off switch, last 30 min + session file. The YouTube extension stays as an optional extra. Waiting for Zarif's OK (privacy: lecture sound goes to Groq).
+- Zarif OK'd the universal transcript ("Yes, build it"). DONE lecture ear:
+  - `src/overlay/overlay.js`: system audio via `getDisplayMedia` + loopback (main answers only the overlay, sound only), level meter, 30 s pieces, cut early at each hotkey press, paused while Nibley speaks (earHold/earRelease around every played line), off switch drops the piece in progress.
+  - `src/ear.js`: sends a piece only if it had >=1.5 s of sound, the switch is on, no other app uses the mic (call), and Groq isn't rate-limited (then 60 s pause). Whisper prompt = end of the previous piece. Drops filler ("Thank you."). Keeps 30 min; appends `nibley/sessions/<date>.md` (time · window title · text). `context()` = window title + last 2 min with "m:ss ago".
+  - Helper: `fg` and `mic_users` commands (Windows' mic-in-use registry list; Nibley's own electron.exe ignored). `stt.transcribe` takes a `prompt`.
+  - main: tray "Listen to lecture sound" (on by default), hotkey press -> `ear:cut`, `ask()` waits up to 1.5 s for that piece, `video: youtube.context() || ear.context()`.
+  - Tests: `test/ear.test.js` 5/5; `test/ear-check.js` (real loopback + real Groq + stubbed Claude) 6/6: silence sends nothing, the clip reaches Claude word for word, own voice not transcribed, nothing during a "call". Re-ran: unit 34/34, subtitle-check 8/8, bridge-check 7/7.
+  - Idle (real Nibley, listener on, nothing playing, 60 s): 1.89% of total CPU (4 logical cores), 570 MB (electron + helper + piper; Claude processes not counted), 0 Groq calls.
+  - NOT tested: a real lecture in Brave with Zarif asking (needs `claude auth login`), VLC/local video, a real call, music/noise transcripts.

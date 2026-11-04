@@ -22,6 +22,9 @@ public static class Nib {
   [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
   [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
   [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string name);
+  [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
+  [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetWindowText(IntPtr hwnd, StringBuilder s, int max);
+  [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr hwnd, out uint pid);
 
   [StructLayout(LayoutKind.Sequential)] struct POINT { public int x, y; }
   [StructLayout(LayoutKind.Sequential)] struct MSG { public IntPtr hwnd; public uint message; public IntPtr w; public IntPtr l; public uint time; public POINT pt; }
@@ -171,6 +174,32 @@ public static class Nib {
         return "";
       }
       case "watch_clicks": PostThreadMessage(hookTid, p[2] == "1" ? WM_MOUSE_ON : WM_MOUSE_OFF, IntPtr.Zero, IntPtr.Zero); return "";
+      case "fg": { // foreground window title + process name (names the video, PDF or page on screen)
+        IntPtr h = GetForegroundWindow();
+        var t = new StringBuilder(512);
+        GetWindowText(h, t, t.Capacity);
+        uint pid; GetWindowThreadProcessId(h, out pid);
+        string exe = "";
+        try { exe = Process.GetProcessById((int)pid).ProcessName; } catch { }
+        return ",\"title\":" + Q(t.ToString()) + ",\"exe\":" + Q(exe);
+      }
+      case "mic_users": { // apps Windows lists as using the microphone right now (LastUsedTimeStop = 0)
+        var names = new System.Collections.Generic.List<string>();
+        using (var root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone")) {
+          if (root != null) {
+            foreach (var sub in new[] { root, root.OpenSubKey("NonPackaged") }) {
+              if (sub == null) continue;
+              foreach (var n in sub.GetSubKeyNames()) {
+                using (var k = sub.OpenSubKey(n)) {
+                  object a = k == null ? null : k.GetValue("LastUsedTimeStart"), b = k == null ? null : k.GetValue("LastUsedTimeStop");
+                  if (a != null && b != null && Convert.ToInt64(a) != 0 && Convert.ToInt64(b) == 0) names.Add(Q(n));
+                }
+              }
+            }
+          }
+        }
+        return ",\"apps\":[" + string.Join(",", names) + "]";
+      }
       default: throw new Exception("unknown command");
     }
   }

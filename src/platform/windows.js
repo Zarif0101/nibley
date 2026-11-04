@@ -67,6 +67,9 @@ module.exports = {
       if (!clickListeners.length) send('watch_clicks', 0).catch(() => {});
     };
   },
+  async foreground() { const r = await send('fg'); return { title: r.title || '', exe: r.exe || '' }; },
+  // Registry key names of apps using the mic now, e.g. "C:#Program Files#Zoom#bin#Zoom.exe" or a store app id.
+  async micUsers() { return (await send('mic_users')).apps || []; },
   async openUrl(url) { await send('open', b64(url)); },
   async openApp(exe) { await send('open', b64(exe)); },
   async ping() { await send('ping'); },

@@ -4,15 +4,17 @@
 // hedge made failures worse in-app, so there is none. One spare connection, opened as the previous one is used.
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 
-// MAX_AGE: a socket left idle ~20 s gave no audio (seen 2026-10-28), so warm() at the hotkey replaces older ones.
-const MAX_AGE = 10e3, GIVE_UP_MS = 2500;
+// MAX_AGE: warm() at the hotkey replaces older sockets. 10 s (2026-10-28) made most first lines reconnect inside their
+// budget, since the first line comes 4-14 s after the press. Re-measured 2026-11-04: sockets idle 2-20 s answered in
+// 0.18-0.24 s; the 10-28 "idle socket, no audio" was Edge's slow periods, not the idle socket.
+const MAX_AGE = 30e3, GIVE_UP_MS = 2500;
 let voice, spare = null;
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 function connect() {
   const tts = new MsEdgeTTS();
   const entry = { at: Date.now(), tts, ready: tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_48KBITRATE_MONO_MP3).then(() => tts) };
-  entry.ready.catch(() => {});
+  entry.ready.catch(() => { entry.at = 0; }); // failed (offline, timeout): the next warm() replaces it
   return entry;
 }
 

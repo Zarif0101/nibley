@@ -97,12 +97,14 @@ module.exports = {
   },
 
   // Sends one question. Callbacks: onText(delta), onEnd(fullText), onError(kind, detail). Returns {cancel}.
-  ask({ png, text, onText = () => {}, onEnd = () => {}, onError = () => {} }) {
+  // video: optional text block (YouTube title, time, transcript part) put before the question; not carried over.
+  ask({ png, text, video, onText = () => {}, onEnd = () => {}, onError = () => {} }) {
     if (!cur.queue.length && (cur.turns >= MAX_TURNS || Date.now() - cur.lastUsed > MAX_IDLE)) { carry = topic(); rotate(); }
     const p = cur;
     const content = [];
     if (png) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/png', data: png.toString('base64') } });
-    content.push({ type: 'text', text: carry ? `(Before this, we talked about: ${carry})\n\n${text}` : text });
+    const q = video ? `${video}\n\n${text}` : text;
+    content.push({ type: 'text', text: carry ? `(Before this, we talked about: ${carry})\n\n${q}` : q });
     carry = null;
     const t = {
       text: '', done: false, cancelled: false, onText,

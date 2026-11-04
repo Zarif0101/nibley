@@ -12,6 +12,8 @@ const tts = require('./tts');
 const piper = require('./piper');
 const memory = require('./memory');
 const lessons = require('./lessons');
+const youtube = require('./youtube');
+const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
 
 const ROOT = path.join(__dirname, '..');
@@ -59,7 +61,7 @@ function createOverlay() {
   overlay.setContentProtection(!process.env.NIBLEY_NO_PROTECT); // not enough on its own here: captureClean() hides the overlay
   overlay.loadFile(path.join(__dirname, 'overlay', 'overlay.html'));
   overlay.once('ready-to-show', () => overlay.showInactive());
-  overlay.webContents.on('did-finish-load', () => send('ink', settings.ink));
+  overlay.webContents.on('did-finish-load', () => { send('ink', settings.ink); if (settings.ear !== false) send('ear:on'); });
 }
 const reassertTop = () => overlay.setAlwaysOnTop(true, 'screen-saver');
 
@@ -90,7 +92,6 @@ const VOICES = [
 async function setVoice(id) {
   settings.voice = id;
   saveSettings();
-  ttsFails = 0;
   ttsBackup = false;
   await tts.init(id).catch((e) => log({ ev: 'tts_init_error', err: e.message }));
   log({ ev: 'voice', voice: id });
@@ -103,6 +104,7 @@ function buildMenu() {
     { label: 'Model', submenu: [radio('Haiku', 'model', 'haiku', () => brain.setModel('haiku')), radio('Sonnet', 'model', 'sonnet', () => brain.setModel('sonnet'))] },
     { label: 'Voice', submenu: VOICES.map(([label, id]) => radio(label, 'voice', id, () => setVoice(id))) },
     { label: 'Actions', submenu: [radio('Ask first', 'mode', 'ask'), radio('Auto', 'mode', 'auto')] },
+    { label: 'Listen to lecture sound', type: 'checkbox', checked: settings.ear !== false, click: (m) => { settings.ear = m.checked; saveSettings(); send(m.checked ? 'ear:on' : 'ear:off'); log({ ev: 'ear_switch', on: m.checked }); } },
     { label: 'Lessons', click: openLessons },
     { label: 'Undo last rule change', click: () => { const r = memory.undoLast(settings.vaultPath); speak(r ? `Undone: I ${r}.` : 'There is no rule change to undo.'); } },
     { label: 'Open log folder', click: () => shell.openPath(logDir) },
@@ -158,24 +160,28 @@ function busyMap(bmp, w) {
 }
 
 // ---------- voice ----------
-let ttsBackup = false, ttsFails = 0, ttsFailedAt = 0; // backup voice for the turn; for the session after 3 failed turns
+// Backup voice for the rest of one answer only (one voice per answer). Every new answer tries Edge again: the old
+// "whole session on backup after 3 misses" rule kept Piper on all day (2026-11-04), because Edge's free service has
+// slow minutes (3-7 s per sentence) between normal ones (0.2-0.35 s).
+let ttsBackup = false;
+// Edge budgets. First line 3 s: release -> first say line is ~1.5-2 s (STT + Claude), so the first word stays under
+// PRD 8's 5 s. 1.2 s (before 2026-11-04) missed most healthy-but-slowish answers. Later lines are made while the
+// previous one plays, so they can wait longer.
+const EDGE_FIRST_MS = 3000, EDGE_NEXT_MS = 4000;
 function sayLine(ctx, text) {
   const i = ctx.says++;
   send('item', ctx.id, { kind: 'say', i, text });
   // Edge voice, else Piper (offline), else the Windows voice.
   ctx.voice = ctx.voice.then(async () => {
-    // First sentence: Piper starts at once in parallel, so a slow Edge costs at most 1.2 s (first word within 5 s)
+    // First sentence: Piper starts at once in parallel, so it is ready the moment Edge's budget runs out
     const early = i === 0 ? piper.synth(text).catch(() => null) : null;
     if (!ttsBackup && !ctx.backup) {
       try {
-        send('item', ctx.id, { kind: 'audio', i, buf: await tts.synth(text, i === 0 ? 1200 : 2500), mime: 'audio/mpeg', src: 'edge' });
-        ttsFails = 0;
+        send('item', ctx.id, { kind: 'audio', i, buf: await tts.synth(text, i === 0 ? EDGE_FIRST_MS : EDGE_NEXT_MS), mime: 'audio/mpeg', src: 'edge' });
         return;
       } catch (e) {
-        ttsBackup = true; // backup voice for the rest of this turn
-        ttsFails++;
-        ttsFailedAt = Date.now();
-        log({ ev: 'tts_fallback', err: e.message, fails: ttsFails });
+        ttsBackup = true; // backup voice for the rest of this answer
+        log({ ev: 'tts_fallback', i, err: e.message });
         setTray();
       }
     }
@@ -206,8 +212,7 @@ let stopClicks = null;
 
 function bargeIn() {
   turnId++;
-  if (ttsFails >= 3 && Date.now() - ttsFailedAt > 5 * 60e3) ttsFails = 0; // Nibley runs all day: retry Edge after 5 min
-  if (ttsFails < 3) ttsBackup = false; // try the Edge voice again each turn
+  ttsBackup = false; // try the Edge voice again each answer
   tts.warm();
   if (active?.handle) active.handle.cancel();
   active = null;
@@ -220,6 +225,7 @@ function onPtt(ev) {
   lastActivity = Date.now();
   if (ev === 'win_down') { rec = { armed: true, ptt: false }; send('rec:start'); } // starts early so the first word isn't cut
   else if (ev === 'ptt_down') {
+    send('ear:cut'); // the lecture sound up to this moment goes to Groq while he talks
     rec.ptt = true;
     pttDownAt = Date.now();
     if (timing.ptt_down && !timing.logged) log({ ev: 'turn', interrupted: true, ...rel(timing) });
@@ -296,6 +302,7 @@ async function handleText(text, id) {
 async function ask(text, id) {
   let s;
   try { s = await shot; } catch { s = {}; }
+  await ear.settled(1500); // the lecture piece cut at the hotkey press is usually back from Groq by now
   if (id !== turnId) return;
   timing.shot_ms = s.ms;
   const ctx = { id, text, png: s.png, bmp: s.bmp, w: s.w, says: 0, voice: Promise.resolve(), asks: [], title: null, full: '', sayLines: [] };
@@ -305,7 +312,8 @@ async function ask(text, id) {
   const parser = createParser((cmd) => { chain = chain.then(() => onCmd(ctx, cmd)).catch((e) => log({ ev: 'cmd_error', err: e.message })); },
     { onBad: (b) => log({ ev: 'bad_line', line: b.line, why: b.why }) });
   ctx.handle = brain.ask({
-    png: s.png, text,
+    // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when the extension has them, else the sound
+    png: s.png, text, video: youtube.context() || ear.context(),
     onText: (d) => { timing.claude_first_token ||= Date.now(); parser.push(d); },
     onEnd: (full) => { ctx.full = full; parser.end(); chain = chain.then(() => endTurn(ctx)); },
     onError: (kind, detail) => { chain = chain.then(() => brainError(ctx, kind, detail)); },
@@ -443,7 +451,8 @@ function closeReplay() {
 ipcMain.on('rec:data', (_e, buf, dur) => onUtterance(buf, dur));
 ipcMain.on('voice:start', (_e, { turn, i, src }) => {
   if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now(); // the overlay switches the pill to Speaking
-  if (src !== 'edge' && i === 0) log({ ev: 'backup_voice', src });
+  // One line per spoken sentence, so the log shows which voice really played (local brief, task 1).
+  log(src === 'edge' ? { ev: 'voice_line', turn, i, voice: settings.voice } : { ev: 'backup_voice', turn, i, src });
 });
 ipcMain.on('turn:done', (_e, id) => {
   events.emit('turn:done', id);
@@ -459,6 +468,8 @@ ipcMain.on('waiting', (_e, { x, y }) => {
 ipcMain.on('waiting-done', () => { stopClicks?.(); stopClicks = null; });
 ipcMain.on('act', (_e, id) => { const a = acts.get(id); acts.delete(id); if (a) runAction(a); });
 ipcMain.on('replay:close', () => replaying && closeReplay());
+ipcMain.on('ear', (_e, r) => log({ ev: 'ear', ...r }));
+ipcMain.on('ear:piece', (_e, buf, meta) => { ear.onPiece({ buf: Buffer.from(buf), ...meta }); });
 ipcMain.on('mic', (_e, r) => { log({ ev: 'mic', ...r }); if (!r.ok) { setTray('mic blocked', true); speak("I can't use the microphone. Check Windows privacy settings for microphone access.", true); } });
 ipcMain.handle('lessons:list', () => lessons.list(settings.vaultPath).map((l) => ({
   ...l, thumb: nativeImage.createFromPath(path.join(l.dir, 'shot.png')).resize({ width: 192 }).toDataURL(),
@@ -491,8 +502,20 @@ app.whenReady().then(async () => {
   log({ ev: 'start', display: d.bounds, scale: d.scaleFactor, settings: { model: settings.model, mode: settings.mode, voice: settings.voice } });
   if (d.scaleFactor !== 1 || d.bounds.width !== SCREEN.w || d.bounds.height !== SCREEN.h) log({ ev: 'display_mismatch', note: 'Built for 1366x768 at 100%; marks may be off.' });
   const isOverlay = (wc) => overlay && wc && wc.id === overlay.webContents.id;
-  session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(perm === 'media' && isOverlay(wc)));
-  session.defaultSession.setPermissionCheckHandler((wc, perm) => perm === 'media' && isOverlay(wc));
+  const allowed = (wc, perm) => ['media', 'display-capture'].includes(perm) && isOverlay(wc);
+  session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(allowed(wc, perm)));
+  session.defaultSession.setPermissionCheckHandler((wc, perm) => allowed(wc, perm));
+  // The lecture ear asks for the screen's sound; only the overlay gets it, as system audio (loopback), never a picture.
+  session.defaultSession.setDisplayMediaRequestHandler((req, cb) => {
+    if (!overlay || req.frame !== overlay.webContents.mainFrame) return cb({});
+    desktopCapturer.getSources({ types: ['screen'] }).then((s) => cb({ video: s[0], audio: 'loopback' }), () => cb({}));
+  });
+  ear.start({
+    transcribe: (buf, o) => stt.transcribe(buf, { key: groqKey(), mime: 'audio/webm', ...o }),
+    micUsers: () => platform.micUsers(), foreground: () => platform.foreground(),
+    ownMic: (name) => name.toLowerCase() === process.execPath.replaceAll('\\', '#').toLowerCase(), // Windows lists apps by path, # for each \
+    enabled: () => settings.ear !== false, vaultPath: settings.vaultPath, log,
+  });
   createOverlay();
   screen.on('display-metrics-changed', reassertTop);
   tray = new Tray(trayIcon());
@@ -505,6 +528,7 @@ app.whenReady().then(async () => {
     buildPrompt: () => prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }),
     onFatal: (msg) => { setTray('Claude keeps crashing', true); speak(msg); },
   });
+  startBridge();
   if (!piper.start(path.join(ROOT, 'piper', 'piper.exe'), path.join(ROOT, 'piper', 'voices', 'en_US-lessac-medium.onnx'))) log({ ev: 'piper_missing' });
   await Promise.all([
     platform.start(),
@@ -515,7 +539,18 @@ app.whenReady().then(async () => {
   events.emit('ready');
 });
 app.on('window-all-closed', () => {}); // keep running in the tray
-app.on('before-quit', () => { brain.stop(); platform.stop(); tts.close(); piper.stop(); });
+app.on('before-quit', () => { brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
+
+// Chrome extension bridge: the extension reads port + token from extension/config.js (gitignored), written here.
+const BRIDGE_PORT = 47711;
+function startBridge() {
+  if (!settings.bridgeToken) { settings.bridgeToken = require('node:crypto').randomBytes(16).toString('hex'); saveSettings(); }
+  if (!process.env.NIBLEY_SETTINGS) { // tests run with their own settings and must not change the real extension's token
+    fs.writeFileSync(path.join(ROOT, 'extension', 'config.js'), `// Written by Nibley at start. Do not commit.\nconst NIBLEY = ${JSON.stringify({ port: BRIDGE_PORT, token: settings.bridgeToken })};\n`);
+  }
+  youtube.start({ port: BRIDGE_PORT, token: settings.bridgeToken, vaultPath: settings.vaultPath, log })
+    .then(() => log({ ev: 'bridge', port: BRIDGE_PORT }), (e) => log({ ev: 'bridge_error', err: e.message }));
+}
 
 // Test entry: one turn with a given screenshot instead of the hotkey, mic and screen capture.
 function testTurn(text, png, { showShot = true } = {}) {

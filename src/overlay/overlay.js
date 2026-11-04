@@ -7,6 +7,9 @@ const EASE = 'cubic-bezier(.3,.7,.2,1)';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
 const svg = $('svg'), layer = $('layer'), swipes = $('swipes'); // swipes sit under pen strokes
+// Everything is drawn at 1366x768 (the screenshot size Claude sees) and scaled to the real screen (1600x900 since 2026-11).
+const K = Math.min(innerWidth / W, innerHeight / H) || 1;
+Object.assign(document.documentElement.style, { transformOrigin: '0 0', transform: `scale(${K})` });
 
 // ---------- helpers ----------
 function rng(seed) { // mulberry32: same mark, same wobble, so replays look identical
@@ -71,7 +74,7 @@ function placeNote(text, box, delay, across = false) {
   // across: the box is a line (arrow), so put the note beside the line, not along it
   const cands = [...(across ? vert : side), ...(across ? side : vert), [bx + bw + gap, by + bh + gap], [bx - gap - w, by - gap - h]];
   const fits = ([x, y]) => x >= 4 && y >= 4 && x + w <= W - 4 && y + h <= H - 4;
-  const hits = ([x, y]) => placed.filter((r) => x < r[0] + r[2] && x + w > r[0] && y < r[1] + r[3] && y + h > r[1]).length;
+  const hits = ([x, y]) => (subRect ? [...placed, subRect] : placed).filter((r) => x < r[0] + r[2] && x + w > r[0] && y < r[1] + r[3] && y + h > r[1]).length;
   const score = (c, i) => hits(c) * 1000 + busyAt(c[0], c[1], w, h) + i * 3; // order breaks near-ties
   const best = cands.map((c, i) => [c, score(c, i)]).filter(([c]) => fits(c)).sort((a, b) => a[1] - b[1])[0];
   const [x, y] = best ? best[0] : [Math.min(Math.max(4, bx), W - w - 4), Math.min(Math.max(4, by + bh + gap), H - h - 4)];
@@ -164,6 +167,7 @@ function draw(m) {
     currentStep = made;
   }
   marks.push(...made);
+  if (subRect) placeSub(); // a new mark may sit where the subtitle is
 }
 
 function eraseAll() {
@@ -171,6 +175,54 @@ function eraseAll() {
   marks = [];
   placed.length = 0;
   currentStep = null;
+}
+
+// ---------- subtitles (DESIGN.md): each say line while its audio plays ----------
+const sub = $('sub'), SUB_MAX_H = 2 * 28 + 16, SUB_GAP = 64; // 2 lines of 28 px + padding
+let subRect = null, subFade = null, subTimers = [];
+// Splits a line into parts of at most 2 lines at the subtitle's size.
+function subParts(text) {
+  const parts = [];
+  let cur = [];
+  Object.assign(sub.style, { display: 'block', visibility: 'hidden' });
+  for (const w of text.split(/\s+/).filter(Boolean)) {
+    sub.textContent = [...cur, w].join(' ');
+    if (cur.length && sub.offsetHeight > SUB_MAX_H) { parts.push(cur.join(' ')); cur = [w]; } else cur.push(w);
+  }
+  if (cur.length) parts.push(cur.join(' '));
+  Object.assign(sub.style, { display: 'none', visibility: '' });
+  return parts;
+}
+// Bottom-centre; top-centre when the bottom spot would cover a mark or label.
+function placeSub() {
+  const w = sub.offsetWidth, h = sub.offsetHeight, x = Math.round((W - w) / 2);
+  const hitsAt = (y) => placed.filter((r) => x < r[0] + r[2] && x + w > r[0] && y < r[1] + r[3] && y + h > r[1]).length;
+  const bottom = H - SUB_GAP - h, top = SUB_GAP;
+  const y = hitsAt(bottom) && hitsAt(top) < hitsAt(bottom) ? top : bottom;
+  Object.assign(sub.style, { left: `${x}px`, top: `${y}px` });
+  subRect = [x, y, w, h];
+}
+function showSub(text, dur) {
+  hideSub(true);
+  const parts = subParts(text), words = text.split(/\s+/).filter(Boolean).length || 1;
+  const ms = (Number.isFinite(dur) && dur > 0 ? dur : words * 0.38) * 1000; // MP3 duration can be Infinity
+  const showPart = (p) => { sub.textContent = p; sub.style.display = 'block'; placeSub(); };
+  let at = 0;
+  parts.forEach((p, n) => {
+    if (n === 0) showPart(p); else subTimers.push(setTimeout(() => showPart(p), at));
+    at += ms * p.split(' ').length / words; // each part shows for its share of the audio
+  });
+}
+function hideSub(now = false) {
+  subTimers.forEach(clearTimeout);
+  subTimers = [];
+  subFade?.cancel();
+  subFade = null;
+  subRect = null;
+  if (sub.style.display === 'none' || !sub.style.display) return;
+  if (now || reduced) { sub.style.display = 'none'; return; }
+  subFade = sub.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 150 });
+  subFade.onfinish = () => { sub.style.display = 'none'; subFade = null; };
 }
 
 // ---------- voice ----------
@@ -219,9 +271,11 @@ async function run(id) {
     if (it.kind === 'say') {
       const a = await audioFor(it.i, id);
       if (!alive()) return;
+      earHold();
       const h = play(a, it.text);
       const dur = await h.started;
       if (!alive()) return;
+      showSub(it.text, dur);
       ipcRenderer.send('voice:start', { turn: id, i: it.i, src: a.src || (a.buf ? 'edge' : 'windows') });
       if (!replay && ['listening', 'thinking', 'none'].includes(statusKind)) status('speaking', 'Speaking');
       // Marks after this say line appear while it is spoken, spaced across the line.
@@ -235,6 +289,8 @@ async function run(id) {
       };
       take();
       while (!h.done) { await Promise.race([h.ended, changed()]); if (!alive()) return; take(); }
+      hideSub();
+      earRelease();
     } else if (isMark(it)) {
       draw(it.mark);
     } else if (it.kind === 'wait') {
@@ -264,6 +320,8 @@ function stopAll() {
   turn++;
   wake();
   stopVoice();
+  hideSub(true);
+  earRelease();
   clearTimeout(clearTimer);
   eraseAll();
 }
@@ -328,7 +386,7 @@ function status(kind, text = '', x = pillAt[0], y = pillAt[1]) {
     statusTimer = setTimeout(() => status('none'), kind === 'error' || text.length > 30 ? 4000 : 1500);
   }
 }
-ipcRenderer.on('status', (_e, kind, text, x, y) => status(kind, text, x, y));
+ipcRenderer.on('status', (_e, kind, text, x, y) => status(kind, text, x === undefined ? x : x / K, y === undefined ? y : y / K)); // cursor is in screen px
 
 // ---------- mic ----------
 let stream, rec, chunks = [], recStart = 0, analyser;
@@ -371,5 +429,68 @@ const endRec = (send) => {
 };
 ipcRenderer.on('rec:stop', () => endRec(true));
 ipcRenderer.on('rec:cancel', () => endRec(false));
+
+// ---------- lecture ear (ARCHITECTURE-v2 3): the laptop's sound, cut into pieces that main sends to Groq ----------
+const EAR_PIECE_MS = 30000, EAR_LOUD_MIN_MS = 1500, EAR_LEVEL = 0.01; // below EAR_LEVEL counts as silence
+let ear = null;
+async function earStart() {
+  if (ear) return;
+  try {
+    const s = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }); // main answers with system audio loopback
+    s.getVideoTracks().forEach((t) => t.stop()); // only the sound is needed
+    const audio = new MediaStream(s.getAudioTracks());
+    if (!audio.getAudioTracks().length) throw new Error('no system audio track');
+    const ctx = new AudioContext(), an = ctx.createAnalyser();
+    an.fftSize = 512;
+    ctx.createMediaStreamSource(audio).connect(an);
+    ear = { audio, ctx, an, buf: new Float32Array(512), cur: null, muted: false, timer: null, letGo: null };
+    ear.meter = setInterval(() => {
+      if (!ear?.cur) return;
+      ear.an.getFloatTimeDomainData(ear.buf);
+      if (Math.sqrt(ear.buf.reduce((a, v) => a + v * v, 0) / ear.buf.length) > EAR_LEVEL) ear.cur.loudMs += 200;
+    }, 200);
+    earPiece();
+    ipcRenderer.send('ear', { ok: true });
+  } catch (e) {
+    ear = null;
+    ipcRenderer.send('ear', { ok: false, err: String(e) });
+  }
+}
+function earPiece() {
+  const rec = new MediaRecorder(ear.audio, { mimeType: 'audio/webm;codecs=opus' });
+  const p = { rec, chunks: [], t0: Date.now(), loudMs: 0 };
+  rec.ondataavailable = (e) => e.data.size && p.chunks.push(e.data);
+  rec.start();
+  ear.cur = p;
+  clearTimeout(ear.timer);
+  ear.timer = setTimeout(() => earCut(true), EAR_PIECE_MS);
+}
+// Ends the current piece and sends it if it had sound; starts the next one unless Nibley is speaking.
+function earCut(again) {
+  const p = ear?.cur;
+  if (!p) return;
+  ear.cur = null;
+  clearTimeout(ear.timer);
+  const t1 = Date.now();
+  p.rec.onstop = async () => {
+    if (p.loudMs >= EAR_LOUD_MIN_MS) ipcRenderer.send('ear:piece', new Uint8Array(await new Blob(p.chunks, { type: 'audio/webm' }).arrayBuffer()), { t0: p.t0, t1, loudMs: p.loudMs });
+  };
+  p.rec.stop();
+  if (again && !ear.muted) earPiece();
+}
+// Nibley's own voice must not be transcribed (Windows 10 can't leave one app out of the loopback): pause around it.
+function earHold() { if (!ear) return; clearTimeout(ear.letGo); if (!ear.muted) { ear.muted = true; earCut(false); } }
+function earRelease() { if (!ear) return; clearTimeout(ear.letGo); ear.letGo = setTimeout(() => { ear.muted = false; if (!ear.cur) earPiece(); }, 700); }
+function earStop() {
+  if (!ear) return;
+  clearInterval(ear.meter); clearTimeout(ear.timer); clearTimeout(ear.letGo);
+  if (ear.cur) { ear.cur.rec.onstop = null; ear.cur.rec.stop(); } // the off switch: the piece in progress is dropped
+  ear.audio.getTracks().forEach((t) => t.stop());
+  ear.ctx.close();
+  ear = null;
+}
+ipcRenderer.on('ear:on', earStart);
+ipcRenderer.on('ear:off', earStop);
+ipcRenderer.on('ear:cut', () => earCut(true)); // hotkey pressed: send what was just heard now
 
 initMic();

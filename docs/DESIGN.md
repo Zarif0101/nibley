@@ -22,7 +22,7 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 | `error` | `#FF8B7A` | Mascot error mark only |
 | `edge` | `#2B3A4B` or `#FFFFFF`, picked by brightness under the mark | 1.5 px outline behind pen strokes so they read on any frame. No glow. |
 | Font | Inter (bundled woff2 in `src/overlay/fonts/`): 400 body, 600 labels/titles, 700 step numbers | Nothing else |
-| Sizes | Chips 14/20. Status pill 13/16. Step numbers 16. Lessons: H1 24/32, card title 18/24, body 16/24, caption 12/16 | |
+| Sizes | Chips 14/20. Status pill 13/16. Subtitles 20/28. Step numbers 16. Lessons: H1 24/32, card title 18/24, body 16/24, caption 12/16 | |
 | Radius | Chips and step blocks 8 px. Cards 12 px. Status pill fully round | |
 | Shadow | Chips, steps, pill: `0 2px 8px rgba(43,58,75,.28)`. Cards: `0 1px 3px rgba(43,58,75,.08)` | |
 | Stroke | Pen 3.5 px, round caps | |
@@ -53,6 +53,14 @@ White pill, 18 px below-right of where the cursor was at the hotkey press:
 - Speaking: mascot mouth opening and closing, "Speaking". Hides when the answer ends.
 - Didn't catch: confused face, "Didn't catch that", 1.5 s.
 - Problem (no key, no internet, Claude limit): error face, short text, 4 s.
+
+## Subtitles (Zarif OK'd the look, 2026-11-04)
+Every `say` line shows as a subtitle while its audio plays, then clears. Zarif: "it's really hard to understand what he's actually saying."
+- Box: `text` background, white Inter 600 20/28, padding 8 px 16 px, radius 8 px (same as chips), chip shadow. Max width 760 px, text centred, max 2 lines.
+- Place: bottom-centre, 64 px above the screen bottom (clears YouTube's control bar). If that spot would cover a pen mark or label, it moves to top-centre (64 px from the top). Labels never land on the subtitle.
+- Longer than 2 lines: split into parts at word breaks, each shown for its share of the audio.
+- Timing: appears when the line's audio starts, fades out 150 ms when it ends. Next line replaces it in place. `prefers-reduced-motion`: no fade.
+- Why `text` and not `deep`: `deep` chips are labels on the video; the subtitle must not look like a label.
 
 ## Lessons window
 - `bg` background, header: mascot + "Lessons".

@@ -4,13 +4,13 @@ const FILLER = /^\W*(thank you|thanks|you|bye|okay)?\W*$/i; // Whisper's usual w
 
 const fail = (kind, msg) => Object.assign(new Error(msg || kind), { kind });
 
-async function post(audio, key, mime) {
+async function post(audio, key, mime, prompt) {
   const fd = new FormData();
   fd.append('file', new Blob([audio], { type: mime }), mime.includes('webm') ? 'clip.webm' : 'clip.mp3');
   fd.append('model', 'whisper-large-v3-turbo');
   fd.append('language', 'en');
   fd.append('response_format', 'json');
-  fd.append('prompt', 'A student asks about a lecture on screen: physics, maths, chemistry, biology, YouTube captions.');
+  if (prompt) fd.append('prompt', prompt);
   try {
     return await fetch(URL, { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: fd, signal: AbortSignal.timeout(8000) });
   } catch (e) {
@@ -18,15 +18,17 @@ async function post(audio, key, mime) {
   }
 }
 
-// audio: Buffer. durationMs: clip length (for the filler check). Returns '' when nothing useful was said.
-async function transcribe(audio, { key, durationMs = 2000, mime = 'audio/webm' }) {
+// audio: Buffer. durationMs: clip length (for the filler check). prompt: words Whisper should expect (for lecture
+// sound: the end of the previous piece, so sentences carry on). Returns '' when nothing useful was said.
+const ASK = 'A student asks about a lecture on screen: physics, maths, chemistry, biology, YouTube captions.';
+async function transcribe(audio, { key, durationMs = 2000, mime = 'audio/webm', prompt = ASK }) {
   if (!key) throw fail('nokey');
-  let r = await post(audio, key, mime);
+  let r = await post(audio, key, mime, prompt);
   if (r.status === 429) {
     const wait = Number(r.headers.get('retry-after'));
     if (!(wait > 0 && wait < 3)) throw fail('rate');
     await new Promise((res) => setTimeout(res, wait * 1000));
-    r = await post(audio, key, mime);
+    r = await post(audio, key, mime, prompt);
     if (r.status === 429) throw fail('rate');
   }
   if (r.status === 401 || r.status === 403) throw fail('key');
@@ -35,4 +37,4 @@ async function transcribe(audio, { key, durationMs = 2000, mime = 'audio/webm' }
   return durationMs < 1000 && FILLER.test(text) ? '' : text;
 }
 
-module.exports = { transcribe };
+module.exports = { transcribe, FILLER };
