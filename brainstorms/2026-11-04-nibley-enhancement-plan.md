@@ -96,6 +96,18 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "run all 4".
 - Flags: none new.
 
+### New request: 3D Mac / premium interfaces
+- Captured: "Also use screenshots and web searches to actually build 3D models of Mac interfaces and premium interfaces for the videos."
+- Tentative / suggested (assistant push-back, not decided): Nibley is Windows-only (PRD v1), so a macOS UI promises a Mac version; DESIGN.md bans glassmorphism, gradients and glow, which the usual "premium Mac" look relies on; copying Apple's UI/logo in marketing is a trade-dress risk. Counter-proposal: premium 3D neutral device mockups (no logos, OS-neutral window chrome) in Nibley's own tokens; web search for composition/lighting references only. Arbitrary website screenshots are not possible from this session (network allowlist).
+- Flags: Mac look vs neutral premium mockup -> Zarif.
+
+### find-skills results (skills.sh API, 2026-11-04)
+- skills.sh host added to the Default environment (approved). The `skills find` CLI still returns nothing; the search API works via curl.
+- Candidates: remotion-dev/skills (official Remotion: remotion-best-practices 744K installs, remotion-render 270K); heygen-com/hyperframes (HeyGen: hyperframes 1.37M, product-launch-video 539K, motion-graphics 514K, three 69K); coreyhaines31/marketingskills (social-content 67K, copywriting 245K); emilkowalski/skills (review-animations 280K).
+- Flagged: many near-identical "superpowers/ai-video-generation" copies from unknown owners with similar install counts (look inflated; also use paid AI APIs, against the no-paid-services rule) -> skip. cloudai-x/threejs-skills (~20K, unknown author) -> skeptical.
+- Not verifiable here: GitHub stars and licences (GitHub access is scoped to this repo).
+- Flags: which skills to install -> Zarif.
+
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
 - Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
