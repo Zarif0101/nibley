@@ -12,6 +12,7 @@ Context sources: docs/QUALITY-PLAN.md, docs/TEACHING-BIBLE.md, docs/LEARNING-ENG
 - Simulator looks (Q3, confirmed): subtitles only (TEACHING-BIBLE section 5), on white slide + dark video, for Zarif's OK before QUALITY-PLAN T2.
 - Teach-back content (Q4, confirmed): the 40 physics + maths topics with the most dependents in the prerequisite graph.
 - Delivery (Q5, confirmed): no PR; push to `claude/brave-cori-ykrswn` only. Zarif decides about a PR later.
+- SCOPE CHANGE (Zarif, mid-build): universal learning on ANY topic (coding etc.). Needs analogies + many more assets and diagrams beyond physics; research first. "Don't ask me anything... keep working until my limit is over." New order: finish B → F (analogy research + analogy library + assets + diagrams) → C → D → E.
 - Credit: ~$35 left, Zarif: "I have one day to use all of the $35 of credit, so I'm just going to do everything I can."
 
 ## Q&A log
@@ -41,6 +42,10 @@ Context sources: docs/QUALITY-PLAN.md, docs/TEACHING-BIBLE.md, docs/LEARNING-ENG
 - Asked: start and open one PR at the end (suggested) / start, no PR, just push / add something first.
 - Captured: "Start; no PR, just push."
 - Flags: PR decision -> Zarif, later
+### Mid-build message (no question asked)
+- Captured (his words): "We are going to be using it for universal learning on any topic, like coding or any stuff. We need analogies, and for those analogies, we need more assets other than those physics and stuff. Also create many assets and diagrams for those cases. Research those cases and then add that. Don't ask me anything. I'm going to sleep... Just keep working until my limit is over."
+- Decided (assistant, no questions allowed): new Phase F after B; C, D, E keep their order after F.
+- Flags: PRD v1 scope says physics + maths study from YouTube; "any topic" needs PRD v2 to say so -> Zarif, PRD v2
 
 ## Open flags (pending input)
 - Merge PR #1 and this branch into main -> Zarif, later

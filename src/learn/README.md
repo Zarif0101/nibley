@@ -104,3 +104,24 @@ Needs 3-5 pre-written key points per topic (`must / accept / common_wrong / fix`
 - Load once: `const lib = loadLibrary()`. Keep `model` and `cards` in memory; save after each change.
 - Map spoken questions to topics with `lib.findTopics(text)` + a one-line model confirmation.
 - Every graded moment (pause quiz, review, root check, pre-video root) goes through `model.observe`. Chat questions go through `model.noteAsked` only.
+
+## Personalization modules (2026-11-04, LEARNING-ENGINE.md section 4)
+
+### kind.js: what kind of question
+`questionKind(text, {screenHasPlot}) -> 'check' | 'problem' | 'formula' | 'visual' | 'concept'`. Keyword rules, first match wins. 40 labelled questions in the test (≥ 36 right).
+
+### style.js: which teaching style (Auto mode by default, Zarif Q2)
+```
+createStyleState(now) ; pickStyle(state, kind, {mode, fixed, request, level, last, topic, now, rand}) -> {style, explore, reason}
+recordPick(state, {kind, style, explore, at}) ; landed(state, {kind, style, value 0..1, at}) ; decay(state, now) ; suggestSwitch(state, kind, style, level)
+```
+Order: asked style ("like a story") > fixed mode > same thread (same topic within 2 min) > first tries (home style first, then each other style once) > Thompson sampling, at most 1 exploring pick in 5. Question Buddy only for check questions or topics at okay/strong. Measured on simulated learners: favourite learned in ~87-89% of runs within 30 answers.
+
+### pace.js: words, lines, rate, pause
+`createPace(now) ; signal(state, name, {at}) ; drift(state, now) ; paceFor(state) -> {words, lines, rate, pauseMs, rateText}`. Signals: slower, faster, more, shorter, again (spoken: at once) and lost, barge-in, reask (indirect: 2 within 7 days). 14 quiet days: one step back to the start.
+
+### curve.js: learning curve
+`addPoint(curve, topic, at, p)` after every `model.observe` ; `weekSummary({curve, cards}, now) -> {stronger, fading, text}` (no percentages) ; `timeToOkay(curve, topic)` in days.
+
+### snapshot.js: the per-question header for Haiku
+`snapshot({style, pace, topic, lib, model, worked, now}) -> string` (≤ 120 tokens; empty fields left out) ; `addWorked(worked, {topic, analogy, at})`. Goes at the top of the user message.
