@@ -63,7 +63,7 @@ function slide(width, opts = {}) {
   if (opts.marks) {
     const ring = pen('post-ring', draw.ellipse(bx, 322, 160, 110));
     const arr = pen('post-arrow', draw.arrow(bx, 246, bx + 4, 140, 22));
-    marks = penSvgPaths([ring, arr], penW) + chipSvg(bx + 28, 112, 'the floor pushing back', 32);
+    marks = penSvgPaths([ring, arr], penW) + chipSvg(bx + 22, 108, 'the floor pushing back', 34);
   } else if (opts.ring) {
     marks = penSvgPaths([pen('post-ring', draw.ellipse(bx, 322, 160, 110))], penW);
   }
@@ -77,7 +77,7 @@ function slide(width, opts = {}) {
 <g transform="translate(${blockTx} ${blockTy}) scale(${k})">${assetInner('block')}</g>
 </g>
 <g stroke="${T.text}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M${bx} 326 L${bx + 1} 388 M${bx - 11} 372 L${bx + 1} 389 L${bx + 12} 372"/></g>
-<text x="${bx + 22}" y="368" font-size="24" font-weight="400" fill="${T.text}">weight</text>
+<text x="${bx + 22}" y="368" font-size="28" font-weight="400" fill="${T.text}">weight</text>
 ${marks}${nib}
 </svg>`;
 }
@@ -128,22 +128,27 @@ const posts = {};
 posts['post-01'] = page(`
 <h1 class="abs" style="left:${M}px;top:88px;width:920px;font-size:100px">Hi, I'm Nibley.<br>I draw on your lecture slides.</h1>
 <div class="abs" style="left:${M}px;top:560px">${laptop(slide(880, { ring: true, nibley: 'happy' }))}</div>
-<div class="abs" style="left:${M}px;bottom:64px;font-size:36px;font-weight:600">Windows · uses your Claude subscription</div>
+<div class="abs" style="left:${M}px;bottom:64px;font-size:40px;font-weight:600">Windows · uses your Claude subscription</div>
 `);
 
 // 2 how it works
+const miniKey = (t, fs_) => `<div class="key" style="width:130px;height:130px;font-size:${fs_}px;border-width:4px;box-shadow:0 4px 0 ${T.text};transform:translateY(5px)">${t}</div>`;
+const col = (n, inner) => `<div style="width:280px;display:flex;flex-direction:column;gap:36px;align-items:flex-start"><div class="step" style="width:64px;height:64px;font-size:36px">${n}</div><div style="height:260px;display:flex;align-items:center">${inner}</div></div>`;
+const miniBlock = `<svg width="280" height="260" viewBox="0 0 200 186" style="display:block"><g fill="none" stroke="${T.text}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 -14)">${assetInner('block')}</g>${penSvgPaths([pen('mini-ring', draw.ellipse(100, 86, 76, 54))], 5)}</svg>`;
 posts['post-02-1'] = page(`
 <h1 class="abs" style="left:${M}px;top:110px;width:940px;font-size:104px">How Nibley<br>works. It's<br>three steps.</h1>
-<div class="abs" style="left:${M}px;top:700px;display:flex;gap:44px;align-items:flex-start">
-${[1, 2, 3].map((n, i) => `<div class="step" style="width:240px;height:240px;font-size:150px;margin-top:${i * 56}px;border-radius:8px">${n}</div>`).join('')}
+<div class="abs" style="left:${M}px;top:640px;display:flex;gap:40px">
+${col(1, `<div style="display:flex;gap:16px;align-items:center">${miniKey('Win', 44)}${miniKey('\`', 70)}</div>`)}
+${col(2, `<div class="card" style="padding:22px 24px;font-size:38px;font-weight:600;line-height:1.2;width:280px">what's this?</div>`)}
+${col(3, miniBlock)}
 </div>
-<svg class="abs" style="left:0;top:0" width="1080" height="1350">${penSvgPaths([pen('how-arrow', draw.arrow(380, 760, 436, 790, 20)), pen('how-arrow2', draw.arrow(720, 820, 780, 850, 20))], 7)}</svg>
 ${footer}`);
 
 posts['post-02-2'] = page(`
 <div class="abs" style="left:${M}px;top:96px">${stepBlock(1)}</div>
 <h1 class="abs" style="left:${M}px;top:240px;font-size:140px">Hold<br>Win + \`</h1>
-<div class="abs" style="left:${M}px;top:700px;display:flex;gap:40px;align-items:center"><div class="key" style="width:400px">Win</div><div style="font-size:90px;font-weight:600">+</div><div class="key">\`</div></div>
+<div class="abs" style="left:${M}px;top:700px;display:flex;gap:40px;align-items:center"><div class="key" style="width:400px">Win</div><div style="font-size:90px;font-weight:600">+</div><div class="key" style="font-size:150px;padding-bottom:30px">\`</div></div>
+<div class="abs" style="left:${M}px;top:1060px;font-size:40px;font-weight:600">the key under Esc</div>
 <div class="abs" style="right:${M}px;bottom:60px">${mas('listening', 200)}</div>
 ${footer}`);
 
@@ -177,7 +182,7 @@ posts['post-04'] = page(`
 <div class="abs" style="left:${M}px;top:100px;width:920px;font-size:76px;line-height:1.25;font-weight:600;letter-spacing:-.015em">
 I have ADHD and I study from YouTube lectures. I wanted <span class="mark">answers that come first</span>, <span class="mark">one idea at a time</span>, drawn right where I'm looking. <span style="color:${T.deep};font-weight:700">So I built Nibley. It's free.</span></div>
 <div class="abs" style="right:${M}px;bottom:70px">${mas('happy', 240)}</div>
-<div class="abs" style="left:${M}px;bottom:64px;font-size:38px;font-weight:600">github.com/Zarif0101/nibley</div>`);
+<div class="abs" style="left:${M}px;bottom:64px;font-size:40px;font-weight:600">github.com/Zarif0101/nibley</div>`);
 
 // 5 moods
 const faces = ['happy', 'listening', 'thinking', 'speaking', 'confused'];
@@ -201,23 +206,23 @@ posts['post-06'] = page(`
 <div class="abs" style="left:${M}px;top:400px;width:920px;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-.02em">MIT licence.</div>
 <div class="abs" style="left:${M}px;top:520px;width:920px;font-size:56px;font-weight:600;line-height:1.2">Runs on your own Claude subscription.</div>
 <div class="abs" style="left:${M}px;top:760px;width:880px;font-size:60px;font-weight:600;line-height:1.2;color:${T.deep}">Fork it, change it, make it yours.</div>
-<div class="abs card" style="left:${M}px;top:1000px;padding:30px 40px;font-size:42px;font-weight:600">git clone github.com/Zarif0101/nibley</div>
+<div class="abs card" style="left:${M}px;top:1000px;padding:30px 40px;width:920px;font-size:40px;font-weight:600;line-height:1.3;word-break:break-all">git clone https://github.com/Zarif0101/nibley</div>
 <div class="abs" style="right:${M}px;top:96px">${mas('happy', 200)}</div>`);
 
 // 7 studying too
 const dcard = (name, label, x, y, w, h, size) => `<div class="abs card" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px">
-<div class="abs" style="left:24px;top:24px"><span class="chip" style="font-size:34px">${label}</span></div>
+<div class="abs" style="left:24px;top:24px"><span class="chip" style="font-size:36px">${label}</span></div>
 <div class="abs" style="left:${(w - size) / 2}px;top:${(h - size) / 2 + 36}px">${asset(name, size, T.text, 3.5)}</div></div>`;
 posts['post-07'] = page(`
 <h1 class="abs" style="left:${M}px;top:90px;width:920px;font-size:88px">Nibley's been<br>studying too.</h1>
 ${dcard('pendulum', 'physics', M, 400, 440, 740, 420)}
 ${dcard('electrochemical-cell', 'chemistry', 540, 400, 460, 360, 330)}
 ${dcard('mitochondrion', 'biology', 540, 780, 460, 360, 330)}
-<div class="abs" style="left:${M}px;top:1170px;width:920px;font-size:36px;font-weight:600;line-height:1.3">200+ topics and 120+ hand-drawn diagrams, in the next update.</div>`);
+<div class="abs" style="left:${M}px;top:1170px;width:920px;font-size:40px;font-weight:600;line-height:1.3">200+ topics and 120+ hand-drawn diagrams, in the next update.</div>`);
 
 // 8 saved lessons
 const thumb = (inner) => `<div style="width:300px;height:188px;border-radius:8px;overflow:hidden;border:2px solid ${T.line};flex:none;background:#fff">${inner}</div>`;
-const lcard = (th, title, ask, date) => `<div class="card" style="display:flex;gap:28px;padding:24px;align-items:center;margin-top:22px">${th}<div><div style="font-size:42px;font-weight:600;line-height:1.15">${title}</div><div style="font-size:34px;line-height:1.25;margin-top:8px">You asked: ${ask}</div><div style="font-size:30px;margin-top:10px;color:${T.text}">${date}</div></div></div>`;
+const lcard = (th, title, ask, date) => `<div class="card" style="display:flex;gap:28px;padding:24px;align-items:center;margin-top:22px">${th}<div><div style="font-size:42px;font-weight:600;line-height:1.15">${title}</div><div style="font-size:36px;line-height:1.25;margin-top:8px">You asked: ${ask}</div><div style="font-size:36px;margin-top:10px;color:${T.text}">${date}</div></div></div>`;
 posts['post-08'] = page(`
 <h1 class="abs" style="left:${M}px;top:90px;width:920px;font-size:100px">Say &ldquo;save this&rdquo;.</h1>
 <div class="abs" style="left:${M}px;top:240px;width:920px;font-size:62px;font-weight:600;line-height:1.2">Replay it any time.<br><span class="mark">Replays use no extra AI.</span></div>

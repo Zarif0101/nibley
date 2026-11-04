@@ -25,7 +25,7 @@ function arrow(name, x1, y1, x2, y2, head = 26, bend = 0.08, wobble = 1) {
 const M = {
   // video 1 slide (900 x 560): block centre x 380, floor y 500
   v1_ring: ring('v1-ring', 380, 394, 204, 134, 2),
-  v1_up: arrow('v1-up', 320, 292, 324, 176, 28, 0.08),
+  v1_up: arrow('v1-up', 320, 292, 324, 206, 26, 0.08),
   v1_weight: arrow('v1-weight', 380, 398, 380, 484, 22, 0.06, 0.5),
   // video 2 slide (900 x 500): block centre x 330, floor y 440
   v2_weight: arrow('v2-weight', 330, 372, 330, 436, 18, 0.06, 0.5),

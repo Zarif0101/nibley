@@ -120,8 +120,8 @@ function buildKeys(parent, x, y) {
   const win = h('div', { className: 'key', style: { left: x + 'px', top: y + 'px' } }, parent, 'Win');
   const plus = h('div', { className: 'plus', style: { left: x + 150 + 22 + 'px', top: y + 'px' } }, parent, '+');
   const tick = h('div', { className: 'key', style: { left: x + 150 + 76 + 'px', top: y + 'px', fontSize: '58px' } }, parent, '`');
-  return (t, appear, press, release) => {
-    const a = ease(pr(t, appear, 0.25));
+  return (t, appear, press, release, vanish = 1e9) => {
+    const a = ease(pr(t, appear, 0.25)) * (1 - pr(t, vanish, 0.2));
     const d = pr(t, press, 0.08) * (1 - pr(t, release, 0.1));
     plus.style.opacity = a;
     for (const [k, delay] of [[win, 0], [tick, 0.12]]) {
@@ -154,7 +154,7 @@ function buildEndCard(stage) {
   const url = h('div', { className: 'abs', style: { left: '80px', top: '830px', fontWeight: 600, fontSize: '50px', lineHeight: '64px', color: '#1E6FEB', whiteSpace: 'nowrap' } }, root, 'github.com/Zarif0101/nibley');
   const small = h('div', { className: 'abs', style: { left: '80px', top: '930px', fontWeight: 400, fontSize: '32px', lineHeight: '44px', color: '#6B7A90' } }, root, 'Windows · uses your Claude subscription');
   const usvg = sv('svg', { class: 'pen', width: 1080, height: 1920, viewBox: '0 0 1080 1920' }, root);
-  const ug = sv('g', { transform: `translate(80 ${906}) scale(${0.97} 1)` }, usvg);
+  const ug = sv('g', { transform: `translate(80 ${906}) scale(${0.9} 1)` }, usvg);
   const um = new Mark(ug, MARKS.underline);
   return { root, m, word, url, small, um };
 }
