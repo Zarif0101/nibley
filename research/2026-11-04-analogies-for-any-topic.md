@@ -17,14 +17,14 @@ Why: Zarif wants Nibley for universal learning ("coding or any stuff"), which ne
 - Analogies with known side effects carry a `source` note (e.g. the name-tag one).
 
 ## Library contents (2026-11-04)
-- 107 analogies: computing 57, maths 15, physics 9, chemistry 5, biology 8, economics 7, learning skills 6. 33 link to a library topic (`topic`).
+- 107 analogies: computing 57, maths 15, physics 9, chemistry 5, biology 8, economics 7, learning skills 6. 69 link to a library topic (`topic`), including the 24 programming topics.
 - 107 new drawings in the same pen style: 70 everyday objects (`subject: everyday`), 21 computing diagrams (`computing`), 16 general diagram templates (`diagram`: steps, cycle, timeline, Venn, comparison, mind map, funnel, pyramid, 2×2, fishbone, before/after, spectrum, feedback loop, checklist, target, layers).
 - `src/learn/analogies.js`: `findAnalogies(list, question, {topic, domain, exclude})` and `analogyLine(a)` for the per-question header.
 
 ## Honest limits
 - Search results were mostly summaries; the TWA step wording varies between sources. The Hermans 2018 result is from the paper's abstract and summary pages, not a re-analysis.
 - Most analogies come from common teaching practice, not from studies of each one. They're checked for correct mapping and a stated break, not tested on learners. Log which ones land (style.js outcomes) and drop the ones that don't.
-- Coding topics have analogies but no topic notes, flashcards or prerequisite tree yet (the library's `topics.json` is still physics, maths, chemistry, biology).
+- Coding now has 24 topics with notes and a prerequisite tree (added the same day); no teach-back points for them yet.
 
 ## Sources
 - [Glynn 1995, The Science Teacher (TWA)](https://www.scribd.com/doc/48480905/Glynn-1995) · [TWA steps summary (CSUN)](https://csun.edu/science/ref/analogy/analogy.htm) · [Yener 2012, APFSLT](https://www.eduhk.hk/apfslt/v13_issue1/yener/page2.htm)

@@ -90,3 +90,9 @@ It checks: unique kebab-case ids, valid subject/level, summary ≤ 20 words, pre
 - 107 new drawings: `tools/specs/50-everyday.js` (70 everyday objects), `60-computing.js` (21), `70-diagrams.js` (16 templates). Same pen engine and rules. Checked on contact sheets; 4 redrawn (watering can, queue arrow, layer stack twice).
 - `check.js` validates analogies (fields, word limits, assets, topics) and counts analogy use, so a drawing only needs a topic *or* an analogy. Diagram templates are exempt.
 - Research: `research/2026-11-04-analogies-for-any-topic.md`. Runtime lookup: `src/learn/analogies.js`.
+
+## Programming subject (added 2026-11-04)
+- 24 topics with `subject: computing` and full notes, from "What a program is" to recursion, Big O, classes, trees and graphs, the web and Git. Levels reuse the library's scale: `foundation` = first programs, `11` = core skills, `12` = data structures and systems.
+- The tree links into maths where it's real: operators need `arithmetic-basics`, Big O needs `logarithms`.
+- Variables are taught as name tags, not boxes (Hermans et al. 2018; see `research/2026-11-04-analogies-for-any-topic.md`).
+- 36 coding analogies now point at these topics (`topic`), so the analogy lookup finds them by topic as well as by words.
