@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 
 const OUT = '/tmp/claude-0/-home-user-nibley/77fe0c19-3d64-5601-8230-97f34306a4e4/scratchpad/launch-out';
 const name = process.argv[2] || 'video1';
-const dur = { video1: 25.6, video2: 24 }[name];
+const dur = { video1: 25.8, video2: 24 }[name];
 const FPS = 30;
 
 (async () => {

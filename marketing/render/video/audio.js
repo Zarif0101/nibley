@@ -7,16 +7,16 @@ const TTS = '/tmp/claude-0/-home-user-nibley/77fe0c19-3d64-5601-8230-97f34306a4e
 const S = (f, t, v = 1) => [SND + f + '.wav', t, v];
 const V = (f, t, v = 1) => [TTS + f + '.wav', t, v];
 const PLAN = {
-  video1: { dur: 25.6, items: [
+  video1: { dur: 25.8, items: [
     S('1-magical-5', 0.2, 0.55),      // Ting! ring draws (no voice)
     S('1-magical-1', 1.45, 0.55),     // Bli-bli! Nibley pops in
     V('n1t', 2.45), S('5-shy-1', 5.1, 0.55),        // "Oh. Hi. I'm Nibley." / M-mip...
     V('n2t', 6.4),
     V('n3t', 9.1), S('6-confused-3', 12.75, 0.55),  // Hmmmmm? while the bubble types
     S('1-magical-6', 14.0, 0.55),     // Ting! arrow
-    V('n4t', 14.5), S('8-excited-1', 17.35, 0.55),  // WOO-pip!
-    V('n5t', 18.3), S('4-mischievous-1', 21.65, 0.55), // Hehehe!
-    V('n6t', 23.15), S('8-excited-4', 24.55, 0.6),  // Tadaa!
+    V('n4t', 14.5), S('8-excited-1', 17.6, 0.55),  // WOO-pip!
+    V('n5t', 18.5), S('4-mischievous-1', 21.85, 0.55), // Hehehe!
+    V('n6t', 23.35), S('8-excited-4', 24.75, 0.6),  // Tadaa!
   ] },
   video2: { dur: 24, items: [
     V('h1t', 0.3), V('a1t', 3.6), V('a2t', 8.0), V('h2t', 11.8), V('a3t', 13.6), V('a4t', 18.4),
