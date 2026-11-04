@@ -1,6 +1,6 @@
 # Cloud build plan ($35 credit): Brainstorm / Discovery Notes
 Date: 2026-11-04 · Goal: finalize what this cloud session builds with the last ~$35 of credit (must be used within one day), then execute.
-Status: complete (interview). Executing A → E; resume point = BUILD-LOG.md, newest entry.
+Status: complete. Built A, B, F, C, D, E (all pushed). Resume point: docs/briefs/wiring-checklist.md (local session) and BUILD-LOG.md.
 Context sources: docs/QUALITY-PLAN.md, docs/TEACHING-BIBLE.md, docs/LEARNING-ENGINE.md, brainstorms/2026-11-04-pregenerated-study-assets.md, PR Zarif0101/nibley#1 (src/learn, library)
 
 ## Summary / key decisions
