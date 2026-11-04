@@ -101,6 +101,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Tentative / suggested (assistant push-back, not decided): Nibley is Windows-only (PRD v1), so a macOS UI promises a Mac version; DESIGN.md bans glassmorphism, gradients and glow, which the usual "premium Mac" look relies on; copying Apple's UI/logo in marketing is a trade-dress risk. Counter-proposal: premium 3D neutral device mockups (no logos, OS-neutral window chrome) in Nibley's own tokens; web search for composition/lighting references only. Arbitrary website screenshots are not possible from this session (network allowlist).
 - Flags: Mac look vs neutral premium mockup -> Zarif.
 
+### New request: voiceover TTS
+- Captured: "Also use some TTS from Grok or the TTSs we have for the video voiceover."
+- Tentative / suggested (assistant, not decided): "Grok" probably means Groq (the project already uses a Groq key for speech-to-text); Groq TTS needs that key in this session (secure credential form, host api.groq.com). "TTSs we have" = Edge voices (msedge-tts, needs the Edge speech host allowed; licence for marketing use unclear) and Piper (local; voice models download from huggingface.co, licence differs per voice). Video 1 (Meet Nibley) uses Nibley's sounds, not a narrator; a voiceover fits video 2.
+- Flags: which TTS + which voice -> Zarif. Groq or xAI Grok? -> Zarif.
+
 ### find-skills results (skills.sh API, 2026-11-04)
 - skills.sh host added to the Default environment (approved). The `skills find` CLI still returns nothing; the search API works via curl.
 - Candidates: remotion-dev/skills (official Remotion: remotion-best-practices 744K installs, remotion-render 270K); heygen-com/hyperframes (HeyGen: hyperframes 1.37M, product-launch-video 539K, motion-graphics 514K, three 69K); coreyhaines31/marketingskills (social-content 67K, copywriting 245K); emilkowalski/skills (review-animations 280K).
