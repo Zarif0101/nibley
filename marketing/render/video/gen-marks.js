@@ -31,8 +31,8 @@ const M = {
   v2_weight: arrow('v2-weight', 330, 372, 330, 436, 18, 0.06, 0.5),
   v2_up: arrow('v2-up', 330, 298, 332, 190, 22, 0.05, 0.5),
   v2_ring_arrow: ring('v2-ring-arrow', 331, 244, 46, 84, 1),
-  v2_ring_floor: ring('v2-ring-floor', 330, 440, 160, 34, 0),
-  v2_ring_weight: ring('v2-ring-weight', 330, 404, 50, 54, 0),
+  v2_ring_floor: ring('v2-ring-floor', 330, 442, 150, 30, 0),
+  v2_ring_weight: ring('v2-ring-weight', 330, 404, 34, 56, 0),
   // end card underline (drawn 800 wide, stretched to the url width)
   underline: make('underline', [D.line(0, 0, 800, 0)]),
 };

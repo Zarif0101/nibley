@@ -133,12 +133,12 @@ posts['post-01'] = page(`
 
 // 2 how it works
 const miniKey = (t, fs_) => `<div class="key" style="width:130px;height:130px;font-size:${fs_}px;border-width:4px;box-shadow:0 4px 0 ${T.text};transform:translateY(5px)">${t}</div>`;
-const col = (n, inner) => `<div style="width:280px;display:flex;flex-direction:column;gap:36px;align-items:flex-start"><div class="step" style="width:64px;height:64px;font-size:36px">${n}</div><div style="height:260px;display:flex;align-items:center">${inner}</div></div>`;
+const col = (n, inner) => `<div style="width:280px;display:flex;flex-direction:column;gap:36px;align-items:flex-start"><div class="step" style="width:64px;height:64px;font-size:36px">${n}</div><div style="height:170px;display:flex;align-items:center">${inner}</div></div>`;
 const miniBlock = `<svg width="280" height="260" viewBox="0 0 200 186" style="display:block"><g fill="none" stroke="${T.text}" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 -14)">${assetInner('block')}</g>${penSvgPaths([pen('mini-ring', draw.ellipse(100, 86, 76, 54))], 5)}</svg>`;
 posts['post-02-1'] = page(`
 <h1 class="abs" style="left:${M}px;top:110px;width:940px;font-size:104px">How Nibley<br>works. It's<br>three steps.</h1>
-<div class="abs" style="left:${M}px;top:640px;display:flex;gap:40px">
-${col(1, `<div style="display:flex;gap:16px;align-items:center">${miniKey('Win', 44)}${miniKey('\`', 70)}</div>`)}
+<div class="abs" style="left:${M}px;top:700px;display:flex;gap:40px">
+${col(1, `<div style="display:flex;gap:16px;align-items:center">${miniKey('Win', 44)}${miniKey('\`', 110)}</div>`)}
 ${col(2, `<div class="card" style="padding:22px 24px;font-size:38px;font-weight:600;line-height:1.2;width:280px">what's this?</div>`)}
 ${col(3, miniBlock)}
 </div>
@@ -147,9 +147,9 @@ ${footer}`);
 posts['post-02-2'] = page(`
 <div class="abs" style="left:${M}px;top:96px">${stepBlock(1)}</div>
 <h1 class="abs" style="left:${M}px;top:240px;font-size:140px">Hold<br>Win + \`</h1>
-<div class="abs" style="left:${M}px;top:700px;display:flex;gap:40px;align-items:center"><div class="key" style="width:400px">Win</div><div style="font-size:90px;font-weight:600">+</div><div class="key" style="font-size:150px;padding-bottom:30px">\`</div></div>
-<div class="abs" style="left:${M}px;top:1060px;font-size:40px;font-weight:600">the key under Esc</div>
-<div class="abs" style="right:${M}px;bottom:60px">${mas('listening', 200)}</div>
+<div class="abs" style="left:${M}px;top:700px;display:flex;gap:40px;align-items:center"><div class="key" style="width:400px">Win</div><div style="font-size:90px;font-weight:600">+</div><div class="key" style="font-size:240px;line-height:1;padding-top:44px">\`</div></div>
+<div class="abs" style="left:${M + 535}px;top:1050px;font-size:40px;font-weight:600">↑ the key under Esc</div>
+<div class="abs" style="right:${M}px;bottom:36px">${mas('listening', 160)}</div>
 ${footer}`);
 
 posts['post-02-3'] = page(`
@@ -206,7 +206,7 @@ posts['post-06'] = page(`
 <div class="abs" style="left:${M}px;top:400px;width:920px;font-size:72px;font-weight:700;line-height:1.1;letter-spacing:-.02em">MIT licence.</div>
 <div class="abs" style="left:${M}px;top:520px;width:920px;font-size:56px;font-weight:600;line-height:1.2">Runs on your own Claude subscription.</div>
 <div class="abs" style="left:${M}px;top:760px;width:880px;font-size:60px;font-weight:600;line-height:1.2;color:${T.deep}">Fork it, change it, make it yours.</div>
-<div class="abs card" style="left:${M}px;top:1000px;padding:30px 40px;width:920px;font-size:40px;font-weight:600;line-height:1.3;word-break:break-all">git clone https://github.com/Zarif0101/nibley</div>
+<div class="abs card" style="left:${M}px;top:1000px;padding:30px 40px;width:920px;font-size:38px;font-weight:600;line-height:1.3">git clone https://github.com/Zarif0101/nibley</div>
 <div class="abs" style="right:${M}px;top:96px">${mas('happy', 200)}</div>`);
 
 // 7 studying too
