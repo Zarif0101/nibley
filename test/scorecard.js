@@ -1,4 +1,4 @@
-// Quality scorecard (QUALITY-PLAN section 1): reads Nibley's logs + test results, prints Q1-Q10 as pass / fail / no data.
+// Quality scorecard (QUALITY-PLAN section 1, SPEED-TOKEN-PLAN section 3): reads Nibley's logs + test results, prints Q1-Q13.
 //   node test/scorecard.js                 newest logs/nibley-*.log
 //   node test/scorecard.js logs/a.log ...  these logs
 // Reads test/out/e2e-results.json and the newest test/out/eval-*.json when present. Never fails the process unless --strict.
@@ -91,11 +91,37 @@ function score(events, { e2e = [], evals = [] } = {}) {
   const m = stt && /word errors (\d+)\/(\d+)/.exec(stt.detail || '');
   rows.push(m ? row('Q10', 'Hear', 'word errors ≤ 2%', `${m[1]}/${m[2]} words`, Number(m[1]) / Number(m[2]) <= 0.02 ? 'pass' : 'fail')
     : row('Q10', 'Hear', 'word errors ≤ 2%', '-', 'no data'));
+
+  // Q11-Q13 (SPEED-TOKEN-PLAN): claude_usage per answer (P0), free_answer when no Claude call was needed (P6).
+  const use = events.filter((e) => e.ev === 'claude_usage');
+  const fresh = use.map((e) => (e.input || 0) + (e.cache_write || 0));
+  rows.push(use.length ? row('Q11', 'Tokens', 'fresh tokens per answer ≤ 2,500 median', `${Math.round(median(fresh))} median (${use.length} answers)`, median(fresh) <= 2500 ? 'pass' : 'fail')
+    : row('Q11', 'Tokens', 'fresh tokens per answer ≤ 2,500 median', '-', 'no data'));
+  const allIn = use.reduce((a, e) => a + (e.input || 0) + (e.cache_write || 0) + (e.cache_read || 0), 0);
+  const read = use.reduce((a, e) => a + (e.cache_read || 0), 0);
+  rows.push(allIn ? row('Q12', 'Cache', 'cache reads ≥ 60% of input', `${Math.round((read / allIn) * 100)}%`, read / allIn >= 0.6 ? 'pass' : 'fail')
+    : row('Q12', 'Cache', 'cache reads ≥ 60% of input', '-', 'no data'));
+  const free = events.filter((e) => e.ev === 'free_answer').length;
+  rows.push(free || use.length ? row('Q13', 'Free', 'answers with no Claude call (grows)', `${free} of ${free + use.length}`, 'info')
+    : row('Q13', 'Free', 'answers with no Claude call (grows)', '-', 'no data'));
   return rows;
 }
 
+// Median milliseconds per step of a turn (SPEED-TOKEN-PLAN section 2). Turn fields are ms after the hotkey press.
+function timeBreakdown(events) {
+  const turns = events.filter((e) => e.ev === 'turn' && !e.interrupted && e.ptt_up != null);
+  const step = (f) => { const v = turns.map(f).filter((x) => Number.isFinite(x) && x >= 0); return v.length ? Math.round(median(v)) : null; };
+  return {
+    n: turns.length,
+    stt: step((t) => t.stt_done - t.ptt_up),
+    claude: step((t) => t.claude_first_token - t.stt_done),
+    firstLine: step((t) => t.first_say - t.claude_first_token),
+    voice: step((t) => t.first_audio - (t.first_say ?? t.claude_first_token)),
+  };
+}
+
 function format(rows) {
-  const w = [4, 11, 36, 46];
+  const w = [4, 11, 40, 46];
   const line = (c) => c.map((v, i) => String(v).padEnd(w[i] || 0)).join(' ');
   return [line(['#', 'Check', 'Target', 'Now']) + 'Result', ...rows.map((r) => line([r.id, r.check, r.target, r.value]) + r.status.toUpperCase())].join('\n');
 }
@@ -113,8 +139,10 @@ function main(argv) {
   const rows = score(events, { e2e, evals });
   console.log(`Logs: ${logs.map((f) => path.relative(ROOT, f)).join(', ') || 'none'}\n`);
   console.log(format(rows));
+  const tb = timeBreakdown(events);
+  if (tb.n) console.log(`\nWhere the time goes (median ms over ${tb.n} turns): speech-to-text ${tb.stt ?? '-'} · Claude first text ${tb.claude ?? '-'} · first line ${tb.firstLine ?? '-'} · voice ${tb.voice ?? '-'}`);
   if (argv.includes('--strict') && rows.some((r) => r.status === 'fail')) process.exitCode = 1;
 }
 
 if (require.main === module) main(process.argv.slice(2));
-module.exports = { parseLog, score, format };
+module.exports = { parseLog, score, format, timeBreakdown };

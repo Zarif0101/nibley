@@ -12,6 +12,13 @@ Date: 2026-11-04 · Built in the cloud, tested with `npm test` (180 pass) and `n
 | T9 | `test/eval/run.js` | Nothing to wire. Run `node test/eval/run.js --baseline` twice (uses ~60 Haiku questions) | Two `test/out/eval-*.json`; scorecard Q6 |
 | T10 | `src/overlay/mascot-loop.js` + `src/overlay/mascot3d/*.webp` (only after T0-T9 green) | `overlay.js status()`: replace the pixel face with `mascotLoop(FACE[kind] || 'happy', 28)` | CPU < 3% while the pill animates; preview `design/mascot-3d/renders/mood-loops-preview.webp` |
 
+## Speed and tokens (`docs/SPEED-TOKEN-PLAN.md`, do P0 together with QUALITY-PLAN T0)
+| Blueprint | Module (ready) | Connect in | Check |
+|---|---|---|---|
+| P0 | `test/scorecard.js` (Q11-Q13 + "where the time goes") | `src/brain.js onEvent` (`result`): `log({ ev: 'claude_usage', turn, image, input, cache_write, cache_read, output, cost, api_ms })` from the line's `usage`, `total_cost_usd`, `duration_api_ms` (check the real field names once); `src/main.js`: `timing.first_say` when the first say line is parsed | `node test/scorecard.js` shows Q11, Q12 and the time line |
+| P1 | `src/screen.js` (`screenKey`, `sameScreen`) | `main.js ask()`: `key = screenKey(s.bmp, s.w)`; `brain.ask`: if this process's last sent key is the same screen, send no image and add "(Same screen as your last question.)"; reset on rotation | 10 follow-ups on a paused video: `image: false`, marks still on target |
+| P2 | none | `src/brain.js`: `MAX_IDLE` 10 min → 4.5 min (try `MAX_TURNS` 8 → 6) | Q11 falls, Q2 no worse |
+
 ## After PRD v2 is OK (new behaviour)
 | Feature | Module (ready) | Connect in | Check |
 |---|---|---|---|
