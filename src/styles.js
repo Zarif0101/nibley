@@ -10,6 +10,7 @@ const ORDER = ['doodle-story', 'board-builder', 'exam-coach', 'picture-first', '
 
 // One style file -> {id, name, card, examples: [{title, subject, turns: [{who, text, script}]}]}
 function parseStyle(id, md) {
+  md = md.replace(/\r\n/g, '\n'); // Windows checkouts get CRLF (git autocrlf)
   const name = (md.match(/^# (.+)$/m) || [])[1] || id;
   const card = ((md.split(/^## Card\s*$/m)[1] || '').split(/^## /m)[0] || '').trim();
   const examples = [];
