@@ -20,6 +20,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Sound (Q9 reply): Nibley has no voice of its own; the videos use cute sound effects Zarif generated with ElevenLabs: 8 mp3 files, each with 4-5 effects, in this order: magical, sleepy, sad, mischievous, shy, confused, surprised, excited. Files are in his Downloads folder (on his laptop).
 - Video frameworks (Q9): video 1 = A "Meet Nibley" (cute first-person intro, speaks in sound effects + captions); video 2 = C hook -> problem -> solution -> call to action. Do NOT build straight away: ask for direction before building, and run skills.
 - Lean mode (Q11 reply): credit is tight ("I don't have that much space on me right now, so utilize it accordingly"). No Mac interfaces "for now". Assistant reading: install no new skills (use the built-in ux-copy, design-critique, accessibility-review) and render with the HTML -> MP4 pipeline already working here.
+- Voiceover (Q12): Groq TTS for video 2 ("I'm not using Grok TTS right now, so use it for this"); video 1 keeps Nibley's sounds. Voiceover optional if it doesn't work out.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -119,6 +120,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "I don't have that much space on me right now, so utilize it accordingly. Let's not use Mac for now."
 - Tentative / suggested (assistant): "space" read as credit -> install none, keep the 3 built-in skills, own render pipeline. Mac dropped for now (neutral device mockups instead).
 - Flags: if "space" meant disk or something else -> Zarif can correct.
+
+### Q12 - Voiceover voice
+- Asked: A Edge voice, B Groq TTS (his key), C no voiceover. Assistant suggested C for credit.
+- Captured: "Groq TTS". "if you don't want to use any voiceover, it's okay, but I'm not using Grok TTS right now, so use it for this." -> use Groq TTS (his quota is free right now).
+- Flags: Groq key must reach this session through the secure credential form (never chat) -> Zarif.
 
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
