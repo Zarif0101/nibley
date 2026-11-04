@@ -166,7 +166,8 @@ Reports in `research/` (2026-11-04). Highlights:
 ### Q16 - Video 1 needs a voice
 - Captured: "1st video needs voice" (after delivery).
 - Asked (with 3 samples of the opening line): A hannah as is, B hannah pitched up as Nibley's own character voice, C austin. Assistant suggested B (Nibley speaks its own lines in first person, cute sounds stay between lines).
-- Flags: voice pick -> Zarif.
+- Captured: "C" -> austin (normal pitch) voices video 1's first-person lines; Nibley's cute sounds stay as reactions between lines.
+- Flags: none new.
 
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
