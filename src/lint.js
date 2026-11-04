@@ -46,4 +46,4 @@ function createLint({ maxSay = 6, maxWords = 24, maxMarks = 3 } = {}) {
   };
 }
 
-module.exports = { createLint, shorten };
+module.exports = { createLint, shorten, FILLER, BANNED };

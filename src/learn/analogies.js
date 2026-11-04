@@ -4,7 +4,10 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const DEFAULT = path.join(__dirname, '..', '..', 'library', 'analogies.json');
-const clean = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+// Lower case, punctuation out, crude plural stem (enzymes -> enzyme) so keywords match either form.
+const stem = (w) => (w.length > 3 && w.endsWith('s') && !w.endsWith('ss') ? w.slice(0, -1) : w);
+const clean = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(Boolean).map(stem).join(' ');
+const MIN_SCORE = 4; // one generic word ("input") is not enough: needs the concept, a phrase, or two keywords
 
 function loadAnalogies(file = DEFAULT) {
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -21,7 +24,7 @@ function findAnalogies(list, text, { topic, domain, limit = 3, exclude = [] } = 
       const c = clean(k);
       if (c && q.includes(` ${c} `)) s += 2 + c.split(' ').length;
     }
-    if (s > 0) scored.push([s, a]);
+    if (s >= MIN_SCORE) scored.push([s, a]);
   }
   return scored.sort((x, y) => y[0] - x[0]).slice(0, limit).map(([, a]) => a);
 }

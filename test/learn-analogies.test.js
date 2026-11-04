@@ -22,6 +22,7 @@ test('a linked library topic beats keywords; domain and exclude filter', () => {
   assert.ok(findAnalogies(list, 'what is a function', { domain: 'maths' }).every((a) => a.domain === 'maths'));
   assert.notEqual(findAnalogies(list, 'what is a variable', { exclude: ['variable-name-tag'] })[0]?.id, 'variable-name-tag');
   assert.deepEqual(findAnalogies(list, 'tell me a joke'), []);
+  assert.deepEqual(findAnalogies(list, 'what is the input layer'), [], 'one generic word is not enough');
 });
 
 test('every analogy names where it breaks (Teaching-With-Analogies step 5)', () => {
