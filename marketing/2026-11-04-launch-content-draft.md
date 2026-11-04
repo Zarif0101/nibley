@@ -3,7 +3,7 @@
 ## v2 changes after audience research (research/2026-11-04-launch-content-research.md)
 - Video 1 is the hero (native upload on X, then an Instagram Reel). It now OPENS on the pen ring being drawn on the slide (the hook), then "Hi. I'm Nibley." Burned-in captions throughout (sound off).
 - Still 10 posts, but posts 2, 3 and 5 become swipeable carousels (single images get the weakest reach; vendor data, see report).
-- Post 4 (ADHD) becomes a personal founder post on X: "made by a learner with ADHD" + the design choices (short answers, one idea at a time). Never claims it treats or helps ADHD. Needs Zarif's OK.
+- Post 4 (ADHD) becomes a personal founder post on X: "made by a learner with ADHD" + the design choices (short answers, one idea at a time). Never claims it treats or helps ADHD. Zarif OK'd mentioning ADHD publicly.
 - Requirements ("Windows + Claude subscription") go in the first line of every post caption and in a small corner tag in the videos, plus the end card.
 - Privacy line in captions and README: "Nibley takes one screenshot only when you use the hotkey, and sends it with your question to Claude."
 - Video 2 trimmed to about 24 s (shorter problem beat). Voices stay hannah + austin (Zarif's pick; research thinks they may sound like an ad: judge on the first render).
