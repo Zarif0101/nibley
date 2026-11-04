@@ -1,0 +1,120 @@
+// Overlay simulator: runs the real src/overlay (overlay.html + overlay.js) in headless Chromium, with a fake Electron
+// message bus, over a test screenshot, and takes pictures mid-answer. For looks only: no Claude, no voice, no hotkey.
+//   node test/sim/sim.js            all scenarios -> test/out/sim-*.png
+// Needs Playwright with Chromium (dev only; not part of npm test).
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+const { chromium } = require('playwright');
+const { parseAll } = require('../../src/script');
+
+const ROOT = path.join(__dirname, '..', '..');
+const OUT = path.join(ROOT, 'test', 'out');
+const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.png': 'image/png', '.woff2': 'font/woff2', '.webp': 'image/webp', '.css': 'text/css' };
+
+// 8 kHz mono silence of a given length, so the overlay's audio timing runs like real speech.
+function wav(seconds) {
+  const n = Math.round(8000 * seconds), b = Buffer.alloc(44 + n * 2);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(8000, 24); b.writeUInt32LE(16000, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
+  return [...b];
+}
+
+const SHIM = `
+window.__dirname = '.';
+const __h = {}; window.__sent = [];
+window.__ipc = { emit(ch, ...a) { (__h[ch] || []).forEach((f) => f({}, ...a)); } };
+const __ipcRenderer = { on(ch, f) { (__h[ch] = __h[ch] || []).push(f); }, send(ch, d) { window.__sent.push([ch, d]); if (window.__onSend) window.__onSend(ch, d); } };
+const __mod = { exports: {} }, __x = new XMLHttpRequest();
+__x.open('GET', 'mascot.js', false); __x.send(); new Function('module', __x.responseText)(__mod); // own scope, like Electron's require
+window.require = (m) => m === 'electron' ? { ipcRenderer: __ipcRenderer } : m === 'node:path' ? { join: (...p) => p.join('/') }
+  : /mascot\\.js$/.test(m) ? __mod.exports : {};`;
+const HOOK = `
+const __subs = window.subtitles.createSubtitles(document.body);
+window.__say = {}; window.__marks = [];
+window.__onSend = (ch, d) => {
+  if (ch === 'voice:start') __subs.show(window.__say[d.i], { top: window.subtitles.inBottomQuarter(window.__marks) });
+  if (ch === 'turn:done') __subs.hideSoon();
+};`;
+
+// Each scenario: a fixture, a Nibley script (real commands), the pen edge colour for that frame, when to take pictures (ms).
+const SCENARIOS = [
+  { name: 'lecture-white', fixture: 'lecture', edge: '#2B3A4B', shots: [2600, 5200], script: `say It's a system of two equations, written as one matrix equation.
+ring 570 245 70 | matrix times x
+say Think of a recipe: set amounts of two unknowns give a known total.
+arrow 760 250 -> 700 120 | the totals
+say Solving it means finding the x and y that make both lines true.
+title Matrix form of linear equations` },
+  { name: 'diagram-dark', fixture: 'diagram', edge: '#FFFFFF', shots: [2600, 5200], script: `say This is a neural network: numbers flow from left to right.
+ring 120 160 60 | inputs
+say Each circle is a neuron that takes in numbers and passes one on.
+arrow 360 330 -> 520 330 | weights
+say The lines are weights: how much each neuron listens to the one before.
+title How a neural network passes numbers` },
+  { name: 'player-bottom-mark', fixture: 'player', edge: '#FFFFFF', shots: [2400], script: `say Click the CC button at the bottom right of the video.
+ring 768 566 34 | CC
+say Captions then show at the bottom of the video.
+title Turning on captions` },
+];
+
+function serve() {
+  return new Promise((res) => {
+    const s = http.createServer((req, rsp) => {
+      const p = path.join(ROOT, decodeURIComponent(req.url.split('?')[0]));
+      if (!p.startsWith(ROOT) || !fs.existsSync(p)) { rsp.writeHead(404); return rsp.end(); }
+      let body = fs.readFileSync(p);
+      if (p.endsWith(path.join('src', 'overlay', 'overlay.html'))) {
+        body = Buffer.from(String(body).replace('<script src="overlay.js"></script>',
+          `<script>${SHIM}</script><script src="subtitles.js"></script><script src="overlay.js"></script><script>${HOOK}</script>`));
+      }
+      rsp.writeHead(200, { 'Content-Type': TYPES[path.extname(p)] || 'application/octet-stream' });
+      rsp.end(body);
+    }).listen(0, '127.0.0.1', () => res(s));
+  });
+}
+
+async function runScenario(page, port, sc) {
+  await page.goto(`http://127.0.0.1:${port}/src/overlay/overlay.html`);
+  await page.evaluate(() => document.fonts.ready);
+  const cmds = parseAll(sc.script);
+  const items = [];
+  let i = 0;
+  for (const c of cmds) {
+    if (c.type === 'say') { items.push({ kind: 'say', i, text: c.text }); items.push({ kind: 'audio', i, buf: wav(Math.max(1.6, c.text.split(/\s+/).length * 0.33)), mime: 'audio/wav', src: 'edge' }); i++; }
+    else if (c.type === 'title') continue;
+    else if (c.type === 'step' || c.type === 'ring' || c.type === 'arrow' || c.type === 'point' || c.type === 'label' || c.type === 'highlight') items.push({ kind: 'mark', mark: { ...c, edge: sc.edge } });
+  }
+  items.push({ kind: 'end' });
+  await page.evaluate(({ items, bg }) => {
+    window.__marks = items.filter((x) => x.kind === 'mark').map((x) => x.mark);
+    for (const x of items) if (x.kind === 'say') window.__say[x.i] = x.text;
+    window.__ipc.emit('turn', 1, { bg });
+    for (const x of items) window.__ipc.emit('item', 1, x.kind === 'audio' ? { ...x, buf: new Uint8Array(x.buf) } : x);
+  }, { items, bg: `/test/fixtures/${sc.fixture}.png` });
+  const t0 = Date.now(), files = [];
+  for (const [n, at] of sc.shots.entries()) {
+    await page.waitForTimeout(Math.max(0, at - (Date.now() - t0)));
+    const f = path.join(OUT, `sim-${sc.name}-${n + 1}.png`);
+    await page.screenshot({ path: f });
+    files.push(path.relative(ROOT, f));
+  }
+  const sent = await page.evaluate(() => window.__sent.map(([c]) => c));
+  return { files, voiceStarts: sent.filter((c) => c === 'voice:start').length };
+}
+
+(async () => {
+  fs.mkdirSync(OUT, { recursive: true });
+  const server = await serve();
+  const browser = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required'] });
+  const page = await browser.newPage({ viewport: { width: 1366, height: 768 } });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  const only = process.argv[2];
+  for (const sc of SCENARIOS.filter((s) => !only || s.name === only)) {
+    const r = await runScenario(page, server.address().port, sc);
+    console.log(`${sc.name}: ${r.voiceStarts} lines started, pictures ${r.files.join(', ')}`);
+  }
+  await browser.close();
+  server.close();
+  if (errors.length) { console.log('page errors:', errors); process.exitCode = 1; }
+})();
