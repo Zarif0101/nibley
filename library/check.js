@@ -14,7 +14,8 @@ const PARTIAL = process.argv.includes('--partial') || process.argv.includes('--o
 // --only id1,id2: check just these notes (implies --partial); for workers writing a batch
 const ONLY = process.argv.includes('--only') ? new Set((process.argv[process.argv.indexOf('--only') + 1] || '').split(',')) : null;
 const SUBJECTS = ['physics', 'maths', 'chemistry', 'biology'];
-const ASSET_SUBJECTS = ['physics', 'maths', 'chemistry', 'biology', 'shared'];
+const ASSET_SUBJECTS = ['physics', 'maths', 'chemistry', 'biology', 'shared', 'everyday', 'computing', 'diagram'];
+const ANALOGY_DOMAINS = ['computing', 'maths', 'physics', 'chemistry', 'biology', 'economics', 'learning', 'everyday'];
 const LEVELS = ['foundation', '11', '12'];
 const LEVEL_RANK = { foundation: 0, 11: 1, 12: 2 };
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -376,9 +377,38 @@ function checkNotes(topics, assets) {
   return done;
 }
 
+// ---------- analogies (library/analogies.json): any topic, Teaching-With-Analogies fields ----------
+function checkAnalogies(topics, assets) {
+  const { data, missing } = readJson('analogies.json');
+  if (missing) { if (PARTIAL) pending.push('analogies.json not written yet'); else fail('analogies.json', 'file missing'); return []; }
+  if (!Array.isArray(data)) { fail('analogies.json', 'must be an array'); return []; }
+  const topicIds = new Set(topics.map((t) => t.id)), ids = new Set();
+  const words = (x) => String(x).trim().split(/\s+/).length;
+  const req = ['id', 'domain', 'concept', 'keywords', 'analogy', 'mapping', 'breaks', 'assets'], opt = ['topic', 'source'];
+  data.forEach((a, i) => {
+    const where = `analogies.json[${i}]${a && a.id ? ` ${a.id}` : ''}`;
+    if (!a || typeof a !== 'object') return fail(where, 'not an object');
+    for (const k of req) if (!(k in a)) fail(where, `missing "${k}"`);
+    for (const k of Object.keys(a)) if (!req.includes(k) && !opt.includes(k)) fail(where, `unknown field "${k}"`);
+    if (typeof a.id !== 'string' || !KEBAB.test(a.id)) fail(where, 'id must be lowercase kebab-case');
+    else if (ids.has(a.id)) fail(where, 'duplicate id'); else ids.add(a.id);
+    if (!ANALOGY_DOMAINS.includes(a.domain)) fail(where, `domain must be one of ${ANALOGY_DOMAINS.join('|')}`);
+    for (const k of ['concept', 'analogy', 'breaks']) if (typeof a[k] !== 'string' || !a[k].trim()) fail(where, `${k} must be a non-empty string`);
+    if (typeof a.analogy === 'string' && words(a.analogy) > 30) fail(where, `analogy has ${words(a.analogy)} words (max 30)`);
+    if (typeof a.breaks === 'string' && words(a.breaks) > 30) fail(where, `breaks has ${words(a.breaks)} words (max 30)`);
+    if (!Array.isArray(a.keywords) || !a.keywords.length || a.keywords.some((k) => typeof k !== 'string' || !k.trim())) fail(where, 'keywords must be a non-empty array of strings');
+    if (!Array.isArray(a.mapping) || a.mapping.length < 2 || a.mapping.length > 4 || a.mapping.some((m) => !Array.isArray(m) || m.length !== 2 || m.some((x) => typeof x !== 'string' || !x.trim()))) fail(where, 'mapping must be 2-4 [familiar, target] string pairs');
+    if (!Array.isArray(a.assets) || !a.assets.length) fail(where, 'assets must be a non-empty array');
+    else for (const n of a.assets) if (!assets.has(n)) fail(where, `asset "${n}" is not in assets/index.json`);
+    if (a.topic !== undefined && !topicIds.has(a.topic)) fail(where, `topic "${a.topic}" is not in topics.json`);
+  });
+  return data;
+}
+
 // ---------- cross checks ----------
-function checkUsage(topics, assets) {
+function checkUsage(topics, assets, analogies = []) {
   const used = new Set();
+  for (const a of analogies) for (const n of a.assets || []) used.add(n);
   for (const t of topics) {
     if (!Array.isArray(t.assets)) continue;
     for (const a of t.assets) {
@@ -389,10 +419,11 @@ function checkUsage(topics, assets) {
       }
     }
   }
-  const unused = [...assets.keys()].filter((a) => !used.has(a));
+  // Diagram templates are general-purpose: they don't need a topic or analogy to justify them.
+  const unused = [...assets.keys()].filter((a) => !used.has(a) && assets.get(a)?.subject !== 'diagram');
   if (unused.length) {
     if (PARTIAL) warn('assets', `not used by any topic: ${unused.join(', ')}`);
-    else for (const a of unused) fail(`asset ${a}`, 'not used by any topic');
+    else for (const a of unused) fail(`asset ${a}`, 'not used by any topic or analogy');
   }
   if (PARTIAL && !assets.size && used.size) pending.push(`${used.size} referenced assets not drawn yet`);
 }
@@ -400,12 +431,14 @@ function checkUsage(topics, assets) {
 const topics = checkTopics();
 const assets = checkAssets();
 const notesDone = topics.length ? checkNotes(topics, assets) : 0;
-checkUsage(topics, assets);
+const analogies = checkAnalogies(topics, assets);
+checkUsage(topics, assets, analogies);
 
 const count = (fn) => topics.filter(fn).length;
 console.log(`Nibley library check${PARTIAL ? ' (partial)' : ''}`);
 console.log(`  topics: ${topics.length} (${SUBJECTS.map((s) => `${s} ${count((t) => t.subject === s)}`).join(', ')}; foundation ${count((t) => t.level === 'foundation')}, 11: ${count((t) => t.level === '11')}, 12: ${count((t) => t.level === '12')})`);
 console.log(`  assets: ${assets.size}`);
+console.log(`  analogies: ${analogies.length} (${ANALOGY_DOMAINS.map((d) => `${d} ${analogies.filter((a) => a.domain === d).length}`).filter((x) => !/ 0$/.test(x)).join(', ')})`);
 console.log(`  notes:  ${notesDone} of ${topics.length}`);
 for (const p of pending) console.log(`  pending: ${p}`);
 for (const w of warnings) console.log(`  warning: ${w}`);

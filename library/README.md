@@ -84,3 +84,9 @@ It checks: unique kebab-case ids, valid subject/level, summary ≤ 20 words, pre
 - Chemistry and biology added (Zarif's request).
 - Extra files beyond the contract: `tools/` (drawing engine and recipes), `preview.png`, `syllabus-comparison.md`, `BUILD-LOG.md`. `check.js` has `--partial` and `--only` options for building in steps.
 - The 10 physics/maths note batches finished at almost the same time, so they went in one commit instead of ten.
+
+## Analogies and everyday drawings (added 2026-11-04, any topic)
+- `analogies.json`: 107 analogies (computing 57, maths 15, physics 9, chemistry 5, biology 8, economics 7, learning 6). Fields: `id, domain, concept, keywords, analogy, mapping` (2-4 familiar → target pairs), `breaks` (where it fails, said once), `assets`, optional `topic` (33 link to topics.json) and `source`.
+- 107 new drawings: `tools/specs/50-everyday.js` (70 everyday objects), `60-computing.js` (21), `70-diagrams.js` (16 templates). Same pen engine and rules. Checked on contact sheets; 4 redrawn (watering can, queue arrow, layer stack twice).
+- `check.js` validates analogies (fields, word limits, assets, topics) and counts analogy use, so a drawing only needs a topic *or* an analogy. Diagram templates are exempt.
+- Research: `research/2026-11-04-analogies-for-any-topic.md`. Runtime lookup: `src/learn/analogies.js`.

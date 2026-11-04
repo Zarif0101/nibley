@@ -1,6 +1,7 @@
 // The small header Haiku gets with each question (LEARNING-ENGINE 4.5). Pure. ≤ 120 tokens (≈ 4 characters each).
 // Goes at the top of the user message, never the system prompt (brain.js starts claude once with a fixed prompt).
 const model = require('./model');
+const { analogyLine } = require('./analogies');
 
 const MAX_TOKENS = 120;
 const tokens = (s) => Math.ceil(s.length / 4);
@@ -16,8 +17,8 @@ function addWorked(worked, { topic, analogy, at = Date.now() }) {
   return [...worked.filter((w) => w.topic !== topic), { topic, analogy: String(analogy).slice(0, 80), at }].slice(-100);
 }
 
-// opts: {style, pace: {words, lines, rate}, topic, lib, model: state, worked, now}
-function snapshot({ style, pace, topic, lib, model: m, worked = [], now = Date.now() }) {
+// opts: {style, pace: {words, lines, rate}, topic, lib, model: state, worked, analogy (from analogies.js), now}
+function snapshot({ style, pace, topic, lib, model: m, worked = [], analogy, now = Date.now() }) {
   const head = [`[nibley] style=${style}`];
   if (pace) head.push(`pace=words${pace.words},lines${pace.lines}${pace.rate ? `,rate${pace.rate > 0 ? '+' : ''}${pace.rate}%` : ''}`);
   const lines = [];
@@ -40,6 +41,7 @@ function snapshot({ style, pace, topic, lib, model: m, worked = [], now = Date.n
   }
   const w = topic && [...worked].reverse().find((x) => x.topic === topic);
   if (w) lines.push(`worked before: "${w.analogy}"`);
+  else if (analogy) lines.push(analogyLine(analogy)); // a fresh analogy only when none has worked for him yet
   const out = [head.join(' '), ...lines];
   while (out.length > 1 && tokens(out.join('\n')) > MAX_TOKENS) out.pop();
   let text = out.join('\n');

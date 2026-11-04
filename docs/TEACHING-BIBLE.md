@@ -1,6 +1,6 @@
 # Nibley: Teaching bible
 
-Date: 2026-11-04 · Status: draft for Zarif's OK, input to PRD v2 · Applies to every explanation Nibley gives.
+Date: 2026-11-04 · Status: draft for Zarif's OK, input to PRD v2 · Applies to every explanation Nibley gives, on any topic (Zarif, 2026-11-04: "universal learning on any topic, like coding").
 Look and colours: `DESIGN.md` only. Algorithms behind the choices: `LEARNING-ENGINE.md`.
 
 ## 1. Ten rules for every answer (all styles)
@@ -147,3 +147,23 @@ Haiku can't hold all of this in its head per answer, so the work is split (detai
 - the ten rules + all five cards live in the system prompt, which never changes, so it's cheap to reuse;
 - each question carries a tiny header: which style, pace numbers, the topic's key lines, his weak basics;
 - code checks the answer afterwards (QUALITY-PLAN T6) and the eval set (QUALITY-PLAN T9) tells if a change made teaching better or worse.
+
+## 7. Analogies (any topic)
+Built on Teaching With Analogies and the research in `research/2026-11-04-analogies-for-any-topic.md`. Library: `library/analogies.json` (107 analogies across coding, maths, physics, chemistry, biology, economics, study skills), drawings in `library/assets/` (everyday objects, computing diagrams, diagram templates).
+1. **Order:** answer → "think of …" (the familiar thing) → map 2-3 parts, drawing the familiar thing and pointing at each part → **say where it breaks, once** → back to the real term.
+2. **Relations, not looks.** Water pressure → voltage works because pressure *pushes flow*. Two things that just look alike are not an analogy.
+3. **Things any student knows:** kitchens, markets, buses, phones, games, school. Nothing tied to one country.
+4. **One analogy per answer.** If it didn't land, the next answer uses a different one, never the same one again.
+5. **Variables are name tags, not boxes** (Hermans et al. 2018). "Box" is only for the unknown in maths.
+6. **Diagram templates** (`subject: diagram`) for structure: steps, cycle, timeline, Venn, comparison, mind map, funnel, pyramid, 2×2, cause-and-effect, before/after, spectrum, feedback loop, checklist, target, layers.
+
+Example (recursion, Doodle Story style, note paper):
+```
+say Recursion is a function that solves a problem by calling itself on a smaller piece.
+draw nesting-dolls 140 160                 (PRD v2)
+say Think of nesting dolls: open one, and there's a smaller one inside.
+label 140 120 | each doll = one call
+say You keep opening until the smallest doll, which doesn't open. That's the base case.
+say Where it breaks: the dolls already exist, but recursion makes each smaller call as it goes.
+title Recursion with nesting dolls
+```
