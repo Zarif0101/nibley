@@ -1,4 +1,4 @@
-// Subtitles (QUALITY-PLAN T2). Look = TEACHING-BIBLE section 5 proposal, only DESIGN.md tokens. NEEDS ZARIF'S OK before shipping.
+// Subtitles (QUALITY-PLAN T2). Look approved by Zarif 2026-11-04 (DESIGN.md "Subtitles"); he may tweak it later.
 // One spoken line at a time, bottom-centre, 72 px above the screen bottom (clear of YouTube captions), max 2 lines.
 // Moves to top-centre when a mark sits in the bottom quarter. Fades 120 ms (none with reduced motion).
 // Wiring (local session, overlay.js run()): const subs = createSubtitles(document.body);

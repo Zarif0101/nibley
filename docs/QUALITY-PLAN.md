@@ -46,7 +46,7 @@ Each one: **Why** (evidence) · **Files** · **Change** · **Test** · **Done wh
 
 ### T2. Subtitles for every spoken line
 - **Why:** "It's really hard to understand what he's actually saying" (Zarif). Q4.
-- **Files:** `docs/DESIGN.md` first (style in `TEACHING-BIBLE.md` section 5, show Zarif), then `src/overlay/overlay.html`, `src/overlay/overlay.js` (`run()`: show the line when its audio starts playing, clear on end).
+- **Files:** look approved and in `docs/DESIGN.md` "Subtitles" (2026-11-04); module ready in `src/overlay/subtitles.js` (see `docs/briefs/wiring-checklist.md`). Wire into `src/overlay/overlay.html`, `src/overlay/overlay.js` (`run()`: show the line when its audio starts playing, clear on end).
 - **Change:** one subtitle element; text = the `say` line; appears on `audio.onplaying`, fades 120 ms after `onended`; moves to top-centre when any mark sits in the bottom quarter.
 - **Test:** e2e turn on `test/fixtures/lecture.png` (white) and `player.png` (dark): screenshot mid-line shows the subtitle; log start/end vs audio start/end within 150 ms; no overlap with a mark.
 - **Done when:** Q4 passes on both fixtures and Zarif says it reads well.

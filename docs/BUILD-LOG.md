@@ -93,3 +93,4 @@ Newest at the bottom. A new session reads this to resume.
   - Not checked by a second reader: the coding notes were written and format-checked here, not reviewed by a person. Python is the example language.
 - DONE teach-back points for the 24 programming topics (72 points). `library/teachback.json`: 64 topics, 193 points. 180/181 tests pass.
 - SESSION END STATE (cloud, 2026-11-04): everything pushed to `claude/brave-cori-ykrswn`, CI green on every push. Next = local session: `docs/briefs/wiring-checklist.md`, starting with QUALITY-PLAN T0 → T1 (voice). Zarif's decisions waiting: subtitle look OK, auto-pause video, learner data location, first-line voice fallback.
+- Zarif (2026-11-04): subtitle look approved as is, tweaks later. Added to DESIGN.md "Subtitles"; QUALITY-PLAN T2 is unblocked.

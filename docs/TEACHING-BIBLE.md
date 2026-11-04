@@ -136,7 +136,7 @@ Screen: 1366×768. The video stays the main thing; Nibley's surface never covers
 
 ## 5. Proposed DESIGN.md additions (need Zarif's OK before building)
 Only existing tokens, no new colours.
-- **Subtitles:** bottom-centre, 72 px above the screen bottom (clear of YouTube's own captions), max width 760 px, max 2 lines. Inter 600 20/28, white text on a `text` (#2B3A4B) chip at 88%, radius 8, chip shadow. Current line only. Fade 120 ms. Moves to top-centre when a mark sits in the bottom quarter.
+- **Subtitles** (approved 2026-11-04, now in DESIGN.md): bottom-centre, 72 px above the screen bottom (clear of YouTube's own captions), max width 760 px, max 2 lines. Inter 600 20/28, white text on a `text` (#2B3A4B) chip at 88%, radius 8, chip shadow. Current line only. Fade 120 ms. Moves to top-centre when a mark sits in the bottom quarter.
 - **Note paper (L1):** 420×auto px, white, ruled lines in `line` every 28 px, radius 12, card shadow. Writing Inter 400 18/28, headings 600. Pen marks inside use `ink`.
 - **Side panel (L2):** 400 px, `bg` background, `line` left border, Inter body 16/24, lessons-window card style for notes.
 - **Whiteboard (L3):** full screen white, `line` grid every 40 px at 50%, same pen marks and chips as on screen.

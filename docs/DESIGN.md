@@ -55,6 +55,13 @@ White pill, 18 px below-right of where the cursor was at the hotkey press:
 - Didn't catch: confused face, "Didn't catch that", 1.5 s.
 - Problem (no key, no internet, Claude limit): error face, short text, 4 s.
 
+## Subtitles
+Approved by Zarif 2026-11-04 ("we can tweak the subtitles in the future"). Built in `src/overlay/subtitles.js`; preview `test/out/sim-subtitles-preview.png`.
+- The line being spoken, bottom-centre, 72 px above the screen bottom (clear of YouTube's own captions), max width 760 px, max 2 lines.
+- Inter 600 20/28, white on a `text` (#2B3A4B) chip at 88%, radius 8, chip shadow.
+- Shows when the line's audio starts, fades 120 ms after it ends; no fade with reduced motion.
+- Moves to top-centre when a mark sits in the bottom quarter of the screen.
+
 ## Lessons window
 - `bg` background, header: mascot + "Lessons".
 - One card per lesson: screenshot thumbnail (radius 8), title, "You asked: …" (2 lines max), date and time. Newest first.

@@ -49,5 +49,5 @@ Context sources: docs/QUALITY-PLAN.md, docs/TEACHING-BIBLE.md, docs/LEARNING-ENG
 
 ## Open flags (pending input)
 - Merge PR #1 and this branch into main -> Zarif, later
-- OK the subtitle look from the simulator screenshots -> Zarif
+- ~~OK the subtitle look from the simulator screenshots -> Zarif~~ Resolved 2026-11-04: approved as is, "we can tweak the subtitles in the future".
 - QUALITY-PLAN open decisions 1, 3, 4 (auto-pause video, learner data location, first-line voice) -> Zarif (2 resolved in Q2)
