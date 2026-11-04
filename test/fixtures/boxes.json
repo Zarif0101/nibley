@@ -1,0 +1,6 @@
+{
+  "_note": "Hand-labelled target boxes [x, y, w, h] in screenshot pixels. cc comes from the YouTube DOM at capture time.",
+  "lecture": { "meaning": [[340, 160, 460, 170], [430, 60, 300, 90]] },
+  "player": { "cc": [[744, 546, 48, 40]] },
+  "diagram": { "parts": [[40, 85, 155, 155], [325, 90, 55, 470], [235, 305, 70, 50], [445, 120, 175, 420], [690, 195, 60, 270]] }
+}

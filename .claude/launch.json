@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "voice-samples",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8777", "--bind", "127.0.0.1", "--directory", "test/voice-samples"],
+      "port": 8777,
+      "autoPort": false
+    },
+    {
+      "name": "sound-lab",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/arko4/Desktop/nibley-brand/sound/export.js", "--serve"],
+      "port": 5317,
+      "autoPort": false
+    }
+  ]
+}
