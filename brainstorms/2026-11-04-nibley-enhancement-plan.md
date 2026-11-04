@@ -21,6 +21,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Video frameworks (Q9): video 1 = A "Meet Nibley" (cute first-person intro, speaks in sound effects + captions); video 2 = C hook -> problem -> solution -> call to action. Do NOT build straight away: ask for direction before building, and run skills.
 - Lean mode (Q11 reply): credit is tight ("I don't have that much space on me right now, so utilize it accordingly"). No Mac interfaces "for now". Assistant reading: install no new skills (use the built-in ux-copy, design-critique, accessibility-review) and render with the HTML -> MP4 pipeline already working here.
 - Voiceover (Q12): Groq TTS for video 2 ("I'm not using Grok TTS right now, so use it for this"); video 1 keeps Nibley's sounds. Voiceover optional if it doesn't work out.
+- Voices (Q13): Groq Orpheus voices austin and hannah both sound good to him.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -126,6 +127,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "Groq TTS". "if you don't want to use any voiceover, it's okay, but I'm not using Grok TTS right now, so use it for this." -> use Groq TTS (his quota is free right now).
 - Flags: ~~Groq key must reach this session~~ done: key saved via the secure form on a new personal "nibley" environment (approved; this session moved onto it). Groq TTS model: canopylabs/orpheus-v1-english; voices autumn, diana, hannah, austin, daniel, troy. Samples of all 6 sent to Zarif.
 - Also captured: "If you want clarification with the sound effects, you can use my browser to go to my Eleven Labs". Assistant: this cloud session cannot reach his browser; prompt-order labels are enough.
+
+### Q13 - Narrator voice
+- Asked: pick one of autumn, diana, hannah, austin, daniel, troy (no suggestion; taste call).
+- Captured: "austin and hannah sounds good".
+- Tentative / suggested (assistant): use both in video 2: hannah = the stuck learner (problem), austin = narrator (solution + call to action).
+- Flags: confirm the two-voice split in the script review -> Zarif.
 
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
