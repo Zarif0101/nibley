@@ -18,6 +18,7 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - Post goals (Q7): main = launch Nibley on GitHub. Also: introduce Nibley; find users, targeting LEARNERS in general (students included, not students only); PR built on Nibley's cuteness (the mascot); "many other things" (not yet named).
 - Platforms (Q8): Instagram (feed posts + Reels) and X. Formats (assistant): posts 1080x1350 (4:5, works on both), videos 1080x1920 vertical (Reels; X plays vertical too).
 - Sound (Q9 reply): Nibley has no voice of its own; the videos use cute sound effects Zarif generated with ElevenLabs: 8 mp3 files, each with 4-5 effects, in this order: magical, sleepy, sad, mischievous, shy, confused, surprised, excited. Files are in his Downloads folder (on his laptop).
+- Video frameworks (Q9): video 1 = A "Meet Nibley" (cute first-person intro, speaks in sound effects + captions); video 2 = C hook -> problem -> solution -> call to action. Do NOT build straight away: ask for direction before building, and run skills.
 - Research scope (Q2): the brain features (flashcards + spaced repetition, daily review queue, gap finder, knowledge map, pause quizzes + hint ladder, teach-it-back grading, confusion detector) PLUS a scan for new ideas from top learning apps and learning science. Screen features (note paper, layouts, subtitles, chat, buttons, chapters) are out: local session + PRD v2 own them. Start now.
 
 ## Research findings (assistant, not yet confirmed by Zarif)
@@ -81,9 +82,14 @@ Reports in `research/` (2026-11-04). Highlights:
 
 ### Q9 - Video script frameworks (still open) + sounds
 - Asked: frameworks for the 2 videos: A Meet Nibley, B Stuck -> saved story, C Hook/problem/solution/CTA, D Before/after. Assistant suggested video 1 = A, video 2 = B.
-- Captured: framework not answered yet. Instead: "Niblay doesn't have a voice for him himself now, so I'll add the cute sounds". Generated with ElevenLabs. 8 mp3 files, "Each file already has 4 to 5 types of sound effects", in order: 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited. "You should also check these files". "its in my download folder".
+- Captured: framework not answered at first (see Q9 answer below). Instead: "Niblay doesn't have a voice for him himself now, so I'll add the cute sounds". Generated with ElevenLabs. 8 mp3 files, "Each file already has 4 to 5 types of sound effects", in order: 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited. "You should also check these files". "its in my download folder".
 - Tentative / suggested (assistant): split each file into its single effects (by silence) and map them to mascot faces (DESIGN.md has happy, listening, thinking, speaking, confused, error).
 - Flags: framework choice still open -> Zarif. ElevenLabs licence for public/commercial posts depends on his plan (free plan may need attribution / be non-commercial) -> Zarif to check. Getting the files into this cloud session -> Zarif.
+
+### Q9 answer - frameworks
+- Captured: "A and C for the video but dont just build it straight away ask for derection before building and run skills". On sound labels: "The history of the Eleven Labs doesn't cover all of the sound effects, but just do it somehow."
+- So: video 1 = A (Meet Nibley), video 2 = C (hook / problem / solution / CTA). Get his direction (script, storyboard) before any rendering. Use skills in the process.
+- Flags: which skills to run -> asking Zarif (his preference: ask before using a skill).
 
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
