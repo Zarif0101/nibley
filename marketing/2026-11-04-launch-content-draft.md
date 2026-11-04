@@ -1,4 +1,14 @@
-# Nibley launch content: draft for review (no rendering yet)
+# Nibley launch content: draft v2 for review (no rendering yet)
+
+## v2 changes after audience research (research/2026-11-04-launch-content-research.md)
+- Video 1 is the hero (native upload on X, then an Instagram Reel). It now OPENS on the pen ring being drawn on the slide (the hook), then "Hi. I'm Nibley." Burned-in captions throughout (sound off).
+- Still 10 posts, but posts 2, 3 and 5 become swipeable carousels (single images get the weakest reach; vendor data, see report).
+- Post 4 (ADHD) becomes a personal founder post on X: "made by a learner with ADHD" + the design choices (short answers, one idea at a time). Never claims it treats or helps ADHD. Needs Zarif's OK.
+- Requirements ("Windows + Claude subscription") go in the first line of every post caption and in a small corner tag in the videos, plus the end card.
+- Privacy line in captions and README: "Nibley takes one screenshot only when you use the hotkey, and sends it with your question to Claude."
+- Video 2 trimmed to about 24 s (shorter problem beat). Voices stay hannah + austin (Zarif's pick; research thinks they may sound like an ad: judge on the first render).
+- Post 7 shows 3 real diagrams big, "200+ topics" small. Post 10 is made now but posted 2-4 weeks later.
+- Never promise accuracy or better grades.
 
 Goal: launch Nibley on GitHub, introduce it, reach learners (students included), lead with Nibley's cuteness.
 Platforms: Instagram (posts + Reels) and X. Sizes: videos 1080×1920, posts 1080×1350.
@@ -11,7 +21,8 @@ Honesty rule for all copy: claim only what v1 does today (voice question → rea
 
 | Time | Picture | Nibley sound | Caption |
 |---|---|---|---|
-| 0-2 s | A lecture slide on a laptop. A spark pops onto the screen | magical "Bli-bli!" | Hi. I'm Nibley. |
+| 0-1.5 s | A lecture slide on a laptop; a blue pen ring draws itself round the block | magical "Ting!" | (none: the drawing is the hook) |
+| 1.5-3 s | A spark pops onto the screen | magical "Bli-bli!" | Hi. I'm Nibley. |
 | 2-5 s | Nibley shuffles, looks down | shy "M-mip..." | I live on your screen while you study. |
 | 5-8 s | Keycap Win + ` pressed; a speech bubble: "what's a normal force?" | confused "Hmmmmm?" | Hold the hotkey. Ask out loud. |
 | 8-13 s | Nibley draws on the slide: a ring round the block, an arrow, a label "normal force" | magical "Ting!" then excited "WOO-pip!" | I explain simply. Then I draw it. |
