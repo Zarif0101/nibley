@@ -42,10 +42,26 @@ Honesty rule for all copy: claim only what v1 does today (voice question → rea
 4. **Made for ADHD brains.** "Made by a learner with ADHD. Answer first. One idea at a time. Short replies."
 5. **Nibley's moods.** Mascot faces grid: happy, listening, thinking, speaking, confused. "Which one are you today?"
 6. **Free and open source.** MIT licence, runs on your own Claude subscription. "Star it, fork it, make it yours."
-7. **It knows the basics.** The 124 hand-drawn diagrams grid. "200+ topics. 120+ diagrams. More on the way." (physics, maths, chemistry, biology; counts grow, so never print exact numbers)
+7. **Nibley is studying too.** The hand-drawn diagrams grid. "200+ topics. 120+ diagrams. Coming in the next update." (physics, maths, chemistry, biology; counts grow, so never print exact numbers; the library is not wired into the app yet)
 8. **Save the good ones.** "Say 'save this'. Replay it later. No extra AI use."
 9. **Built in public.** "One learner + Claude Code. Here's what Nibley is made of." (stack: Electron, Haiku, Whisper via Groq)
 10. **Coming soon.** Flashcards, gap finder, knowledge map. "Next: Nibley finds the basic you're missing."
+
+## Claims check (every line against PRD v1, the code and the repo)
+| Claim | Source | OK? |
+|---|---|---|
+| Hold the hotkey (Win + `), ask out loud | PRD 4.1 | yes |
+| It sees your screen | PRD 4.2 (one screenshot per question) | yes |
+| Explains in simple words, out loud | PRD 4.3, 4.1 (Piper backup voice plays today; Edge voice bug being fixed) | yes |
+| Draws rings, arrows, labels, steps on screen | PRD 4.4, src/script.js | yes |
+| Save and replay, no extra AI use | PRD 4.7 ("No Claude call") | yes |
+| Free and open source, MIT | LICENSE | yes |
+| Needs Windows and a Claude subscription | PRD 3 | yes (install guide must also mention Claude Code and a free Groq key for speech-to-text) |
+| Built with Electron, Haiku, Whisper via Groq | PRD 4.1, ARCHITECTURE.md | yes |
+| 200+ topics, 120+ diagrams | library/ (229, 124) | yes as counts, but NOT in the app yet -> post 7 now says "coming in the next update" |
+| Flashcards, gap finder, knowledge map | src/learn/ (built, not wired) | only as "coming soon" (post 10) |
+| Made by a learner with ADHD | CLAUDE.md, PRD 2 | true, but personal: needs Zarif's OK to say publicly (post 4) |
+| github.com/Zarif0101/nibley | repo is public | yes |
 
 ## Before posting (launch readiness, not content)
 - Nibley v1 is set up for one laptop (Zarif's vault path, his settings). A learner who clicks the GitHub link needs an install guide and a configurable notes folder, or the launch brings stars but broken installs.
