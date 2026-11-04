@@ -5,16 +5,16 @@ Rules: write like the person who built it, talking to one friend. Concrete detai
 Every post caption starts with: `Free, open source. Windows + your Claude subscription.`
 Privacy line (end of captions that show the screen): `Nibley takes one screenshot only when you use the hotkey, and sends it with your question to Claude.`
 
-## Video 1: Meet Nibley (hero, about 20 s, Nibley's sounds only)
+## Video 1: Meet Nibley (hero, about 25 s). austin is the NARRATOR introducing Nibley (third person) and says each caption line; Nibley speaks only in its cute sounds, in the gaps
 | Time | Picture | Sound | Caption |
 |---|---|---|---|
 | 0-1.5 | A physics lecture slide (block on the floor) on a laptop. A blue pen ring draws itself round the block | magical "Ting!" | (none) |
-| 1.5-3.5 | Nibley pops in beside the ring | magical "Bli-bli!" | Oh. Hi. I'm Nibley. |
-| 3.5-6 | Nibley shuffles, looks down | shy "M-mip..." | I hang out on your screen while you study. |
+| 1.5-3.5 | Nibley pops in beside the ring | magical "Bli-bli!" | This is Nibley. |
+| 3.5-6 | Nibley shuffles, looks down | shy "M-mip..." | It hangs out on your screen while you study. |
 | 6-9 | Keycaps Win + ` press down. Speech bubble: "wait, what's a normal force?" | confused "Hmmmmm?" | You hold two keys and just ask. |
-| 9-14 | Nibley draws an arrow up from the block and a label chip "the floor pushing back" | "Ting!" then excited "WOO-pip!" | I say it simply, then draw it on the slide. |
+| 9-14 | Nibley draws an arrow up from the block and a label chip "the floor pushing back" | "Ting!" then excited "WOO-pip!" | It says it simply, then draws it on the slide. |
 | 14-16.5 | Nibley grins | mischievous "Hehehe!" | Free. Actually free. Open source. |
-| 16.5-20 | End card: Nibley, github.com/Zarif0101/nibley, small "Windows · uses your Claude subscription" | excited "Tadaa!" | Come say hi. |
+| 16.5-20 | End card: Nibley, github.com/Zarif0101/nibley, small "Windows · uses your Claude subscription" | excited "Tadaa!" | Come say hi to Nibley. |
 
 ## Video 2: hook / problem / solution / call to action (about 24 s)
 | Beat | Time | Picture | Voice | Caption |

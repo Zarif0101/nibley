@@ -166,7 +166,7 @@ Reports in `research/` (2026-11-04). Highlights:
 ### Q16 - Video 1 needs a voice
 - Captured: "1st video needs voice" (after delivery).
 - Asked (with 3 samples of the opening line): A hannah as is, B hannah pitched up as Nibley's own character voice, C austin. Assistant suggested B (Nibley speaks its own lines in first person, cute sounds stay between lines).
-- Captured: "C" -> austin (normal pitch) voices video 1's first-person lines; Nibley's cute sounds stay as reactions between lines.
+- Captured: "C" -> austin (normal pitch). ~~voices video 1's first-person lines~~ CORRECTED by Zarif: "austin is introducing nibley he is not nibley" -> austin narrates in third person ("This is Nibley."); Nibley speaks only in its cute sounds.
 - Flags: none new.
 
 ## Build log (after Q4)
