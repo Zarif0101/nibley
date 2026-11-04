@@ -140,6 +140,12 @@ Reports in `research/` (2026-11-04). Highlights:
 - Captured: "let's continue with it, but about those 229 topics and 124 diagrams, it's not confirmed. We are going to add more, so do something like more than these topics". "Do a bit more research about what people would like to see, research that, and check everything, then we'll proceed with the building."
 - Flags: launch-readiness push-back not answered -> Zarif (local session work).
 
+### Audience research + checks (after Q14)
+- Report: research/2026-11-04-launch-content-research.md (study-niche evidence is thin; mostly platform guidance + vendor data + creator anecdote).
+- Applied to draft v2 (assistant): video 1 hero, opens on the ring being drawn; posts 2/3/5 as carousels (still 10 posts); ADHD post -> founder post on X, no health claims; requirements + privacy line in every caption; video 2 ~24 s; post 7 shows 3 diagrams, "200+ topics" small; post 10 posted later.
+- Claims check: 12 claims checked against PRD/code/repo; post 7 reframed as "coming in the next update" (library not wired into the app yet).
+- Flags: saying "made by a learner with ADHD" publicly -> Zarif. Anthropic terms for a public tool that runs on each user's own Claude subscription via Claude Code -> Zarif to check before launch.
+
 ### Sounds received (2026-11-04)
 - Captured: Zarif attached all 8 ElevenLabs mp3s in chat. Assistant matched them to his order by file creation time (11:34 to 11:42): 1 magical, 2 sleepy, 3 sad, 4 mischievous, 5 shy, 6 confused, 7 surprised, 8 excited (assumption, he can correct). CONFIRMED: his screenshot of `Downloads/nibley sound effects` lists the 8 files in this same name order, and the sizes match (276, 129, 156, 131, 134, 156, 181, 166 KB).
 - Checked (assistant): split by silence -> magical 8 short pieces (likely 4 effects of 2 parts), sleepy 4, sad 5, mischievous 4, shy 4, confused 4, surprised 4, excited 5. Confused file is much quieter (peak -16 dB vs about -2 to -6 dB for the others); every piece was loudness-normalised (-16 LUFS). Pieces kept in the session scratchpad, NOT in the public repo, until the ElevenLabs licence is confirmed.
