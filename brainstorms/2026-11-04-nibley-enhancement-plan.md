@@ -11,8 +11,19 @@ Context sources: brainstorms/2026-11-04-pregenerated-study-assets.md (14 MVP fea
 - This cloud session cannot run or test the Electron app, voice, overlay or hotkey. It can build and test content and pure Node logic.
 
 ## Summary / key decisions
-(running synthesis, updated as you go)
+- Spend plan (Q1b, corrects Q1): A + C. Full research and feature specs (C) AND build the brain modules with tests (A). If credit is left after that: social media posts and animations.
 
 ## Q&A log
+### Q1 - What the $78 should mainly buy
+- Asked: A brain modules (code + tests), B better content, C research/planning only, D mix (short research, then build). Assistant suggested D, and to build only standard parts that won't change with PRD v2 (FSRS scheduling, gap finder over the prerequisite tree).
+- Captured: ~~chose D ("lets do what you suggested").~~ SUPERSEDED by Q1b. Also wants "some social media post and animations", but only "if we have some left" after D.
+- Tentative / suggested: none new.
+- Flags: social media posts + animations: which platforms, what they should show, and whether they are for Nibley's launch or Zarif's own brand -> Zarif, later (only if credit remains).
+
+### Q1b - Correction to Q1
+- Captured: "lets do A and C". So: research + planning/specs for the advanced features (C), plus brain modules as tested code (A). Not the light "short research" version of D.
+- Still holds from Q1: social media posts + animations only if credit remains afterwards.
+- Flags: none new.
 
 ## Open flags (pending input)
+- Social media posts + animations: platforms, content, purpose -> Zarif (after the build, if credit remains)
