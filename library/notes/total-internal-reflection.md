@@ -1,7 +1,7 @@
 # Total internal reflection
 
 ## Simple idea
-Look up from under water in a swimming pool and the surface can act like a mirror. When light inside glass hits the edge at a steep slant, it cannot escape into air. All of it bounces back inside. That is how light stays trapped in optical fibres.
+Look up from under water in a swimming pool and the surface can act like a mirror. When light inside glass hits the edge at a big angle from the normal (a glancing hit), it cannot escape into air. All of it bounces back inside. That is how light stays trapped in optical fibres.
 
 ## Key formulas
 - sin C = n₂ / n₁. C: critical angle (degrees), n₁: index of the denser material, n₂: index of the less dense one (no units)

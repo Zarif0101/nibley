@@ -10,7 +10,7 @@ Picture a dot going round a circle of radius 1, like a rider on a ferris wheel. 
 - Period: sin and cos repeat every 2π radians (360°)
 
 ## Picture it
-Draw `unit-circle`. Put a dot at `unit-circle.point`, label the angle at `unit-circle.angle` "θ". Label the dashed drop at `unit-circle.foot` "cos θ across", and the vertical height "sin θ up".
+Draw `unit-circle`. Put a dot at `unit-circle.point`, label the angle at `unit-circle.angle` "θ". Label `unit-circle.foot` "cos θ across" and the dashed drop above it "sin θ up".
 Draw `graph-sine`, label `graph-sine.peak` "sin = 1" and `graph-sine.period-end` "one full turn".
 
 ## Common mistakes

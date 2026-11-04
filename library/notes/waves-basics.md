@@ -1,7 +1,7 @@
 # Wave basics
 
 ## Simple idea
-Flick one end of a rope and a bump runs along it, but the rope itself stays put. A wave carries energy from place to place without carrying material. Every part of the rope just moves up and down like a small simple harmonic motion. The faster and longer the waves, the faster they travel.
+Flick one end of a rope and a bump runs along it, but the rope itself stays put. A wave carries energy from place to place without carrying material. Every part of the rope just moves up and down like a small simple harmonic motion. The material sets the speed; v = f·λ links speed, frequency and wavelength.
 
 ## Key formulas
 - v = f·λ. v: wave speed (m/s), f: frequency (hertz, Hz), λ: wavelength (m)

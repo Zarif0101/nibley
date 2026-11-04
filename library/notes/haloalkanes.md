@@ -14,7 +14,7 @@ Draw `carbon-chain` and label `carbon-chain.group` "Br (halogen)", and `carbon-c
 Arrow from the words "OH⁻ nucleophile" to `carbon-chain.carbon-2`.
 
 ## Common mistakes
-- Thinking the most polar bond reacts fastest: C–Cl is most polar but C–I is weakest, so C–I reacts fastest.
+- Thinking the most polar bond reacts fastest: C–F is the most polar, but C–I is the weakest, so C–I reacts fastest.
 - Mixing up conditions: aqueous hydroxide gives substitution, ethanolic hydroxide gives an alkene.
 - Calling the attacker an electrophile: it donates electrons, so it is a nucleophile.
 

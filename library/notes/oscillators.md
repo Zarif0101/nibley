@@ -1,7 +1,7 @@
 # Pendulums and springs
 
 ## Simple idea
-A playground swing takes the same time per swing whether you swing high or low, as long as the swing is small. A longer swing takes longer. A bouncing spring is different: a heavier weight bounces slower, a stiffer spring bounces faster. Mass of the pendulum bob does not matter.
+A playground swing takes the same time per swing whether you swing high or low, as long as the swing is small. A longer string makes each swing take longer. A bouncing spring is different: a heavier weight bounces slower, a stiffer spring bounces faster. Mass of the pendulum bob does not matter.
 
 ## Key formulas
 - T = 2π√(L/g) for a pendulum. T: period (seconds, s), L: string length (m), g: 9.8 m/s²
@@ -9,7 +9,7 @@ A playground swing takes the same time per swing whether you swing high or low, 
 
 ## Picture it
 Draw `pendulum`. Label `pendulum.string-mid` "length L" and `pendulum.bob` "mass does not matter".
-Arrow along the swing from `pendulum.bob` to `pendulum.rest-position`, labelled "one swing".
+Arrow along the swing from `pendulum.bob` to `pendulum.rest-position`, labelled "back to the middle".
 Next to it draw `mass-spring`, label `mass-spring.mass-center` "mass m".
 
 ## Common mistakes

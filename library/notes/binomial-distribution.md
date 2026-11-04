@@ -10,7 +10,7 @@ Do the same yes-or-no try several times, like shooting 10 free throws. Each try 
 
 ## Picture it
 Draw `tree-diagram` for 2 trials. Label `tree-diagram.end-aa` "2 successes: p²" and `tree-diagram.end-bb` "0 successes: (1−p)²".
-Draw `bar-chart` for n = 4, p = ½: put "k = 0" to "k = 4" under `bar-chart.bar-1` to `bar-chart.bar-5`, middle bar tallest.
+Draw `bar-chart` for n = 4, p = ½: put "k = 0" to "k = 4" under `bar-chart.bar-1` to `bar-chart.bar-5`, and write the true heights "1, 4, 6, 4, 1 sixteenths".
 
 ## Common mistakes
 - Using it when trials are not independent or p changes: check the four conditions.

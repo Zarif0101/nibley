@@ -10,7 +10,7 @@ An identity is an equation that is true for every angle, like "double a number t
 - sin(90° − θ) = cos θ
 
 ## Picture it
-Draw `unit-circle`. Label `unit-circle.point` "(cos θ, sin θ)", the drop at `unit-circle.foot` "cos θ", and the radius "1".
+Draw `unit-circle`. Label `unit-circle.point` "(cos θ, sin θ)", `unit-circle.foot` "cos θ along the x-axis", the dashed drop "sin θ", and the radius "1".
 Draw `right-triangle` with `right-triangle.angle-a` labelled "θ", `right-triangle.hypotenuse-mid` "1", `right-triangle.base-mid` "cos θ", `right-triangle.side-mid` "sin θ".
 
 ## Common mistakes

@@ -55,13 +55,17 @@ It checks: unique kebab-case ids, valid subject/level, summary ≤ 20 words, pre
 1. **Syllabi compared** (topic lists only, nothing copied): CBSE/NCERT 11-12, Bangladesh HSC, Cambridge AS & A Level, AP, IB Diploma. A topic area is in if at least 3 of the 5 cover it. Details and the table: `syllabus-comparison.md`.
 2. **Topic list and prerequisite tree** written by the lead model (Opus), plus `check.js`.
 3. **Drawings**: Opus wrote a small pen engine (`tools/draw.js`) that adds the hand-drawn wobble the same way every time, and drew 12 core drawings as the style example. Sonnet workers wrote recipes for the other 112. Opus looked at every drawing on a contact sheet and fixed or redrew 6 (tangent graph, polariser, atom and wavefronts rings, spin arrow, heart).
-4. **Notes**: Opus wrote one gold-standard note (`newtons-second-law`). Sonnet workers wrote the rest in 15 batches of 13-17. Each worker ran `check.js` on its batch. Opus then read notes from every batch for correctness and plain wording (counts below).
+4. **Notes**: Opus wrote one gold-standard note (`newtons-second-law`). Sonnet workers wrote the rest in 15 batches of 13-17. Each worker ran `check.js` on its batch. Opus then read notes from every batch, and Sonnet fact-checkers read the rest (counts below).
 5. **Chemistry and biology** were added mid-session at Zarif's request, after physics and maths were done, with the same steps.
 
 ## What was checked, and what was not
 - `check.js`: full strict run passes (see the PR for the output).
 - Drawings: Opus looked at **all 124**.
-- Notes: Opus read **30 of 156 physics and maths** notes in full for correctness (3 per batch, picking the riskiest topics). Fixes made: 5 wording errors fixed, magnetism direction rules added (chemistry and biology review still to come). **The other notes were checked only by their writer and by `check.js`, not by Opus.** `check.js` checks format, not facts.
+- Notes, two passes:
+  - **Opus read 45 of 229 notes in full** (3 from each of the 15 batches, the riskiest topics) and wrote 1 (`newtons-second-law`).
+  - **Sonnet fact-checkers read the other 183** (redoing every calculation, checking every formula and claim, comparing each picture with its drawing). They only reported problems; Opus checked each report before changing anything.
+  - Found and fixed: 4 factual errors (hyperbola "never touches the axes", X-linked "1 in 4 sons", "C–Cl is the most polar" halogen bond, "faster waves travel faster") and 13 misleading or unclear lines (wrong picture labels, ambiguous wording). Added the right-hand grip rule and Fleming's left-hand rule, which a writer had left out.
+  - What this means: 183 notes were fact-checked by a cheaper model, not by Opus. With 4 factual errors in 229, a few more may remain. `check.js` checks format, not facts.
 - Nobody has tested the library inside the app yet (the app code is being changed in another session).
 
 ## Known gaps
