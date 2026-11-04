@@ -4,11 +4,13 @@ Resume notes for a new session. The brief is `docs/briefs/cloud-library.md`.
 
 ## Done
 - Step 1: `syllabus-comparison.md`, `topics.json` (156 topics), `check.js` (passes with `--partial`).
+- Step 2: `tools/draw.js` (pen-style generator) + `tools/specs/*.js` -> 86 assets in `assets/`, all assigned to topics. Rebuild with `node library/tools/draw.js`. Opus reviewed every drawing on a contact sheet; fixed graph-tangent, polariser (unpolarised input), atom/wavefronts (spiral look), disc-rotation arrowhead.
+- Gold-standard note: `notes/newtons-second-law.md` (written by Opus).
 
 ## Next
-- Step 2: asset generator (`tools/`), ~75 assets, assign assets to topics.
 - Step 3: notes in batches of ~15.
 - Step 4: README, strict `node library/check.js`, PR.
+- Then (Zarif, 2026-11-04): add chemistry and biology in the same format, after physics + maths are finished.
 
 ## Deviations from the brief
 - Branch: the brief says `library-v1`; this cloud session is pinned to `claude/sleepy-darwin-jy0kpp`, so work and the PR use that branch.

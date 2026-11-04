@@ -4,12 +4,15 @@
 // Validates the study library against the output contract in docs/briefs/cloud-library.md.
 // Usage: node library/check.js            strict (every topic needs a note, every asset must be used)
 //        node library/check.js --partial  missing notes / unused assets are reported, not failed
+//        node library/check.js --only a,b  check only the notes for topics a and b (partial)
 
 const fs = require('fs');
 const path = require('path');
 
 const ROOT = __dirname;
-const PARTIAL = process.argv.includes('--partial');
+const PARTIAL = process.argv.includes('--partial') || process.argv.includes('--only');
+// --only id1,id2: check just these notes (implies --partial); for workers writing a batch
+const ONLY = process.argv.includes('--only') ? new Set((process.argv[process.argv.indexOf('--only') + 1] || '').split(',')) : null;
 const SUBJECTS = ['physics', 'maths'];
 const ASSET_SUBJECTS = ['physics', 'maths', 'shared'];
 const LEVELS = ['foundation', '11', '12'];
@@ -358,6 +361,7 @@ function checkNotes(topics, assets) {
   let done = 0;
   const missing = [];
   for (const t of topics) {
+    if (ONLY && !ONLY.has(t.id)) continue;
     if (!files.includes(`${t.id}.md`)) {
       missing.push(t.id);
       continue;
