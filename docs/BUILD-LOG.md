@@ -57,3 +57,11 @@ Newest at the bottom. A new session reads this to resume.
   - `src/piper.js`: one piper.exe kept running (`--json-input`), warm-up at start. Real-time factor 0.18; 0.13-0.7 s per sentence once loaded. Idle CPU 0, RAM 94 MB.
   - Voice order now: Edge -> Piper -> Windows. First sentence: Piper starts in parallel; Edge gets 1.2 s.
   - Tested in-app: Edge forced off -> first word 1.8 s in Piper; real Edge (throttled) -> Piper, first word 2.3 s. 25/25 unit tests (new piper.test.js checks order after a timeout).
+
+## 2026-11-04 cloud session (brave-cori)
+- Zarif sent the real brand board + 2 turnaround sheets (saved in `design/mascot-3d/reference/`). The app icon `app-256.png` is NOT the reference.
+- DONE `design/mascot-3d/`: smooth 3D Nibley (8 blended shapes, face on the surface, 7 moods), viewer page, 8 turnaround + 7 mood renders, `nibley.glb`, `compare-reference.png`.
+  - Checked: rendered colours measured against the board (face ≈ #8BD9FC, lower body ≈ #2B88FA); side-by-side compared on 5 views; page loads with no script errors (headless Chromium, SwiftShader).
+  - Deviation: three.js 0.170.0 is used, but only in this design page (from jsDelivr) and in `render.js` (dev tool, `npm i --no-save`). Not an app dependency; package.json unchanged.
+  - Not checked: on Zarif's laptop or a phone; real GPU speed (built in ~1.2 s here in software rendering).
+- NEXT: quality plan + teaching bible (Zarif asked: quality first, small tweaks, 5 teacher styles, layouts, personalization plan, blueprints for the local session). Then, if wanted, mood sprite loops for the overlay.
