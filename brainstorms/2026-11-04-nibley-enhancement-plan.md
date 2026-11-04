@@ -163,6 +163,11 @@ Reports in `research/` (2026-11-04). Highlights:
 - Posts: 19 images (posts 2, 3, 5 are carousels), captions.md with Instagram + X versions and alt text. Review fixed: clone URL, ink-blue text contrast, small text, keycap, template-looking cover, alt text.
 - Files sent to Zarif directly (kept out of the public repo until the ElevenLabs licence is confirmed). Render code in marketing/render/ (re-run: posts `node build.js`, videos `node render.js video1|video2`).
 
+### Q16 - Video 1 needs a voice
+- Captured: "1st video needs voice" (after delivery).
+- Asked (with 3 samples of the opening line): A hannah as is, B hannah pitched up as Nibley's own character voice, C austin. Assistant suggested B (Nibley speaks its own lines in first person, cute sounds stay between lines).
+- Flags: voice pick -> Zarif.
+
 ## Build log (after Q4)
 - Done: library.js, model.js (learner model + gap tracker), gapfinder.js, fsrs.js, review.js, map.js, prevideo.js, quiz.js, confusion.js, spec `src/learn/README.md`. 93 learn tests pass; full suite 117 pass, 0 fail.
 - Changed from research: gap finder limit 4 -> 6 questions (simulation over 2,751 topic/basic cases: 77% found with 4, 100% with 6, 4.3 asked on average); unseen basics count as 50/50 so it binary-searches. Pre-video check skips basics already "okay", so it doesn't nag before every video.
