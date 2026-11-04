@@ -7,6 +7,7 @@ Nibley = Zarif's voice study buddy for Windows. Hold Win+` and ask; it reads the
 2. `docs/ARCHITECTURE.md`: how it fits together, measured numbers.
 3. `docs/BUILD-PLAN.md`: file tree, every known problem + fix, tests, stop rules, summary format.
 4. `docs/DESIGN.md`: the only allowed look. Zarif hates AI slop; no styles outside it.
+5. `docs/QUALITY-PLAN.md`: the current work (scorecard + blueprints T0-T11). `docs/TEACHING-BIBLE.md` and `docs/LEARNING-ENGINE.md`: inputs to PRD v2, not built yet.
 
 ## Rules
 - Follow BUILD-PLAN.md. If you must deviate, write why in `docs/BUILD-LOG.md` and in the final summary.

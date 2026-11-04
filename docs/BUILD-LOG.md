@@ -67,4 +67,7 @@ Newest at the bottom. A new session reads this to resume.
 - Zarif: shapes felt odd, no hands. Audit: no hands; body flared like an onion/bell; centred pointy tuft; lumpy feet; side dent; eyes small and high.
   - DONE v2: rounder core widest at eye level, chunky tuft curling right, toe nubs, moving nub hands (pose per mood, hello-wave, hop), bigger low eyes with 2 glints, blush, toy shine, spark star (white-blue, Zarif's pick), crisper pixel cubes. DESIGN.md mascot section notes the 3D extras.
   - Checked: 5-view side-by-side with the board, 7 mood renders, no page errors.
-- NEXT: quality plan + teaching bible (Zarif asked: quality first, small tweaks, 5 teacher styles, layouts, personalization plan, blueprints for the local session). Then, if wanted, mood sprite loops for the overlay.
+- DONE (plans, no code): `docs/QUALITY-PLAN.md` (scorecard Q1-Q10 + blueprints T0-T11, each with a test), `docs/TEACHING-BIBLE.md` (10 rules, 5 styles with Haiku cards + example scripts, 5 layouts, DESIGN.md proposals), `docs/LEARNING-ENGINE.md` (signals, style picker, pace, learning curve, prompt header, distillation, eval gate, tests). Local brief + CLAUDE.md point to them.
+  - Found while reading code: brain.js starts claude once with `--system-prompt-file`, so per-question style/pace must go in the user message; style cards go in the fixed system prompt.
+  - Voice hypothesis for T1 (unverified): line 1 gets only 1.2 s for Edge, then the whole turn is locked to Piper.
+- NEXT (local session): QUALITY-PLAN T0 then T1. Zarif's open decisions: QUALITY-PLAN section 5.
