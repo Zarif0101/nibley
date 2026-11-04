@@ -13,8 +13,8 @@ const ROOT = __dirname;
 const PARTIAL = process.argv.includes('--partial') || process.argv.includes('--only');
 // --only id1,id2: check just these notes (implies --partial); for workers writing a batch
 const ONLY = process.argv.includes('--only') ? new Set((process.argv[process.argv.indexOf('--only') + 1] || '').split(',')) : null;
-const SUBJECTS = ['physics', 'maths'];
-const ASSET_SUBJECTS = ['physics', 'maths', 'shared'];
+const SUBJECTS = ['physics', 'maths', 'chemistry', 'biology'];
+const ASSET_SUBJECTS = ['physics', 'maths', 'chemistry', 'biology', 'shared'];
 const LEVELS = ['foundation', '11', '12'];
 const LEVEL_RANK = { foundation: 0, 11: 1, 12: 2 };
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -404,7 +404,7 @@ checkUsage(topics, assets);
 
 const count = (fn) => topics.filter(fn).length;
 console.log(`Nibley library check${PARTIAL ? ' (partial)' : ''}`);
-console.log(`  topics: ${topics.length} (physics ${count((t) => t.subject === 'physics')}, maths ${count((t) => t.subject === 'maths')}; foundation ${count((t) => t.level === 'foundation')}, 11: ${count((t) => t.level === '11')}, 12: ${count((t) => t.level === '12')})`);
+console.log(`  topics: ${topics.length} (${SUBJECTS.map((s) => `${s} ${count((t) => t.subject === s)}`).join(', ')}; foundation ${count((t) => t.level === 'foundation')}, 11: ${count((t) => t.level === '11')}, 12: ${count((t) => t.level === '12')})`);
 console.log(`  assets: ${assets.size}`);
 console.log(`  notes:  ${notesDone} of ${topics.length}`);
 for (const p of pending) console.log(`  pending: ${p}`);
