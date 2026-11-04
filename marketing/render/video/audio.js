@@ -7,15 +7,16 @@ const TTS = '/tmp/claude-0/-home-user-nibley/77fe0c19-3d64-5601-8230-97f34306a4e
 const S = (f, t, v = 1) => [SND + f + '.wav', t, v];
 const V = (f, t, v = 1) => [TTS + f + '.wav', t, v];
 const PLAN = {
-  video1: { dur: 20, items: [
-    S('1-magical-5', 0.2),        // Ting! ring draws
-    S('1-magical-1', 1.55),       // Bli-bli! Nibley pops in
-    S('5-shy-1', 3.65),           // M-mip...
-    S('6-confused-3', 7.55),      // Hmmmmm?
-    S('1-magical-6', 9.3),        // Ting! arrow
-    S('8-excited-1', 10.4),       // WOO-pip!
-    S('4-mischievous-1', 14.1),   // Hehehe!
-    S('8-excited-4', 16.6),       // Tadaa!
+  video1: { dur: 25.6, items: [
+    S('1-magical-5', 0.2, 0.55),      // Ting! ring draws (no voice)
+    S('1-magical-1', 1.45, 0.55),     // Bli-bli! Nibley pops in
+    V('n1t', 2.45), S('5-shy-1', 5.1, 0.55),        // "Oh. Hi. I'm Nibley." / M-mip...
+    V('n2t', 6.4),
+    V('n3t', 9.1), S('6-confused-3', 12.75, 0.55),  // Hmmmmm? while the bubble types
+    S('1-magical-6', 14.0, 0.55),     // Ting! arrow
+    V('n4t', 14.5), S('8-excited-1', 17.35, 0.55),  // WOO-pip!
+    V('n5t', 18.3), S('4-mischievous-1', 21.65, 0.55), // Hehehe!
+    V('n6t', 23.15), S('8-excited-4', 24.55, 0.6),  // Tadaa!
   ] },
   video2: { dur: 24, items: [
     V('h1t', 0.3), V('a1t', 3.6), V('a2t', 8.0), V('h2t', 11.8), V('a3t', 13.6), V('a4t', 18.4),
@@ -36,7 +37,7 @@ if (r.status) process.exit(r.status);
 // two-pass loudnorm (linear) so the integrated level lands on -14 LUFS
 const m = spawnSync('ffmpeg', ['-hide_banner', '-i', out + '.pre.wav', '-af', 'loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json', '-f', 'null', '-'], { encoding: 'utf8' });
 const j = JSON.parse(m.stderr.slice(m.stderr.lastIndexOf('{')));
-const ln = `volume=${((process.argv[2] === 'video2' ? -12.9 : -14) - parseFloat(j.input_i)).toFixed(2)}dB,alimiter=limit=0.9:level=disabled,aformat=channel_layouts=stereo:sample_rates=48000`;
+const ln = `volume=${(-13.0 - parseFloat(j.input_i)).toFixed(2)}dB,alimiter=limit=0.9:level=disabled,aformat=channel_layouts=stereo:sample_rates=48000`;
 r = spawnSync('ffmpeg', ['-y', '-v', 'error', '-i', out + '.pre.wav', '-af', ln, out], { stdio: 'inherit' });
 require('fs').unlinkSync(out + '.pre.wav');
 process.exit(r.status || 0);
