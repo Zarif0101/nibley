@@ -1,6 +1,6 @@
 // In-memory platform for tests: never touches the real mouse or keyboard.
 const calls = [];
-const pttListeners = [], clickListeners = [];
+const pttListeners = [], clickListeners = [], keyListeners = [];
 const elements = []; // [{box:[x,y,w,h], name, isPassword}]
 let focusedPassword = false;
 
@@ -12,6 +12,8 @@ module.exports = {
   stop() {},
   onError() {},
   onPtt(cb) { pttListeners.push(cb); },
+  onKey(cb) { keyListeners.push(cb); },
+  async grabKeys(on) { rec('grabKeys', on); },
   async click(x, y) { rec('click', x, y); },
   async type(text) { rec('type', text); },
   async key(name) { rec('key', name); },
@@ -34,6 +36,7 @@ module.exports = {
   async ping() {},
   // Test controls
   emitPtt(ev) { pttListeners.forEach((cb) => cb(ev)); },
+  emitKey(name) { keyListeners.forEach((cb) => cb(name)); },
   emitClick(x, y) { clickListeners.slice().forEach((cb) => cb(x, y)); },
   setFocusedPassword(v) { focusedPassword = v; },
   reset() { calls.length = 0; elements.length = 0; focusedPassword = false; },

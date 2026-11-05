@@ -8,9 +8,9 @@
 const ORDER = { listening: 1, thinking: 2, speaking: 3 };
 
 function createPillSequencer(show, { minMs = 350, now = () => Date.now(), setTimer = setTimeout, clearTimer = clearTimeout } = {}) {
-  let current = 'none', shownAt = -Infinity, queue = [], timer = null, blocked = false;
+  let current = 'none', shownAt = -Infinity, queue = [], timer = null, blocked = false, pressed = false;
 
-  function apply(kind, text) { current = kind; shownAt = now(); show(kind, text); }
+  function apply(kind, text) { current = kind; shownAt = now(); if (kind === 'listening') pressed = false; show(kind, text); }
   function flush() {
     timer = null;
     if (blocked || !queue.length) return;
@@ -24,7 +24,8 @@ function createPillSequencer(show, { minMs = 350, now = () => Date.now(), setTim
     // Never go backwards or repeat: drop queued states that come at or after this one in the order.
     if (ORDER[kind]) queue = queue.filter((q) => ORDER[q.kind] && ORDER[q.kind] < ORDER[kind]);
     // Never skip Listening: a press always shows it first, even if he let go before the screen was grabbed.
-    if (ORDER[kind] > ORDER.listening && !ORDER[current] && !queue.some((q) => q.kind === 'listening')) queue.unshift({ kind: 'listening', text: 'Listening' });
+    // Only after a press: a spoken confirmation or a clicked answer has no Listening step.
+    if (pressed && ORDER[kind] > ORDER.listening && !ORDER[current] && !queue.some((q) => q.kind === 'listening')) queue.unshift({ kind: 'listening', text: 'Listening' });
     queue.push({ kind, text });
     clearTimer(timer);
     flush();
@@ -32,12 +33,12 @@ function createPillSequencer(show, { minMs = 350, now = () => Date.now(), setTim
 
   return {
     // New hotkey press: forget the old turn, wait for the screenshot before showing anything.
-    press() { clearTimer(timer); timer = null; queue = []; blocked = true; if (current !== 'none') apply('none', ''); },
+    press() { clearTimer(timer); timer = null; queue = []; blocked = true; pressed = true; if (current !== 'none') apply('none', ''); },
     // Screen grabbed: the pill may appear now.
     ready() { blocked = false; if (!queue.length) queue.push({ kind: 'listening', text: 'Listening' }); flush(); },
     push(kind, text = '') {
       if (kind === 'error' || kind === 'msg') { clearTimer(timer); timer = null; queue = []; blocked = false; return apply(kind, text); }
-      if (kind === 'none') { queue.push({ kind: 'none', text: '' }); clearTimer(timer); return flush(); }
+      if (kind === 'none') { pressed = false; queue.push({ kind: 'none', text: '' }); clearTimer(timer); return flush(); }
       if (ORDER[current] >= ORDER[kind]) return; // already there or past it
       enqueue(kind, text);
     },

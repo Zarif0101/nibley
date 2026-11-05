@@ -1,5 +1,7 @@
 // Overlay: draws marks (docs/DESIGN.md), plays the voice timed to them, records the mic.
 const { ipcRenderer } = require('electron');
+const { pillMotion } = require(require('node:path').join(__dirname, 'pill-motion.js'));
+const { createChoices } = require(require('node:path').join(__dirname, 'choices.js'));
 
 const NS = 'http://www.w3.org/2000/svg';
 const W = 1366, H = 768;
@@ -167,7 +169,7 @@ function draw(m) {
     currentStep = made;
   }
   marks.push(...made);
-  if (subRect) placeSub(); // a new mark may sit where the subtitle is
+  if (subRect) placeSub(); else layoutStack(); // a new mark may sit where the subtitle or pill is
 }
 
 function eraseAll() {
@@ -175,6 +177,7 @@ function eraseAll() {
   marks = [];
   placed.length = 0;
   currentStep = null;
+  layoutStack();
 }
 
 // ---------- subtitles (DESIGN.md): each say line while its audio plays ----------
@@ -193,14 +196,31 @@ function subParts(text) {
   Object.assign(sub.style, { display: 'none', visibility: '' });
   return parts;
 }
-// Bottom-centre; top-centre when the bottom spot would cover a mark or label.
+// Subtitle, answer buttons and pill stack together (DESIGN.md "Status pill"): bottom-centre, or all at the top when a
+// mark sits in the bottom quarter. Bottom, from the edge: subtitle 64 px, buttons, pill 184 px. Top: pill 24 px, buttons, subtitle.
+const atTop = () => placed.some((r) => r[1] + r[3] > H * 0.75);
+function layoutStack() {
+  const gap = 8, top = atTop(), wrap = $('status-wrap'), row = choices.el;
+  const subOn = !!subRect, subH = subOn ? sub.offsetHeight : 0, btnOn = choices.visible, btnH = btnOn ? row.offsetHeight : 0;
+  if (!top) {
+    const btnAt = Math.max(128, subOn ? SUB_GAP + subH + gap : 0);
+    const pillAt = Math.max(184, btnOn ? btnAt + btnH + gap : subOn ? SUB_GAP + subH + gap : 0);
+    if (subOn) sub.style.top = `${H - SUB_GAP - subH}px`;
+    Object.assign(row.style, { top: 'auto', bottom: `${btnAt}px` });
+    Object.assign(wrap.style, { top: 'auto', bottom: `${pillAt}px` });
+  } else {
+    const pillAt = 24, btnAt = pillAt + 36 + gap, subAt = btnOn ? btnAt + btnH + gap : btnAt;
+    if (subOn) sub.style.top = `${subAt}px`;
+    Object.assign(row.style, { bottom: 'auto', top: `${btnAt}px` });
+    Object.assign(wrap.style, { bottom: 'auto', top: `${pillAt}px` });
+  }
+  if (subOn) subRect[1] = parseFloat(sub.style.top);
+}
 function placeSub() {
   const w = sub.offsetWidth, h = sub.offsetHeight, x = Math.round((W - w) / 2);
-  const hitsAt = (y) => placed.filter((r) => x < r[0] + r[2] && x + w > r[0] && y < r[1] + r[3] && y + h > r[1]).length;
-  const bottom = H - SUB_GAP - h, top = SUB_GAP;
-  const y = hitsAt(bottom) && hitsAt(top) < hitsAt(bottom) ? top : bottom;
-  Object.assign(sub.style, { left: `${x}px`, top: `${y}px` });
-  subRect = [x, y, w, h];
+  sub.style.left = `${x}px`;
+  subRect = [x, 0, w, h];
+  layoutStack();
 }
 function showSub(text, dur) {
   hideSub(true);
@@ -255,7 +275,8 @@ function stopVoice() {
 let turn = 0, items = [], audios = new Map(), wakers = [], advanceWait = null, clearTimer = null, replay = false;
 const changed = () => new Promise((r) => wakers.push(r));
 const wake = () => { const w = wakers; wakers = []; w.forEach((r) => r()); };
-const isMark = (it) => it.kind === 'mark';
+const isMark = (it) => it.kind === 'mark' || it.kind === 'choices'; // both appear while the line before them is spoken
+const drawItem = (it) => (it.kind === 'choices' ? !replay && showChoices(it.options) : draw(it.mark));
 
 async function audioFor(i, id) {
   while (!audios.has(i)) { await changed(); if (id !== turn) return null; }
@@ -278,14 +299,13 @@ async function run(id) {
       if (!alive()) return;
       showSub(it.text, dur);
       ipcRenderer.send('voice:start', { turn: id, i: it.i, src: a.src || (a.buf ? 'edge' : 'windows'), synth_ms: a.synth_ms, wait_ms: Math.round(performance.now() - w0) });
-      if (!replay && ['listening', 'thinking', 'none'].includes(statusKind)) status('speaking', 'Speaking');
       // Marks after this say line appear while it is spoken, spaced across the line.
       const t0 = performance.now(), gap = Math.min(600, (dur * 1000) / 3);
       let j = 0;
       const take = () => {
         while (k < items.length && isMark(items[k])) {
-          const m = items[k++].mark, at = t0 + j++ * gap;
-          setTimeout(() => alive() && draw(m), Math.max(0, at - performance.now()));
+          const m = items[k++], at = t0 + j++ * gap;
+          setTimeout(() => alive() && drawItem(m), Math.max(0, at - performance.now()));
         }
       };
       take();
@@ -293,7 +313,7 @@ async function run(id) {
       hideSub();
       earRelease();
     } else if (isMark(it)) {
-      draw(it.mark);
+      drawItem(it);
     } else if (it.kind === 'wait') {
       if (replay) continue;
       ipcRenderer.send('waiting', { x: it.x, y: it.y });
@@ -307,7 +327,6 @@ async function run(id) {
     } else if (it.kind === 'clear') {
       eraseAll();
     } else if (it.kind === 'end') {
-      if (statusKind === 'speaking') status('none');
       ipcRenderer.send('turn:done', id);
       clearTimeout(clearTimer);
       if (!replay) clearTimer = setTimeout(eraseAll, 20000);
@@ -317,7 +336,7 @@ async function run(id) {
 }
 
 function stopAll() {
-  if (statusKind === 'speaking') status('none');
+  choices.hide();
   turn++;
   wake();
   stopVoice();
@@ -349,28 +368,51 @@ ipcRenderer.on('stop', () => { stopAll(); const bg = $('bg'); bg.style.display =
 ipcRenderer.on('advance', () => advanceWait && advanceWait());
 addEventListener('keydown', (e) => { if (e.key === 'Escape') ipcRenderer.send('replay:close'); });
 
-// ---------- status pill near the cursor: the mascot shows listening / thinking / speaking / problems ----------
+// ---------- answer buttons (QUALITY-PLAN T13): a pick counts as if he said it ----------
+let pickHow = 'click';
+const choices = createChoices(document.body, (text) => ipcRenderer.send('choice', { text, how: pickHow }), { onHide: () => ipcRenderer.send('choices:shown', false) });
+choices.el.addEventListener('mouseenter', () => ipcRenderer.send('choices:mouse', true)); // main stops ignoring the mouse here only
+choices.el.addEventListener('mouseleave', () => ipcRenderer.send('choices:mouse', false));
+function showChoices(options) {
+  choices.show(options);
+  layoutStack();
+  ipcRenderer.send('choices:shown', true);
+}
+// Keys come from the helper while the buttons show (the overlay never takes focus). 'other' = he is typing: get out of the way.
+ipcRenderer.on('choices:key', (_e, name) => {
+  if (name === 'other') return choices.hide();
+  pickHow = 'key';
+  choices.key(name);
+  pickHow = 'click';
+});
+
+// ---------- status pill, one fixed spot (DESIGN.md): the mascot shows listening / thinking / speaking / problems ----------
+// Main decides the order (src/overlay/pill-sequence.js); this only draws it, with motion (pill-motion.js).
 const mascot = require(require('node:path').join(__dirname, 'mascot.js'));
-let level = 0, statusTimer = null, levelLoop = null, talkLoop = null, statusKind = 'none', dotAnims = [], pillAt = [0, 0];
+let level = 0, statusTimer = null, levelLoop = null, talkLoop = null, statusKind = 'none', dotAnims = [];
 const FACE = { listening: 'listening', thinking: 'thinking', speaking: 'speaking', msg: 'confused', error: 'error' };
-function status(kind, text = '', x = pillAt[0], y = pillAt[1]) {
-  const s = $('status');
+function status(kind, text = '') {
+  const s = $('status'), was = statusKind;
   clearTimeout(statusTimer);
   cancelAnimationFrame(levelLoop);
   clearInterval(talkLoop);
   dotAnims.forEach((a) => a.cancel());
   dotAnims = [];
   statusKind = kind;
-  if (kind === 'none') { s.style.display = 'none'; return; }
-  pillAt = [x, y];
-  s.className = kind === 'listening' ? 'listening' : '';
-  $('face').innerHTML = mascot.svg(FACE[kind], 28);
-  $('word').textContent = text;
-  $('bars').style.display = kind === 'listening' ? 'flex' : 'none';
-  $('dots').style.display = kind === 'thinking' ? 'flex' : 'none';
-  s.style.display = 'flex';
-  s.style.left = `${Math.max(4, Math.min(x + 18, W - s.offsetWidth - 4))}px`;
-  s.style.top = `${Math.max(4, Math.min(y + 18, H - s.offsetHeight - 4))}px`;
+  if (kind === 'none') {
+    if (was !== 'none') pillMotion.leave(s, () => { if (statusKind === 'none') s.style.display = 'none'; });
+    return;
+  }
+  const fill = () => {
+    s.className = kind === 'listening' ? 'listening' : '';
+    $('face').innerHTML = mascot.svg(FACE[kind], 28);
+    $('word').textContent = text;
+    $('bars').style.display = kind === 'listening' ? 'flex' : 'none';
+    $('dots').style.display = kind === 'thinking' ? 'flex' : 'none';
+  };
+  s.getAnimations().forEach((a) => a.cancel()); // a leave still running must not hide the new state
+  if (was === 'none' || s.style.display !== 'flex') { fill(); s.style.display = 'flex'; layoutStack(); pillMotion.enter(s); }
+  else pillMotion.morph(s, fill);
   if (kind === 'listening') {
     const bars = [...$('bars').children];
     const tick = () => {
@@ -387,7 +429,7 @@ function status(kind, text = '', x = pillAt[0], y = pillAt[1]) {
     statusTimer = setTimeout(() => status('none'), kind === 'error' || text.length > 30 ? 4000 : 1500);
   }
 }
-ipcRenderer.on('status', (_e, kind, text, x, y) => status(kind, text, x === undefined ? x : x / K, y === undefined ? y : y / K)); // cursor is in screen px
+ipcRenderer.on('status', (_e, kind, text) => status(kind, text));
 
 // ---------- mic ----------
 let stream, rec, chunks = [], recStart = 0, analyser;

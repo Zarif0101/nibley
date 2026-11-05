@@ -1,0 +1,32 @@
+[
+  {
+    "name": "T13 click",
+    "pass": true,
+    "detail": "5/5"
+  },
+  {
+    "name": "T13 enter",
+    "pass": true,
+    "detail": "5/5"
+  },
+  {
+    "name": "T13 typing",
+    "pass": true,
+    "detail": "5/5"
+  },
+  {
+    "name": "T13 timeout",
+    "pass": true,
+    "detail": "5/5"
+  },
+  {
+    "name": "T13 elsewhere",
+    "pass": true,
+    "detail": "5/5"
+  },
+  {
+    "name": "T13 Claude adds choices to a yes/no question",
+    "pass": true,
+    "detail": "3/3"
+  }
+]

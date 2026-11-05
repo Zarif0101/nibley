@@ -20,7 +20,7 @@ const CHOICES_CSS = `
 const TIMEOUT_MS = 15000;
 const EASE = 'cubic-bezier(.3,.7,.2,1)';
 
-function createChoices(root, onPick, { timeoutMs = TIMEOUT_MS } = {}) {
+function createChoices(root, onPick, { timeoutMs = TIMEOUT_MS, onHide = () => {} } = {}) {
   if (!document.getElementById('choices-style')) {
     const st = document.createElement('style');
     st.id = 'choices-style';
@@ -33,7 +33,7 @@ function createChoices(root, onPick, { timeoutMs = TIMEOUT_MS } = {}) {
   root.appendChild(row);
   let options = [], timer = null;
 
-  function hide() { clearTimeout(timer); row.classList.remove('on'); row.innerHTML = ''; options = []; }
+  function hide() { const was = options.length > 0; clearTimeout(timer); row.classList.remove('on'); row.innerHTML = ''; options = []; if (was) onHide(); }
   function pick(i) {
     if (i < 0 || i >= options.length) return false;
     const text = options[i];
@@ -56,7 +56,8 @@ function createChoices(root, onPick, { timeoutMs = TIMEOUT_MS } = {}) {
         k.className = 'key';
         k.textContent = i === 0 ? 'Enter' : String(i + 1);
         b.appendChild(k);
-        b.addEventListener('click', () => pick(i));
+        // mouseup, not click: Windows eats the mousedown on the non-focusable overlay (measured 2026-11-05), so click never fires
+        b.addEventListener('mouseup', (e) => e.button === 0 && pick(i));
         row.appendChild(b);
       });
       row.classList.add('on');

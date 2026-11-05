@@ -80,3 +80,20 @@ test('errors jump the queue at once; a new press clears the pill', () => {
   assert.equal(h.seq.current, 'none');
   assert.deepEqual(h.seq.pending, []);
 });
+
+test('no press (spoken confirmation, clicked answer): Speaking or Thinking shows without a Listening step', () => {
+  const h = harness();
+  h.seq.push('speaking', 'Speaking');
+  assert.deepEqual(h.kinds(), ['speaking']);
+  h.seq.push('none'); h.advance(400);
+  h.seq.push('thinking', 'Thinking');
+  assert.deepEqual(h.kinds(), ['speaking', 'none', 'thinking']);
+});
+
+test('an accidental tap (none before the screenshot) shows nothing and leaves no Listening debt', () => {
+  const h = harness();
+  h.seq.press(); h.seq.push('none'); h.seq.ready();
+  h.advance(400);
+  h.seq.push('speaking', 'Speaking');
+  assert.deepEqual(h.kinds(), ['none', 'speaking']); // 'none' = stays hidden
+});

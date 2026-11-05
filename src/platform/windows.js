@@ -5,7 +5,7 @@ const readline = require('node:readline');
 
 let proc, nextId = 1, readyResolve, crashes = [];
 const pending = new Map();
-const pttListeners = [], clickListeners = [];
+const pttListeners = [], clickListeners = [], keyListeners = [];
 let ready = new Promise((r) => (readyResolve = r));
 let onError = () => {};
 
@@ -20,6 +20,7 @@ function start() {
       if (p) m.ok ? p.resolve(m) : p.reject(new Error(m.err));
     } else if (m.ev === 'ready') readyResolve();
     else if (m.ev === 'click') clickListeners.forEach((cb) => cb(m.x, m.y));
+    else if (m.ev === 'key') keyListeners.forEach((cb) => cb(m.name, m)); // Enter, Escape, 1-3, or 'other'
     else if (m.ev === 'error') onError(m.err);
     else pttListeners.forEach((cb) => cb(m.ev)); // win_down, ptt_down, ptt_up, win_up
   });
@@ -51,6 +52,9 @@ module.exports = {
   stop() { if (proc) { proc.stopping = true; proc.kill(); } },
   onError(cb) { onError = cb; },
   onPtt(cb) { pttListeners.push(cb); },
+  onKey(cb) { keyListeners.push(cb); },
+  // While answer buttons show: take Enter, Esc, 1-3; any other key ends it (QUALITY-PLAN T13).
+  async grabKeys(on) { await send('grab_keys', on ? 1 : 0); },
   async click(x, y) { await send('click', Math.round(x), Math.round(y)); },
   async type(text) { await send('type', b64(text)); },
   async key(name) { await send('key', name); },

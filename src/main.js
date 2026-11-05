@@ -7,6 +7,7 @@ const brain = require('./brain');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
 const { pickSource } = require('./screen');
+const { createPillSequencer } = require('./overlay/pill-sequence');
 const gate = require('./gate');
 const stt = require('./stt');
 const tts = require('./tts');
@@ -207,7 +208,9 @@ function speak(text, backup = false) {
   sayLine(ctx, text);
   send('item', ctx.id, { kind: 'end' });
 }
-const say = (kind, text) => { const c = screen.getCursorScreenPoint(); send('status', kind, text, c.x, c.y); };
+// Status pill in a fixed order (QUALITY-PLAN T12): press -> (screen grabbed) Listening -> Thinking -> Speaking -> none.
+const pill = createPillSequencer((kind, text) => send('status', kind, text));
+const say = (kind, text) => pill.push(kind, text);
 
 // ---------- turn loop ----------
 let turnId = 0, active = null, lastDone = null, pendingAsk = null, timing = {};
@@ -241,15 +244,16 @@ function onPtt(ev) {
     if (replaying) closeReplay();
     bargeIn();
     reassertTop();
+    pill.press(); // nothing on screen until the screenshot is taken, so the pill is never in it
     const id = turnId;
     shot = captureClean();
-    shot.then(() => { if (id === turnId && !timing.ptt_up) { timing.feedback_ms ??= Date.now() - pttDownAt; say('listening', 'Listening'); } }, (e) => log({ ev: 'shot_error', err: e.message }));
+    const ready = () => { if (id !== turnId) return; timing.feedback_ms ??= Date.now() - pttDownAt; pill.ready(); };
+    shot.then(ready, (e) => { log({ ev: 'shot_error', err: e.message }); ready(); });
     setTray('listening');
   } else if (ev === 'ptt_up') {
     timing.ptt_up = Date.now();
     if (Date.now() - pttDownAt < 250) { send('rec:cancel'); say('none'); setTray('ready'); return; } // accidental tap
     send('rec:stop');
-    timing.feedback_ms ??= Date.now() - pttDownAt; // first pill on screen (scorecard Q3); Listening was skipped
     say('thinking', 'Thinking');
     setTray('thinking');
   } else if (ev === 'win_up') {
@@ -294,6 +298,12 @@ async function handleText(text, id) {
   }
   // A new question instead of an answer just closes the interview.
   if (interview.open && /\?\s*$|^\W*(what|how|why|when|where|who|which|explain|can|could|show|tell|is|are|do|does)/i.test(text)) interview.open = false;
+  if (interview.open && /^\W*skip\W*$/i.test(text)) { // the Skip button: no answer, don't ask again
+    interview.open = false;
+    settings.pendingQuestion = null;
+    saveSettings();
+    return say('none');
+  }
   if (interview.open) {
     interview.open = false;
     memory.addLearning(settings.vaultPath, [`Asked "${settings.pendingQuestion}". He said: ${text}`]);
@@ -337,6 +347,7 @@ async function onCmd(ctx, cmd) {
     return sayLine(ctx, cmd.text);
   }
   if (cmd.type === 'title') { ctx.title = cmd.text; return; }
+  if (cmd.type === 'choices') return send('item', ctx.id, { kind: 'choices', options: cmd.options });
   if (cmd.type === 'clear') return send('item', ctx.id, { kind: 'clear' });
   if (cmd.type === 'wait_click') return ctx.replay || send('item', ctx.id, { kind: 'wait', x: cmd.x, y: cmd.y });
   if (cmd.type === 'action') return ctx.replay || onAction(ctx, cmd);
@@ -388,10 +399,12 @@ function endTurn(ctx) {
   if (ctx.id !== turnId) return;
   if (ctx.asks.length) {
     sayLine(ctx, `Should I ${ctx.asks.map((x) => x.describe).join(', then ')}?`);
+    send('item', ctx.id, { kind: 'choices', options: ['Yes', 'No'] }); // QUALITY-PLAN T13: buttons Nibley's code adds
     pendingAsk = { actions: ctx.asks.map((x) => x.a), until: Date.now() + 20000 };
   } else if (ctx.says && settings.pendingQuestion && !interview.asked) {
     interview = { asked: true, open: true }; // mini-interview: at most once per session
     sayLine(ctx, `Quick question: ${settings.pendingQuestion}`);
+    send('item', ctx.id, { kind: 'choices', options: ['Skip'] });
   }
   send('item', ctx.id, { kind: 'end' });
   if (!ctx.says && !ctx.asks.length) say('none');
@@ -466,12 +479,15 @@ function closeReplay() {
 // ---------- IPC ----------
 ipcMain.on('rec:data', (_e, buf, dur) => onUtterance(buf, dur));
 ipcMain.on('voice:start', (_e, { turn, i, src, synth_ms, wait_ms }) => {
-  if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now(); // the overlay switches the pill to Speaking
+  if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now();
+  // Speaking after Listening/Thinking or from nothing (spoken confirmations); an error or message stays up
+  if (turn === turnId && !replaying && ['listening', 'thinking', 'none'].includes(pill.current)) say('speaking', 'Speaking');
   // One line per spoken sentence, so the log shows which voice really played (QUALITY-PLAN T0, scorecard Q1).
   log({ ev: 'line_voice', turn, i, src, voice: src === 'edge' ? settings.voice : undefined, synth_ms, wait_ms });
 });
 ipcMain.on('turn:done', (_e, id) => {
   events.emit('turn:done', id);
+  if (id === turnId && !['error', 'msg'].includes(pill.current)) say('none'); // the answer ended: the pill leaves
   if (id !== turnId || !timing.ptt_down || timing.logged) return;
   timing.turn_end = Date.now();
   timing.logged = true;
@@ -483,6 +499,20 @@ ipcMain.on('waiting', (_e, at) => {
   stopClicks = platform.onMouseClick((cx, cy) => { if (Math.hypot(cx - x, cy - y) <= 40) { stopClicks?.(); stopClicks = null; send('advance'); } });
 });
 ipcMain.on('waiting-done', () => { stopClicks?.(); stopClicks = null; });
+// Answer buttons (QUALITY-PLAN T13). While they show: the mouse reaches the overlay only over the buttons, and the
+// helper takes Enter, Esc, 1-3 (any other key lets go at once, so typing is never blocked).
+ipcMain.on('choices:shown', (_e, on) => {
+  if (replaying) return;
+  overlay.setIgnoreMouseEvents(true, on ? { forward: true } : undefined);
+  platform.grabKeys(on).catch((e) => log({ ev: 'helper_error', err: e.message }));
+});
+ipcMain.on('choices:mouse', (_e, over) => { if (!replaying) overlay.setIgnoreMouseEvents(!over, { forward: true }); });
+ipcMain.on('choice', (_e, { text, how }) => {
+  log({ ev: 'choice', text, how });
+  bargeIn();
+  timing = { ptt_down: Date.now(), ptt_up: Date.now(), stt_done: Date.now(), choice: how }; // first word is timed from the pick
+  handleText(text, turnId);
+});
 ipcMain.on('act', (_e, id) => { const a = acts.get(id); acts.delete(id); if (a) runAction(a); });
 ipcMain.on('replay:close', () => replaying && closeReplay());
 ipcMain.on('ear', (_e, r) => log({ ev: 'ear', ...r }));
@@ -542,6 +572,7 @@ app.whenReady().then(async () => {
   setTray('starting');
   platform.onError((e) => log({ ev: 'helper_error', err: String(e).slice(0, 300) }));
   platform.onPtt(onPtt);
+  platform.onKey((name) => send('choices:key', name));
   brain.start({
     model: settings.model, claudePath: settings.claudePath,
     buildPrompt: () => prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }),
