@@ -6,6 +6,7 @@ const platform = require('./platform');
 const brain = require('./brain');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
+const { pickSource } = require('./screen');
 const gate = require('./gate');
 const stt = require('./stt');
 const tts = require('./tts');
@@ -116,10 +117,12 @@ function buildMenu() {
 // ---------- screenshot ----------
 async function capture() {
   const t = Date.now();
-  const [src] = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: SCREEN.w, height: SCREEN.h } });
+  const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: SCREEN.w, height: SCREEN.h } });
+  const src = pickSource(sources.map((s) => ({ s, display_id: s.display_id, size: s.thumbnail.getSize() })), screen.getAllDisplays(), screen.getPrimaryDisplay()).s;
   const img = src.thumbnail;
   const { width, height } = img.getSize();
-  if (width !== SCREEN.w || height !== SCREEN.h) log({ ev: 'shot_size_mismatch', width, height });
+  // 1600x900 scales to 1365x768: 1 px short is fine
+  if (Math.abs(width - SCREEN.w) > 2 || Math.abs(height - SCREEN.h) > 2) log({ ev: 'shot_size_mismatch', width, height, src: src.name });
   return { png: img.toPNG(), bmp: img.toBitmap(), w: width, ms: Date.now() - t };
 }
 
@@ -339,8 +342,12 @@ async function onCmd(ctx, cmd) {
   send('item', ctx.id, { kind: 'mark', mark: { ...cmd, edge: edgeFor(ctx.bmp, ctx.w, cmd) } });
 }
 
+// Claude's coordinates are screenshot pixels (1366x768); clicks and UI Automation need real screen pixels (1600x900).
+const toScreen = (x, y) => { const b = screen.getPrimaryDisplay().bounds; return [Math.round(b.x + x * b.width / SCREEN.w), Math.round(b.y + y * b.height / SCREEN.h)]; };
+
 async function onAction(ctx, a) {
   let info = {};
+  if (a.kind === 'click') { const [x, y] = toScreen(a.x, a.y); a = { ...a, x, y }; }
   try {
     if (a.kind === 'click') info = await platform.elementAt(a.x, a.y);
     if (a.kind === 'type') info = { isPassword: await platform.focusedIsPassword() };
@@ -469,8 +476,9 @@ ipcMain.on('turn:done', (_e, id) => {
   timing.logged = true;
   log({ ev: 'turn', model: settings.model, ...rel(timing) });
 });
-ipcMain.on('waiting', (_e, { x, y }) => {
+ipcMain.on('waiting', (_e, at) => {
   stopClicks?.();
+  const [x, y] = toScreen(at.x, at.y); // the mouse hook reports real screen pixels
   stopClicks = platform.onMouseClick((cx, cy) => { if (Math.hypot(cx - x, cy - y) <= 40) { stopClicks?.(); stopClicks = null; send('advance'); } });
 });
 ipcMain.on('waiting-done', () => { stopClicks?.(); stopClicks = null; });
@@ -508,7 +516,9 @@ if (!app.requestSingleInstanceLock()) app.quit();
 app.whenReady().then(async () => {
   const d = screen.getPrimaryDisplay();
   log({ ev: 'start', display: d.bounds, scale: d.scaleFactor, settings: { model: settings.model, mode: settings.mode, voice: settings.voice } });
-  if (d.scaleFactor !== 1 || d.bounds.width !== SCREEN.w || d.bounds.height !== SCREEN.h) log({ ev: 'display_mismatch', note: 'Built for 1366x768 at 100%; marks may be off.' });
+  // Any 16:9 screen at 100% works (screenshot and marks scale); other shapes or scaling are untested.
+  if (d.scaleFactor !== 1 || Math.abs(d.bounds.width / d.bounds.height - SCREEN.w / SCREEN.h) > 0.02) log({ ev: 'display_mismatch', note: 'Tested on 16:9 at 100%; marks may be off.' });
+  if (screen.getAllDisplays().length > 1) log({ ev: 'displays', n: screen.getAllDisplays().length, note: 'Nibley sees and draws on the primary screen only.' });
   const isOverlay = (wc) => overlay && wc && wc.id === overlay.webContents.id;
   const allowed = (wc, perm) => ['media', 'display-capture'].includes(perm) && isOverlay(wc);
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(allowed(wc, perm)));

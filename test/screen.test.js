@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { screenKey, sameScreen, screenDiff } = require('../src/screen');
+const { screenKey, sameScreen, screenDiff, pickSource } = require('../src/screen');
 
 const W = 1366, H = 768;
 // A busy fake screen: stripes and blocks of text-like noise, deterministic.
@@ -44,4 +44,15 @@ test('the key is small and the height defaults from the buffer length', () => {
   const k = screenKey(base, W);
   assert.equal(k.h, H);
   assert.equal(k.blocks.length, 64 * 36);
+});
+
+test('pickSource takes the overlay display, not sources[0] (Zarif: portrait laptop screen + 1600x900 primary)', () => {
+  const portrait = { id: 964081145, bounds: { x: 1600, y: 0, width: 768, height: 1366 } };
+  const primary = { id: 2484256938, bounds: { x: 0, y: 0, width: 1600, height: 900 } };
+  const src = [{ display_id: '', size: { width: 432, height: 768 } }, { display_id: '', size: { width: 1365, height: 768 } }];
+  assert.equal(pickSource(src, [portrait, primary], primary), src[1]); // by shape (measured sizes, display_id empty)
+  const ids = [{ display_id: '2484256938', size: { width: 432, height: 768 } }, { display_id: '964081145', size: { width: 1365, height: 768 } }];
+  assert.equal(pickSource(ids, [portrait, primary], primary), ids[0]); // an id wins over the shape
+  const twins = [{ display_id: '', size: { width: 1366, height: 768 } }, { display_id: '', size: { width: 1366, height: 768 } }];
+  assert.equal(pickSource(twins, [portrait, primary], primary), twins[1]); // same shape: the display's place in the list
 });

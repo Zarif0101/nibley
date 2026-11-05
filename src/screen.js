@@ -43,4 +43,18 @@ function sameScreen(a, b, { meanMax = 1.5, blockMax = 6 } = {}) {
   return d.mean <= meanMax && d.max <= blockMax;
 }
 
-module.exports = { screenKey, screenDiff, sameScreen, KW, KH };
+// Which desktopCapturer source is the overlay's display. With 2 screens, sources[0] was Zarif's portrait laptop
+// screen, so Claude looked at the wrong screen and every mark missed (2026-11-05). display_id is empty on his PC,
+// so: id, else the only source with the display's shape, else the display's place in the list.
+// sources: [{display_id, size: {width, height}}], displays: screen.getAllDisplays(), target: the overlay's display.
+function pickSource(sources, displays, target) {
+  const byId = sources.find((s) => s.display_id && s.display_id === String(target.id));
+  if (byId) return byId;
+  const want = target.bounds.width / target.bounds.height;
+  const shape = sources.filter((s) => Math.abs(s.size.width / s.size.height - want) < 0.02);
+  if (shape.length === 1) return shape[0];
+  const inOrder = sources[displays.findIndex((d) => d.id === target.id)];
+  return shape.includes(inOrder) ? inOrder : shape[0] || inOrder || sources[0];
+}
+
+module.exports = { screenKey, screenDiff, sameScreen, pickSource, KW, KH };

@@ -4,3 +4,4 @@ logs/
 settings.json
 piper/
 extension/config.js
+test/out/aim-*/

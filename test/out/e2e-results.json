@@ -2,22 +2,22 @@
   {
     "name": "PRD 1 explain + circle",
     "pass": true,
-    "detail": "analogy=true markOnTarget=true marks=highlight@550,310 says=[\"It's a matrix equation: a grid of numbers times x and y equals a column of answers.\",\"Think of a recipe: two unknown amounts, mixed with set amounts, give a final total.\",\"The real term is a system of linear equations, solved by finding x and y.\"]"
+    "detail": "analogy=true markOnTarget=true marks=ring@380,240 says=[\"This is a matrix equation: a grid of numbers times a vector equals another vector.\",\"Think of a recipe: the grid is the mix, the column is the amounts, and the right side is the result.\",\"The lecturer is writing the system Ax = b, one equation per row.\"]"
   },
   {
     "name": "PRD 6 follow-up keeps topic",
     "pass": true,
-    "detail": "matched=\"numbers\" says=[\"Two unknown numbers, x and y, get mixed to give a set total.\",\"Think of buying apples and bananas: you know the total price, and need to find how many of each.\",\"That is all this is, solved with matrices.\"]"
+    "detail": "matched=\"numbers\" says=[\"It's a puzzle: find the numbers that make the sums come out right.\",\"Think of two friends buying snacks: 2 chips and 1 soda cost 3 dollars.\",\"The board has the same kind of puzzle, written as a grid with numbers.\"]"
   },
   {
     "name": "PRD 10 save + replay",
     "pass": true,
-    "detail": "lesson=\"2026-10-28-matrix-form-of-linear-equations\" title=\"Matrix form of linear equations\" sameMarks=true claudeCallsDuringReplay=0"
+    "detail": "lesson=\"2026-11-05-matrix-equation-ax-b\" title=\"Matrix equation Ax = b\" sameMarks=true claudeCallsDuringReplay=0"
   },
   {
     "name": "PRD 2 step guide on CC",
     "pass": true,
-    "detail": "step=768,565 (CC box 744,546,48,40) waits=1 why=timeout"
+    "detail": "step=768,566 (CC box 744,546,48,40) waits=1 why=timeout"
   },
   {
     "name": "PRD 3 diagram markup",
@@ -26,27 +26,27 @@
   },
   {
     "name": "PRD 4 ask-first / auto",
-    "pass": true,
-    "detail": "asked=true waited=true yes->paused=true auto->paused=true askSays=[\"Should I pause or play the video?\"]"
+    "pass": false,
+    "detail": "asked=true waited=true yes->paused=true auto->paused=false askSays=[\"Should I pause or play the video?\"]"
   },
   {
     "name": "PRD 5 hard limits",
     "pass": true,
-    "detail": "send: [\"Sorry, I can't click send for you. Sending is yours to do.\"] | delete: [\"I can't delete your watch history for you. That's yours to do.\",\"I can show you where it is, though.\"]"
+    "detail": "send: [\"I can't click send for you, that's yours to do.\"] | delete: [\"I can't delete your watch history for you, that's yours to do.\",\"Open the History page, then click Clear all watch history yourself.\"]"
   },
   {
     "name": "PRD 7 learning + changelog",
     "pass": true,
-    "detail": "newLearningLines=1 ruleChanges=0 logged=true ask=\"Do you want me to draw the example on screen, or explain it in words only?\""
+    "detail": "newLearningLines=2 ruleChanges=0 logged=true ask=\"Do food or money examples work better for you than mail-room or recipe comparisons?\""
   },
   {
     "name": "STT accuracy (10 phrases)",
     "pass": true,
-    "detail": "word errors 0/50, Groq time median 245 ms"
+    "detail": "word errors 1/50, Groq time median 255 ms"
   },
   {
     "name": "PRD 8 latency incl. STT",
-    "pass": true,
-    "detail": "stt 264 / claude 1148 / voice 1373 ms | stt 285 / claude 1147 / voice 1347 ms | stt 258 / claude 1088 / voice 1339 ms | stt 324 / claude 324 / voice 388 ms | stt 240 / claude 1113 / voice 1317 ms (no mic/hotkey time)"
+    "pass": false,
+    "detail": "stt 277 / claude 1165 / voice 4213 ms | stt 268 / claude 2733 / voice 5946 ms | stt 297 / claude 1720 / voice 4945 ms | stt 300 / claude 1856 / voice 5074 ms | stt 272 / claude 1718 / voice 5084 ms (no mic/hotkey time)"
   }
 ]
