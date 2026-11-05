@@ -1,6 +1,6 @@
 // Real turns for the scorecard (QUALITY-PLAN T0, SPEED-TOKEN-PLAN P0): real Claude, real Edge voice, real overlay,
 // fixture screenshots instead of the screen, typed questions instead of the mic, scratch vault.
-// Run: npx electron test/turns.js [count]   (GAP_S=20 between questions, like a study session)
+// Run: npx electron test/turns.js [count] [--switch N]   (GAP_S=20 between questions; --switch: new tray voice before turn N)
 // Then: node test/scorecard.js
 const fs = require('node:fs');
 const os = require('node:os');
@@ -18,6 +18,7 @@ const main = require('../src/main');
 
 const COUNT = Number(process.argv.find((a) => /^\d+$/.test(a)) || 5);
 const GAP = Number(process.env.GAP_S || 20) * 1000;
+const SWITCH = process.argv.includes('--switch') ? Number(process.argv[process.argv.indexOf('--switch') + 1]) : -1; // switch voice before this turn
 const QS = [['what does this mean?', 'lecture'], ['explain this', 'diagram'], ['how do I turn on captions?', 'player'],
   ['can you say that again, even simpler?', 'lecture'], ['what is the part on the left?', 'diagram']];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -39,6 +40,12 @@ async function run() {
   await main.ready;
   await sleep(4000); // both Claude processes finish their warm-up
   for (let i = 0; i < COUNT; i++) {
+    if (i === SWITCH) { // QUALITY-PLAN T1: the voice picked in the tray must play right after a switch too
+      const other = main.VOICES.map((v) => v[1]).find((v) => v !== main.state.settings.voice && v.includes('Multilingual'));
+      console.log(`switch voice to ${other}`);
+      await main.setVoice(other);
+      await sleep(GAP);
+    }
     const [q, f] = QS[i % QS.length];
     const t0 = Date.now();
     console.log(`turn ${i + 1}/${COUNT} "${q}" on ${f}: ${await turn(q, f)} in ${((Date.now() - t0) / 1000).toFixed(1)} s`);

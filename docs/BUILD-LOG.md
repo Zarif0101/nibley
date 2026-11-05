@@ -182,3 +182,17 @@ Newest at the bottom. A new session reads this to resume.
   - Regression after the fix: unit 205/205. e2e 8/10: PRD 1, 2, 3, 5, 6, 7, 10 and STT (1/50 word errors) pass. FAIL PRD 4 auto: on the second "pause the video" Claude spoke a line instead of writing the pause action (key path untouched by this change; it passed on the last committed run). FAIL PRD 8: first word 4.2-5.9 s, the Edge voice wait (T1).
   - `test/out/aim-*/` is gitignored: those screenshots show Zarif's real screens.
 - NEXT: QUALITY-PLAN T1 (voice falls back to Piper, 30 real turns, root cause first). Space Edge tests out (burst throttle).
+
+## 2026-11-05 T1: voice falls back to Piper (root cause, no fix yet)
+- New `edge_req` log per sentence in `src/tts.js`: `ready_ms` (socket), `first_ms` (first audio), `total_ms`, `opened_ms`, `words`; after a timeout it keeps listening 15 s and logs `late_ms`. `test/turns.js --switch N` switches the tray voice before turn N.
+- 30 real turns (`test/turns.js 30 --switch 20`, 20 s apart; Andrew Multilingual, then Ava Multilingual):
+  - Q1 FAIL: 43% of 80 lines Edge; only 12 of 31 answers fully in the chosen voice. 16 of 31 first lines missed the 3 s budget, then the whole answer went to Piper (by design: one voice per answer).
+  - Q2 FAIL: first word 4.27 s median, 5.76 s p90 (no STT in this harness). Voice wait 3,050 ms median.
+  - Edge requests: 55; 36 in time, 19 late. All 19 late ones did answer, after 3.0-7.5 s (`late_ms`). Socket was ready in 0 ms every time. In-time ones: first audio median 2,053 ms, full sentence median 3,472 ms (the overlay waits for the full sentence).
+  - Not the cause: socket age (corr 0.09), gap since last request (0.14), requests in the last minute (-0.17). Sentence length weakly (0.32).
+- Same-moment voice tests (`scratchpad voice-probe.js`, fresh socket each, 6-8 s apart, interleaved), 3 runs:
+  - Edge has slow periods lasting minutes. In them the newer voices (Andrew, Ava, Emma, Brian, Multilingual and plain, also Sonia, William) took 1.5-8.2 s to first audio. In good periods they take ~0.2 s (Andrew Multilingual 0.18-0.29 s in 4 samples).
+  - Classic voices stayed fast in every sample: Jenny 0.16-0.54 s (8), Christopher 0.18-0.80 s (8), Guy 0.24-0.47 s (5), Aria 0.26-0.44 s (5).
+- Root cause: Edge's free service is slow for the picked voice for minutes at a time; Nibley's code is not slow (socket ready, request sent at once). The 3 s first-line budget then sends the whole answer to Piper.
+- WAITING on Zarif (QUALITY-PLAN open decision 4, now with numbers): fast classic voice, or keep Andrew with a fast Edge backup, or Piper first line, or wait longer.
+- Separate speed lever found (not done): the overlay waits for the whole sentence before playing (`total_ms` - `first_ms` = 0.1-1.5 s per line). Streaming playback would cut that on every line (SPEED-TOKEN-PLAN P7).

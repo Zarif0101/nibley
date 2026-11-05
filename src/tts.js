@@ -3,6 +3,7 @@
 // open ahead of time. Edge also throttles when many connections open within seconds: a "second request if slow"
 // hedge made failures worse in-app, so there is none. One spare connection, opened as the previous one is used.
 const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
+const { log } = require('./log');
 
 // MAX_AGE: warm() at the hotkey replaces older sockets. 10 s (2026-10-28) made most first lines reconnect inside their
 // budget, since the first line comes 4-14 s after the press. Re-measured 2026-11-04: sockets idle 2-20 s answered in
@@ -26,28 +27,35 @@ function warm() {
 }
 
 // One sentence to an MP3 buffer. Rejects if no audio arrives within giveUpMs.
+// Logs one edge_req line per sentence (QUALITY-PLAN T1): connect, first audio, done. After a timeout it keeps
+// listening up to 15 s, so the log tells "slow but arrives" (late_ms) from "never answers".
 async function synth(text, giveUpMs = GIVE_UP_MS) {
   warm();
   const conn = spare;
   spare = connect(); // ready for the next sentence
-  let stream, timer;
+  const t0 = Date.now(), seen = { opened_ms: t0 - conn.at, words: text.split(/\s+/).length };
+  let stream, timer, timedOut = false;
+  const close = () => { stream?.destroy(); conn.tts.close(); };
   try {
     return await new Promise((resolve, reject) => {
-      const t0 = Date.now(), seen = {};
-      timer = setTimeout(() => reject(new Error(`no audio in ${giveUpMs} ms (connected ${seen.ready ?? 'never'} ms, opened ${t0 - conn.at} ms before)`)), giveUpMs);
+      timer = setTimeout(() => { timedOut = true; reject(new Error(`no audio in ${giveUpMs} ms (connected ${seen.ready_ms ?? 'never'} ms, opened ${seen.opened_ms} ms before)`)); }, giveUpMs);
       conn.ready.then((tts) => {
-        seen.ready = Date.now() - t0;
+        seen.ready_ms = Date.now() - t0;
         ({ audioStream: stream } = tts.toStream(esc(text)));
         const chunks = [];
-        stream.on('data', (c) => { chunks.push(c); clearTimeout(timer); });
+        stream.on('data', (c) => { seen.first_ms ??= Date.now() - t0; chunks.push(c); clearTimeout(timer); });
         stream.on('end', () => (chunks.length ? resolve(Buffer.concat(chunks)) : reject(new Error('empty audio'))));
         stream.on('error', reject);
       }, reject);
     });
   } finally {
     clearTimeout(timer);
-    stream?.destroy();
-    conn.tts.close();
+    if (!timedOut) { close(); log({ ev: 'edge_req', ok: seen.first_ms != null, ...seen, total_ms: Date.now() - t0 }); }
+    else { // diagnostic: does the audio still come?
+      const giveUp = setTimeout(() => { close(); log({ ev: 'edge_req', ok: false, ...seen, late_ms: null }); }, 15000);
+      const onLate = () => { clearTimeout(giveUp); close(); log({ ev: 'edge_req', ok: false, ...seen, late_ms: Date.now() - t0 }); };
+      if (stream) stream.once('data', onLate); else conn.ready.then(() => stream ? stream.once('data', onLate) : null, () => {});
+    }
   }
 }
 
