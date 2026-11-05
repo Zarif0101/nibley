@@ -5,7 +5,7 @@ Zarif (2026-11-04): "slow down with the features and make the app more quality-f
 Companion docs: `TEACHING-BIBLE.md` (how Nibley teaches, layouts) and `LEARNING-ENGINE.md` (personalization, distillation). Those two are inputs to PRD v2; this plan is for the v1 app as it is today.
 
 ## 0. The rule
-No new feature until the scorecard (section 1) is green on 3 real study sessions in a row. A tweak that turns another line red is reverted.
+~~No new feature until the scorecard (section 1) is green on 3 real study sessions in a row.~~ Dropped by Zarif 2026-11-05: the next round is `docs/NEXT-ROUND.md` (bugs + voice, sidebar, new marks, 3D Nibley). Still in force: a tweak that turns another scorecard line red is reverted.
 
 ## 1. Scorecard (the quality bar)
 `test/scorecard.js` (built in T0) reads the newest `logs/nibley-*.log` + `test/out/e2e-results.json` and prints this table with pass/fail.
@@ -130,7 +130,7 @@ Each one: **Why** (evidence) · **Files** · **Change** · **Test** · **Done wh
 Note paper, chat, layouts, teaching styles, flashcards, quizzes, knowledge map. They wait for PRD v2 (Zarif's process: play back → his OK → PRD v2 → build). `TEACHING-BIBLE.md` and `LEARNING-ENGINE.md` are written so PRD v2 can be quick.
 
 ## 5. Open decisions for Zarif
-1. When Nibley starts explaining, should it pause the YouTube video and play it again after? (Today it only pauses when asked.)
+1. ~~When Nibley starts explaining, should it pause the YouTube video and play it again after?~~ Answered 2026-11-05: yes, pause and resume (`docs/NEXT-ROUND.md` phase 1 step 8).
 2. Teaching style: Nibley picks per question ("Auto"), or one fixed style that Nibley only suggests changing? (`TEACHING-BIBLE.md` section 3)
 3. Learner data: in the vault (`Second Brain/nibley/learner.json`, backed up with his notes) or in the app folder?
 4. If Edge is slow on the first line: stay silent a bit longer (up to 2 s) for the chosen voice, or start in Piper and switch to the chosen voice from line 2?

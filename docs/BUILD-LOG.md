@@ -213,3 +213,8 @@ Newest at the bottom. A new session reads this to resume.
   - Found: Windows drops the mousedown on Nibley's non-focusable overlay (only mouseup arrives), so `click` never fired. Buttons now pick on mouseup.
   - Live test, real helper, real mouse and keys on a white test page: click Yes 5/5 (page under it got nothing), Enter 5/5, typing 5/5 (letter reached the page, buttons gone), 15 s timeout 5/5 (keys released), click elsewhere 5/5 (reached the page, buttons stayed). Real Claude added `choices Yes | No` to a yes/no quiz question 3/3. Picture: `test/out/pill-choices.png`.
   - Test incident: WScript SendKeys sent test keys to the focused window, which was the Claude app; it typed "a2x" and pressed Enter there. It also taps NumLock first, which ended the grab (false failures). The test now uses keybd_event and sends a key only when the helper reports the test page in front.
+
+## 2026-11-05 Next-round interview (plan only, no code)
+- Zarif's new wish list turned into `docs/NEXT-ROUND.md` (21 answers + 5 phases): bugs + voice, sidebar shell, new marks, 3D Nibley, rest of the sidebar. QUALITY-PLAN rule 0 dropped; open decision 1 answered (pause + resume).
+- Uncommitted test changes from before this interview are still on `quality-pass` (`test/scorecard.js`, `test/subtitle-check.js`, `test/out/subtitle-results.json`, two `test/out/*.png`). Read and run them, then ask Zarif to commit or drop.
+- NEXT: `docs/NEXT-ROUND.md` phase 1 step 0 (eval baseline), then step 1 (voice audition).
