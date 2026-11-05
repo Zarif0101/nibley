@@ -196,3 +196,12 @@ Newest at the bottom. A new session reads this to resume.
 - Root cause: Edge's free service is slow for the picked voice for minutes at a time; Nibley's code is not slow (socket ready, request sent at once). The 3 s first-line budget then sends the whole answer to Piper.
 - WAITING on Zarif (QUALITY-PLAN open decision 4, now with numbers): fast classic voice, or keep Andrew with a fast Edge backup, or Piper first line, or wait longer.
 - Separate speed lever found (not done): the overlay waits for the whole sentence before playing (`total_ms` - `first_ms` = 0.1-1.5 s per line). Streaming playback would cut that on every line (SPEED-TOKEN-PLAN P7).
+- Zarif (2026-11-05): switch to Christopher. Done: his `settings.json` voice and the app default (`main.js DEFAULTS`) are `en-US-ChristopherNeural`. No other code change.
+- DONE T1. Same 30 turns again (`test/turns.js 30 --switch 20 --to en-US-JennyNeural --offline 2`):
+  - Q1 PASS: 100% of 83 lines in the chosen voice (was 43%); 31 of 31 answers fully in it (was 12 of 31). Lines: Christopher 53, Jenny 30 after the tray switch.
+  - Q2 PASS: first word 1.91 s median, 2.75 s p90 (was 4.27 s / 5.76 s; harness, no STT). Voice wait 769 ms median (was 3,050).
+  - Edge: 85 requests, 0 late (was 19 of 55). First audio median 475 ms, p90 848, max 1,303 (was 2,053 median).
+  - Offline (Edge address unreachable): Piper spoke 552 and 688 ms after the first say line; longest gap between lines 25 ms. Passes "Piper within 1.5 s, no silence over 2 s".
+  - Q7 0 errors in 30 turns. Q11 1,573 fresh tokens per answer, Q12 85% cache.
+  - Caveat: Edge may also have been in a good period during this run (Andrew was not re-measured side by side here). The three side-by-side probes earlier showed the classic voices fast in both good and slow periods.
+- QUALITY-PLAN open decision 4 is settled by the voice choice. NEXT: T12 + T13 (pill order and motion, click/Enter answer buttons).

@@ -29,7 +29,8 @@ function findClaude() {
   }
   return path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe');
 }
-const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-AvaMultilingualNeural', ink: '#2F8BFF', apps: { chrome: 'chrome', notepad: 'notepad' }, claudePath: '', vaultPath: 'C:\\Users\\arko4\\Desktop\\Second Brain', pendingQuestion: null };
+// Christopher: classic Edge voices stayed under 0.9 s in Edge's slow periods; Ava/Andrew took 1.5-8 s (BUILD-LOG 2026-11-05 T1)
+const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { chrome: 'chrome', notepad: 'notepad' }, claudePath: '', vaultPath: 'C:\\Users\\arko4\\Desktop\\Second Brain', pendingQuestion: null };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS, 'utf8')) }; } catch { /* first run */ }
 if (!settings.claudePath || !fs.existsSync(settings.claudePath)) settings.claudePath = findClaude();
