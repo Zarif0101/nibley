@@ -1,0 +1,593 @@
+{
+  "date": "2026-11-05T13-01-08",
+  "model": "haiku",
+  "effort": "high",
+  "styles": false,
+  "first_ms": {
+    "median": 2612,
+    "p90": 3830
+  },
+  "baseline": false,
+  "scores": {
+    "S1": 0.533,
+    "S2": 0.833,
+    "S3": 0.938,
+    "S4": 0.933,
+    "S5": 1,
+    "S6": 0.333,
+    "S7": 0.967
+  },
+  "score": 0.806,
+  "items": [
+    {
+      "id": "q01",
+      "question": "what does this mean?",
+      "style": "doodle-story",
+      "ms": 6130,
+      "first_ms": 5385,
+      "script": "say This is a matrix equation: a grid of numbers times a vector equals another vector.\nhighlight 380 170 400 150 | the matrix times x equals b\nsay Think of it like a recipe: the matrix holds the amounts, and x holds the unknowns we want to find.\nring 655 265 70 | the answer vector b\nsay Here the lecturer is combining the columns to get the result, which is the answer vector.\ntitle Matrix form of linear equations, Ax = b",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q02",
+      "question": "explain this like a story",
+      "style": "doodle-story",
+      "ms": 4278,
+      "first_ms": 3358,
+      "script": "say Picture a snack shop where each column is one snack, and x tells how many of each you buy.\nhighlight 590 175 80 130 | the snack prices, one column each\nsay One day, you buy some of each snack and the bill is exactly 0 and 3.\nhighlight 695 175 80 150 | the total you paid\nsay The puzzle is to find how many of each snack you bought, which is x.\nlabel 560 330 | combining columns makes the total\nsay The lecturer is mixing the columns together, just like adding up the cost of your shopping.\ntitle Matrix times x equals b, as a shopping story",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": 1,
+        "S5": null,
+        "S6": 1,
+        "S7": 0,
+        "score": 0.6666666666666666,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q03",
+      "question": "show me step by step how to solve this",
+      "style": "board-builder",
+      "ms": 6749,
+      "first_ms": 6170,
+      "script": "say First, write the two equations: 2x minus y equals 0, and minus x plus 2y equals 3.\nhighlight 415 175 90 110 | first column: 2 and -1\nsay From the first equation, y equals 2x. Put that into the second one.\nsay Then minus x plus 4x equals 3, so 3x equals 3, and x equals 1.\nsay Now y equals 2 times 1, so y equals 2.\nlabel 380 300 | answer: x = 1, y = 2\nsay Check: 2 times 1 minus 2 is 0, and minus 1 plus 4 is 3. Both work.\ntitle Solving a 2 by 2 system, x = 1 and y = 2",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.6,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q04",
+      "question": "how would they test this, exam style?",
+      "style": "exam-coach",
+      "ms": 4036,
+      "first_ms": 3770,
+      "script": "say An exam might give you this same system and ask for x. Which one is the solution?\nchoices x = [1, 2] | x = [2, 1] | x = [0, 3]\nsay Pick one, and I will show you how to check it by plugging it back in.\ntitle Exam practice: finding x in Ax = b",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 0,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.4,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q05",
+      "question": "quiz me on this",
+      "style": "question-buddy",
+      "ms": 2936,
+      "first_ms": 2612,
+      "script": "say Quiz time. On the board, what is the vector b on the right side?\nhighlight 695 175 80 150 | which vector is b?\nchoices [0, 3] | [-1, 2] | [2, -1]\nsay Pick one, and I will tell you if you got it right.\ntitle Quiz: identifying b in Ax = b",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q06",
+      "question": "what is a matrix?",
+      "style": "doodle-story",
+      "ms": 4054,
+      "first_ms": 3658,
+      "script": "say A matrix is a neat grid of numbers, arranged in rows and columns.\nsay Think of a spreadsheet or a seating chart, where every number has its own row and column.\nhighlight 415 175 250 130 | the whole grid is the matrix\nsay On this board, each bracketed column is one column of the matrix.\ntitle What is a matrix?",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q07",
+      "question": "why do we write it as a matrix?",
+      "style": "doodle-story",
+      "ms": 2750,
+      "first_ms": 2225,
+      "script": "say We write it as a matrix so many equations fit into one short line: Ax = b.\nhighlight 450 90 270 60 | Ax = b, short form\nsay Think of it like shorthand: instead of writing every equation, you write one line that holds them all.\nsay It also helps computers, because the same grid of numbers can be solved with the same steps every time.\ntitle Why write a system as a matrix",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q08",
+      "question": "what does the x mean here?",
+      "style": "doodle-story",
+      "ms": 2928,
+      "first_ms": 2566,
+      "script": "say The x stands for the unknown numbers we want to find.\nring 595 120 35 | x: the unknowns\nsay Think of it like the snack story: x holds how many of each snack you bought.\nsay In the matrix form, x is a short list of unknowns, one number per column.\ntitle What x means in Ax = b",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q09",
+      "question": "what is a system of linear equations?",
+      "style": "doodle-story",
+      "ms": 2658,
+      "first_ms": 2122,
+      "script": "say A system of linear equations is a group of equations that all use the same unknowns.\nhighlight 30 170 300 50 | equations with n unknowns\nsay Think of it like a riddle with several clues, where every clue must be true at the same time.\nsay Each equation is a straight line, so solving the system means finding the point where they all agree.\ntitle System of linear equations",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q10",
+      "question": "can you visualize this?",
+      "style": "picture-first",
+      "ms": 3961,
+      "first_ms": 3526,
+      "script": "say Picture two straight lines on a graph, one for each equation.\nsay They cross at exactly one point, x = 1 and y = 2, and that crossing is the answer.\nsay Another view: each column is an arrow, and x tells you how much of each arrow to add.\nhighlight 560 315 140 45 | combining the columns\nsay Stretch and add the arrows until they land exactly on b, which is the vector 0, 3.\ntitle Visualizing a linear system",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q11",
+      "question": "explain this diagram",
+      "style": "picture-first",
+      "ms": 4450,
+      "first_ms": 3830,
+      "script": "say This is a neural network that reads a handwritten digit, like the 2 in the box.\nhighlight 45 88 145 147 | the digit: 28 by 28 pixels\nring 330 330 40 | 784 input pixels\nsay Each circle is a neuron holding one number, and the lines between them carry those numbers along.\narrow 430 250 -> 520 250 | hidden layers find edges and shapes\nsay Think of a team of helpers passing notes, each layer finding simpler patterns than the last.\nhighlight 690 200 50 260 | 10 outputs, one per digit\nsay The brightest output, here the 2, is the network's guess.\ntitle How a neural network reads digits",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q12",
+      "question": "what are these circles?",
+      "style": "picture-first",
+      "ms": 4059,
+      "first_ms": 3507,
+      "script": "say These circles are neurons, and each one holds a single number between 0 and 1.\nring 470 330 150 | a layer of neurons\nsay Brighter circles mean a bigger number, like a dimmer switch that is turned up higher.\nsay Each neuron gets numbers from the layer before it, mixes them, and passes its own number on.\ntitle What a neuron is in a neural network",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q13",
+      "question": "what do the lines between them mean?",
+      "style": "picture-first",
+      "ms": 3961,
+      "first_ms": 3558,
+      "script": "say The lines are connections, and each one has a weight that says how strong that link is.\narrow 530 200 -> 585 320 | one connection with its weight\nsay Think of water pipes with valves: a wide-open valve lets more flow through.\nsay A weight can be positive or negative, so it can help a neuron or push it down.\nsay All these weights together form a matrix, the same kind of grid we saw on the board.\ntitle Connections and weights between neurons",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q14",
+      "question": "how does a neural network learn?",
+      "style": "doodle-story",
+      "ms": 3744,
+      "first_ms": 3335,
+      "script": "say A network learns by slowly changing its weights, the strengths of all those connection lines.\nsay It guesses, checks how wrong it was, then nudges each weight a tiny bit to be less wrong.\nsay Think of tuning a guitar: pluck a string, hear it is off, turn the peg a little, and try again.\nsay It repeats this on thousands of example digits until its guesses are mostly right.\nhighlight 968 68 230 130 | the next video explains the method\ntitle How a neural network learns",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q15",
+      "question": "explain this like a story",
+      "style": "doodle-story",
+      "ms": 3209,
+      "first_ms": 2350,
+      "script": "say Once upon a time, a tiny robot looked at a handwritten 2 and had to guess what it was.\nhighlight 45 88 145 147 | the picture the robot sees\nsay It sent the picture through its layers, passing notes from one team of neurons to the next.\nsay At the end, the robot shouted its guess, but at first it was often wrong.\nring 708 265 14 | the guess, and the robot's first try\nsay Each time it was wrong, it tuned its connection weights a little, until its guesses got better.\ntitle A robot learns to read digits",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": 1,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 0.8333333333333334,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q16",
+      "question": "quiz me on neural networks",
+      "style": "question-buddy",
+      "ms": 3015,
+      "first_ms": 2817,
+      "script": "say Quiz time. What does a weight on a connection line do?\nchoices It sets how strong that link is | It stores the digit picture | It counts the layers\nsay Pick one, and I will tell you if you got it right.\ntitle Quiz: what a weight does",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q17",
+      "question": "what is the input layer?",
+      "style": "picture-first",
+      "ms": 2774,
+      "first_ms": 2335,
+      "script": "say The input layer is the first column of circles, and it holds the picture itself.\nring 352 330 40 | input layer: 784 pixels\nsay Each circle holds the brightness of one pixel, so the 784 numbers are the 28 by 28 image flattened into a list.\nsay Think of it like a row of dimmer switches, one for each dot of the picture.\ntitle The input layer",
+      "scores": {
+        "S1": 1,
+        "S2": 0,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q18",
+      "question": "what is gradient descent?",
+      "style": "doodle-story",
+      "ms": 2931,
+      "first_ms": 2433,
+      "script": "say Gradient descent is a way to make the network's mistakes smaller, step by step.\nhighlight 968 68 230 130 | the video on gradient descent\nsay Think of hiking down a hill in thick fog: you feel the slope under your feet and take a step downhill.\nsay The hill is the error, and each step tweaks the weights so the error gets a little lower.\ntitle Gradient descent: walking downhill to fewer mistakes",
+      "scores": {
+        "S1": 1,
+        "S2": 0,
+        "S3": null,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q19",
+      "question": "what is the output here?",
+      "style": "picture-first",
+      "ms": 3723,
+      "first_ms": 3381,
+      "script": "say The output layer is the last column, with ten circles labeled 0 to 9, one for each digit.\nhighlight 690 200 50 260 | ten outputs, digits 0 to 9\nsay Each circle holds a score for how sure the network is that the picture is that digit.\nsay The brightest circle wins, so here the network's answer is the 2.\ntitle The output layer",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q20",
+      "question": "show me visually how information flows",
+      "style": "picture-first",
+      "ms": 3190,
+      "first_ms": 2533,
+      "script": "say Information flows left to right, starting from the picture and ending at the answer.\narrow 370 330 -> 455 330 | pixels feed the first layer\nsay Each layer takes numbers in, mixes them using the weights, and passes new numbers on.\narrow 490 330 -> 575 330 | simpler patterns move forward\narrow 605 330 -> 690 330 | final scores for each digit\nsay The last arrow leads to the ten outputs, and the brightest one is the answer.\ntitle How information flows through the network",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q21",
+      "question": "how do I turn on captions?",
+      "style": "doodle-story",
+      "ms": 3443,
+      "first_ms": 3254,
+      "script": "say Good news, captions are already showing at the bottom of this video.\nring 768 566 16 | CC button: turns captions on or off\nsay Click CC to hide them, and click it again to show them.\ntitle Turning captions on or off",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q22",
+      "question": "what does the CC button do?",
+      "style": "doodle-story",
+      "ms": 2391,
+      "first_ms": 2102,
+      "script": "say The CC button turns closed captions on or off, which show the spoken words as written text.\nring 768 566 16 | CC: closed captions button\nsay It helps when the audio is hard to hear, or when you want to read along.\ntitle What the CC button does",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 1,
+        "S4": 0,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.6666666666666666,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q23",
+      "question": "how do I make the video play slower?",
+      "style": "doodle-story",
+      "ms": 2760,
+      "first_ms": 2416,
+      "script": "say Click the gear icon, then choose Playback speed and pick a slower speed like 0.75.\nstep 1 816 566 | Click the gear (settings)\nwait_click 816 566\nsay Now pick Playback speed, then choose 0.75 or 0.5 to slow the video down.\ntitle Slowing down a video",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q24",
+      "question": "explain how video streaming works",
+      "style": "doodle-story",
+      "ms": 3822,
+      "first_ms": 3528,
+      "script": "say Streaming means the video arrives in small pieces while you watch, not all at once.\nhighlight 28 530 910 8 | the video loads in small chunks\nsay Think of a conveyor belt: the server sends the next piece before you finish the last one.\nsay The gray part ahead of the red bar is the buffer, and the player lowers quality if the internet slows.\ntitle How video streaming works",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q25",
+      "question": "what is a variable in python?",
+      "style": "doodle-story",
+      "ms": 2656,
+      "first_ms": 2375,
+      "script": "say A variable in Python is a name that holds a value, like a labeled box.\nsay For example, age = 15 stores the number 15 under the name age.\nsay You can change it later, so age = 16 replaces the old value with the new one.\ntitle Variables in Python",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q26",
+      "question": "explain recursion",
+      "style": "doodle-story",
+      "ms": 2887,
+      "first_ms": 2294,
+      "script": "say Recursion is when a function calls itself to solve a smaller version of the same problem.\nsay Think of Russian nesting dolls: each doll opens to reveal a smaller doll, until you reach the tiniest one.\nsay Every recursive function needs a base case, the tiny doll that stops the calls, or it would run forever.\nsay For example, factorial(n) returns n times factorial(n minus 1), and stops when n is 1.\ntitle Recursion: a function that calls itself",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q27",
+      "question": "what is an API?",
+      "style": "doodle-story",
+      "ms": 2374,
+      "first_ms": 2008,
+      "script": "say An API is a set of rules that lets one program ask another program for something.\nsay Think of a restaurant menu: you pick a dish from the list, and the kitchen makes it without you entering the kitchen.\nsay The menu is the API, the waiter carries your order, and the kitchen is the program that does the work.\ntitle What an API is",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.5,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q28",
+      "question": "what is compound interest?",
+      "style": "doodle-story",
+      "ms": 2712,
+      "first_ms": 2321,
+      "script": "say Compound interest means you earn interest on your original money and on the interest already added.\nsay Think of a snowball rolling downhill: it picks up more snow as it gets bigger, so it grows faster.\nsay For example, 100 at 10 percent gives 110 after year one, then 121 after year two, because year two earns on 110.\ntitle Compound interest: interest on interest",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 1,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.6,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q29",
+      "question": "how do I solve 2x + 3 = 11?",
+      "style": "board-builder",
+      "ms": 3011,
+      "first_ms": 2473,
+      "script": "say Start by getting rid of the plus 3: subtract 3 from both sides.\nsay That leaves 2x = 8, because 11 minus 3 is 8.\nsay Now divide both sides by 2 to get x alone.\nsay So x = 4. Check it: 2 times 4 is 8, plus 3 is 11.\ntitle Solving 2x + 3 = 11",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": null,
+        "S5": 1,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q30",
+      "question": "what is the derivative of x squared?",
+      "style": "exam-coach",
+      "ms": 3023,
+      "first_ms": 2573,
+      "script": "say The derivative of x squared is 2x, and it tells you how fast x squared is changing.\nsay Use the power rule: bring the power 2 down in front, then lower the power by 1.\nsay Think of a square with side x: its area is x squared, and when the side grows a little, the area grows by about 2x times that little bit.\ntitle Derivative of x squared is 2x",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.5,
+        "bad": 0
+      }
+    }
+  ]
+}

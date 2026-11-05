@@ -40,15 +40,15 @@ test('banned words are logged but not changed', () => {
   assert.equal(r.cmd.text, 'It is just a ratio.');
 });
 
-test('voice stops after 6 say lines', () => {
+test('voice stops after 5 say lines', () => {
   const l = createLint();
-  for (let i = 0; i < 6; i++) assert.ok(l.check(say(`Line ${i}.`)).cmd);
-  assert.deepEqual(l.check(say('Line 7.')), { cmd: null, fixes: ['too_many_lines'] });
+  for (let i = 0; i < 5; i++) assert.ok(l.check(say(`Line ${i}.`)).cmd);
+  assert.deepEqual(l.check(say('Line 6.')), { cmd: null, fixes: ['too_many_lines'] });
 });
 
-test('a 4th visible mark fades the oldest; steps and clear behave', () => {
+test('a 3rd visible mark fades the oldest; steps and clear behave', () => {
   const l = createLint();
-  for (const type of ['ring', 'arrow', 'label']) assert.equal(l.check({ type }).fadeOldest, undefined);
+  for (const type of ['ring', 'arrow']) assert.equal(l.check({ type }).fadeOldest, undefined);
   assert.equal(l.check({ type: 'step', n: 1 }).fadeOldest, undefined);
   const r = l.check({ type: 'highlight' });
   assert.equal(r.fadeOldest, true);

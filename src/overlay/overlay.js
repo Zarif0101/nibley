@@ -127,11 +127,21 @@ function swipe(x, y, w, h, rand, delay) {
   return d;
 }
 
-let marks = [], currentStep = null;
+let marks = [], currentStep = null, groups = []; // groups: one per drawn mark {made, boxes, step}, oldest first
+
+// Answer guard (T6, NEXT-ROUND Q8): max 2 marks on screen, so the oldest non-step mark fades before a new one.
+function fadeOldest() {
+  const g = groups.find((x) => !x.step);
+  if (!g) return;
+  groups = groups.filter((x) => x !== g);
+  g.made.forEach((x) => x.erase());
+  marks = marks.filter((x) => !g.made.includes(x));
+  for (const b of g.boxes) { const i = placed.indexOf(b); if (i >= 0) placed.splice(i, 1); }
+}
 
 function draw(m) {
   const rand = rng(seedOf(m));
-  const made = [];
+  const made = [], p0 = placed.length;
   const block = (x, y, w, h) => placed.push([x, y, w, h]);
   if (m.type === 'ring') {
     block(m.x - m.r * 1.1, m.y - m.r, m.r * 2.2, m.r * 2);
@@ -169,12 +179,14 @@ function draw(m) {
     currentStep = made;
   }
   marks.push(...made);
+  groups.push({ made, boxes: placed.slice(p0), step: m.type === 'step' });
   if (subRect) placeSub(); else layoutStack(); // a new mark may sit where the subtitle or pill is
 }
 
 function eraseAll() {
   for (const m of marks) m.erase();
   marks = [];
+  groups = [];
   placed.length = 0;
   currentStep = null;
   layoutStack();
@@ -182,7 +194,7 @@ function eraseAll() {
 
 // ---------- subtitles (DESIGN.md): each say line while its audio plays ----------
 const sub = $('sub'), SUB_MAX_H = 2 * 28 + 16, SUB_GAP = 64; // 2 lines of 28 px + padding
-let subRect = null, subFade = null, subTimers = [];
+let subRect = null, subFade = null, subTimers = [], subPlan = null;
 // Splits a line into parts of at most 2 lines at the subtitle's size.
 function subParts(text) {
   const parts = [];
@@ -222,20 +234,27 @@ function placeSub() {
   subRect = [x, 0, w, h];
   layoutStack();
 }
+// Returns a plan whose retime(seconds) re-spaces the parts not shown yet (streamed audio: exact length comes later).
 function showSub(text, dur) {
   hideSub(true);
   const parts = subParts(text), words = text.split(/\s+/).filter(Boolean).length || 1;
-  const ms = (Number.isFinite(dur) && dur > 0 ? dur : words * 0.38) * 1000; // MP3 duration can be Infinity
-  const showPart = (p) => { sub.textContent = p; sub.style.display = 'block'; placeSub(); };
-  let at = 0;
-  parts.forEach((p, n) => {
-    if (n === 0) showPart(p); else subTimers.push(setTimeout(() => showPart(p), at));
-    at += ms * p.split(' ').length / words; // each part shows for its share of the audio
-  });
+  const sec = (d) => (Number.isFinite(d) && d > 0 ? d : words * 0.38) * 1000; // MP3 duration can be Infinity
+  const plan = subPlan = { n: 0, before: 0, t0: performance.now(), ms: sec(dur) };
+  // each part shows for its share of the audio
+  const schedule = () => { if (plan.n < parts.length) subTimers.push(setTimeout(next, Math.max(0, plan.t0 + plan.ms * plan.before / words - performance.now()))); };
+  const next = () => {
+    sub.textContent = parts[plan.n]; sub.style.display = 'block'; placeSub();
+    plan.before += parts[plan.n++].split(' ').length;
+    schedule();
+  };
+  plan.retime = (d) => { if (subPlan !== plan) return; subTimers.forEach(clearTimeout); subTimers = []; plan.ms = sec(d); schedule(); };
+  next();
+  return plan;
 }
 function hideSub(now = false) {
   subTimers.forEach(clearTimeout);
   subTimers = [];
+  subPlan = null;
   subFade?.cancel();
   subFade = null;
   subRect = null;
@@ -250,7 +269,28 @@ let audio = null;
 function play(it, text) {
   // Returns {started: Promise<duration s>, ended: Promise, done}
   const h = { done: false };
-  if (it.buf) {
+  if (it.stream) { // Edge MP3 pieces as they arrive (P7), fed into a MediaSource; ipc 'audio:chunk' / 'audio:end' fill it
+    const ms = new MediaSource();
+    let exact;
+    h.exact = new Promise((res) => (exact = res)); // true length once the last piece is in
+    audio = new Audio(URL.createObjectURL(ms));
+    ms.addEventListener('sourceopen', () => {
+      let sb;
+      try { sb = ms.addSourceBuffer(it.mime); } catch { audio.onerror(); return; } // can't stream: skip the line, never hang the turn
+      let k = 0;
+      it.feed = () => {
+        if (sb.updating || ms.readyState !== 'open') return;
+        if (k < it.chunks.length) sb.appendBuffer(it.chunks[k++]);
+        else if (it.done) { ms.endOfStream(); exact(ms.duration); }
+      };
+      sb.addEventListener('updateend', it.feed);
+      it.feed();
+    }, { once: true });
+    // Length unknown until the last piece: estimate from words, like the Windows voice (subtitle parts, mark spacing)
+    h.started = new Promise((res) => { audio.onplaying = () => res(text.split(/\s+/).length * 0.38); });
+    h.ended = new Promise((res) => { audio.onended = audio.onerror = audio.onpause = () => { h.done = true; res(); }; });
+    audio.play().catch(() => { h.done = true; });
+  } else if (it.buf) {
     audio = new Audio(URL.createObjectURL(new Blob([it.buf], { type: it.mime || 'audio/mpeg' })));
     h.started = new Promise((res) => { audio.onplaying = () => res(audio.duration || 2); });
     h.ended = new Promise((res) => { audio.onended = audio.onerror = audio.onpause = () => { h.done = true; res(); }; });
@@ -276,7 +316,7 @@ let turn = 0, items = [], audios = new Map(), wakers = [], advanceWait = null, c
 const changed = () => new Promise((r) => wakers.push(r));
 const wake = () => { const w = wakers; wakers = []; w.forEach((r) => r()); };
 const isMark = (it) => it.kind === 'mark' || it.kind === 'choices'; // both appear while the line before them is spoken
-const drawItem = (it) => (it.kind === 'choices' ? !replay && showChoices(it.options) : draw(it.mark));
+const drawItem = (it) => (it.kind === 'choices' ? !replay && showChoices(it.options) : (it.fadeOldest && fadeOldest(), draw(it.mark)));
 
 async function audioFor(i, id) {
   while (!audios.has(i)) { await changed(); if (id !== turn) return null; }
@@ -297,7 +337,8 @@ async function run(id) {
       const h = play(a, it.text);
       const dur = await h.started;
       if (!alive()) return;
-      showSub(it.text, dur);
+      const plan = showSub(it.text, dur);
+      h.exact?.then((d) => plan?.retime(d));
       ipcRenderer.send('voice:start', { turn: id, i: it.i, src: a.src || (a.buf ? 'edge' : 'windows'), synth_ms: a.synth_ms, wait_ms: Math.round(performance.now() - w0) });
       // Marks after this say line appear while it is spoken, spaced across the line.
       const t0 = performance.now(), gap = Math.min(600, (dur * 1000) / 3);
@@ -359,9 +400,11 @@ ipcRenderer.on('turn', (_e, id, opts = {}) => {
 });
 ipcRenderer.on('item', (_e, id, it) => {
   if (id !== turn) return;
-  if (it.kind === 'audio') audios.set(it.i, it); else items.push(it);
+  if (it.kind === 'audio') audios.set(it.i, it.stream ? { ...it, chunks: [], done: false } : it); else items.push(it);
   wake();
 });
+ipcRenderer.on('audio:chunk', (_e, id, i, c) => { const a = id === turn && audios.get(i); if (a) { a.chunks.push(c); a.feed?.(); } });
+ipcRenderer.on('audio:end', (_e, id, i) => { const a = id === turn && audios.get(i); if (a) { a.done = true; a.feed?.(); } });
 ipcRenderer.on('ink', (_e, ink) => document.documentElement.style.setProperty('--ink', ink));
 ipcRenderer.on('bg', (_e, src) => { const bg = $('bg'); bg.src = src; bg.style.display = 'block'; }); // tests: show the fixture under the marks
 ipcRenderer.on('stop', () => { stopAll(); const bg = $('bg'); bg.style.display = 'none'; bg.removeAttribute('src'); });

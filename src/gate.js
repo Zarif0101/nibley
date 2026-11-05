@@ -42,11 +42,12 @@ function check(action, info = {}, settings = {}) {
       try { u = new URL(action.url); } catch { return no('I can only open web links.'); }
       if (!/^https?:$/.test(u.protocol)) return no('I can only open web links.');
       if (CHECKOUT_URL.test(u.pathname)) return no(`I can't buy or pay for anything, ${MINE}`);
-      return yes(`open ${u.hostname.replace(/^www\./, '')}`);
+      // Opening something new always asks, also in Auto mode (NEXT-ROUND Q15): never a surprise page
+      return { ...yes(`open ${u.hostname.replace(/^www\./, '')} in a new tab`), ask: true };
     }
     case 'open_app':
       if (!settings.apps || !Object.hasOwn(settings.apps, action.name)) return no(`I don't know the app ${action.name}.`);
-      return yes(`open ${action.name}`);
+      return { ...yes(`open ${action.name}`), ask: true };
     default:
       return no("I can't do that.");
   }

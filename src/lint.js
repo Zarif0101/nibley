@@ -1,6 +1,6 @@
 // Answer guard (QUALITY-PLAN T6): fixes what the prompt can't guarantee, one parsed script command at a time. Pure.
 // Wiring (local session, src/main.js onCmd): const r = ctx.lint.check(cmd); r.fixes.forEach((rule) => log({ ev: 'lint', rule, turn: ctx.id }));
-//   if (!r.cmd) return; if (r.fadeOldest) send('item', ctx.id, { kind: 'fade-oldest' }); then handle r.cmd as before.
+//   if (!r.cmd) return; a mark with r.fadeOldest is sent as { kind: 'mark', fadeOldest: true }; then handle r.cmd as before.
 // Create one guard per turn: ctx.lint = createLint().
 
 const MARKS = new Set(['ring', 'point', 'arrow', 'highlight', 'label']);
@@ -17,7 +17,8 @@ function shorten(text, max) {
   return w.slice(0, max).join(' ') + '…';
 }
 
-function createLint({ maxSay = 6, maxWords = 24, maxMarks = 3 } = {}) {
+// Caps from docs/NEXT-ROUND.md phase 1 step 4: 5 say lines, 2 marks on screen (Q8).
+function createLint({ maxSay = 5, maxWords = 24, maxMarks = 2 } = {}) {
   let says = 0, visible = 0;
   return {
     check(cmd) {

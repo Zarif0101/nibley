@@ -17,7 +17,7 @@ function startProc() {
   fs.writeFileSync(file, cfg.buildPrompt());
   const args = ['-p', '--model', cfg.model, '--setting-sources', '', '--strict-mcp-config', '--tools', '', '--disable-slash-commands',
     '--no-session-persistence', '--system-prompt-file', file, '--input-format', 'stream-json', '--output-format', 'stream-json',
-    '--verbose', '--include-partial-messages'];
+    '--verbose', '--include-partial-messages', ...(cfg.effort ? ['--effort', cfg.effort] : [])];
   const child = spawn(cfg.claudePath, args, { shell: false, windowsHide: true, env: cleanEnv() });
   const p = { child, file, turns: 0, lastUsed: Date.now(), queue: [], stderr: '', loggedInit: false };
   child.stdin.on('error', () => {});
@@ -98,7 +98,7 @@ function rotate() {
 module.exports = {
   cleanEnv,
 
-  // opts: {model, claudePath, buildPrompt, onFatal}
+  // opts: {model, claudePath, buildPrompt, onFatal, effort?} effort: claude --effort (low..max), none = Claude's default
   start(opts) {
     cfg = { onFatal: () => {}, ...opts };
     cur = startProc();

@@ -30,6 +30,8 @@ module.exports = {
   foregroundWin: { title: 'Lecture - YouTube - Brave', exe: 'brave' },
   micApps: [],
   async foreground() { return { ...module.exports.foregroundWin }; },
+  browserUrlNow: 'youtube.com/watch?v=fake0000000',
+  async browserUrl() { return module.exports.browserUrlNow; },
   async micUsers() { return [...module.exports.micApps]; },
   async openUrl(url) { rec('openUrl', url); },
   async openApp(exe) { rec('openApp', exe); },

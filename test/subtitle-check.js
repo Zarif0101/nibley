@@ -17,7 +17,8 @@ const brain = require('../src/brain');
 const main = require('../src/main');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const LONG = 'Here is a long line on purpose: when the cart is full of heavy bags you have to push much harder to get it moving, and the same push on an empty cart makes it speed up fast.';
+// 24 words (the answer guard's max, src/lint.js) but wider than 2 subtitle lines, so it must split
+const LONG = 'Here is a deliberately overlong subtitle sentence because the heavier shopping trolley needs considerably stronger pushing before anything starts moving while emptier trolleys accelerate.';
 const ANSWERS = {
   slide: [
     "say Newton's second law says force equals mass times acceleration.",
@@ -41,7 +42,12 @@ brain.ask = ({ onText, onEnd }) => {
 const overlaps = (a, b) => a[0] < b[0] + b[2] && a[0] + a[2] > b[0] && a[1] < b[1] + b[3] && a[1] + a[3] > b[1];
 const state = () => main.overlay.webContents.executeJavaScript('({ d: sub.style.display, t: sub.textContent, r: subRect, h: sub.offsetHeight, p: placed.map((x) => x) })');
 const results = [];
-const check = (name, pass, detail) => { results.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
+const check = (name, pass, detail) => { results.push({ name: `subtitle ${name}`, pass, detail }); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
+// Timing (scorecard Q4, +-150 ms): when each subtitle shows/hides vs when its audio starts/ends, measured in the overlay.
+const HOOK = `window.__t = []; { const p0 = play, s0 = showSub, h0 = hideSub;
+  play = (it, text) => { const h = p0(it, text); h.started.then(() => __t.push(['aplay', performance.now()])); h.ended.then(() => __t.push(['aend', performance.now()])); return h; };
+  showSub = (...a) => { __t.push(['show', performance.now()]); return s0(...a); };
+  hideSub = (now) => { if (sub.style.display === 'block' && !now) __t.push(['hide', performance.now()]); return h0(now); }; } 0`; // ends in 0: executeJavaScript must not return the function
 
 async function turn(fixture) {
   script = ANSWERS[fixture];
@@ -58,13 +64,14 @@ async function turn(fixture) {
   const ended = new Promise((r) => main.events.on('turn:done', function f(tid) { if (tid === id) { main.events.off('turn:done', f); r(); } }));
   main.events.on('send', onSend);
   ipcMain.on('voice:start', onVoice);
+  await main.overlay.webContents.executeJavaScript('__t.length = 0');
   main.testTurn('explain this', fs.readFileSync(path.join(__dirname, 'fixtures', `${fixture}.png`)));
   const poll = (async () => {
     while (!done) {
       const s = await state();
       if (s.d === 'block' && s.r) {
         seen.add(s.t);
-        if (s.r[1] === 64) wentTop = true;
+        if (s.r[1] < 384) wentTop = true; // top half: moved up with the pill and buttons (T12 stack)
         if (s.h > 2 * 28 + 16) problems.push(`3+ lines: "${s.t.slice(0, 30)}..."`);
         const hit = s.p.find((b) => overlaps(s.r, b));
         if (hit) problems.push(`covers mark at ${hit.map(Math.round)}`);
@@ -84,15 +91,22 @@ async function turn(fixture) {
   if (says.includes(LONG)) check(`${fixture}: long line split into parts`, [...seen].filter((t) => LONG.includes(t)).length >= 2, [...seen].filter((t) => LONG.includes(t)).map((t) => `"${t.slice(0, 25)}..."`).join(' + '));
   if (fixture === 'slide') check(`${fixture}: moved to top over the ring`, wentTop, 'see test/out/sub-slide.png');
   check(`${fixture}: cleared after the answer`, after.d === 'none', `display=${after.d}`);
+  // Pair each audio start with the next subtitle show, each audio end with the next hide.
+  const t = await main.overlay.webContents.executeJavaScript('__t');
+  const lag = (from, to) => t.filter((e) => e[0] === from).map(([, at]) => { const n = t.find((e) => e[0] === to && e[1] >= at - 150); return n ? Math.round(n[1] - at) : null; });
+  const on = lag('aplay', 'show'), off = lag('aend', 'hide'), all = [...on, ...off];
+  check(`${fixture}: in sync with the voice (+-150 ms)`, all.length >= 2 * says.length && all.every((d) => d != null && Math.abs(d) <= 150), `show after audio start ${on.join('/')} ms; hide after audio end ${off.join('/')} ms`);
 }
 
 async function run() {
   await main.ready;
   await sleep(3000);
+  await main.overlay.webContents.executeJavaScript(HOOK);
   await turn('slide');
   await sleep(3000);
   await turn('diagram');
-  console.log(`\n${results.filter(Boolean).length}/${results.length} pass. Screens: test/out/sub-slide.png, test/out/sub-diagram.png`);
+  fs.writeFileSync(path.join(__dirname, 'out', 'subtitle-results.json'), JSON.stringify(results, null, 2)); // scorecard Q4
+  console.log(`\n${results.filter((r) => r.pass).length}/${results.length} pass. Screens: test/out/sub-slide.png, test/out/sub-diagram.png`);
   fs.rmSync(TMP, { recursive: true, force: true });
   app.quit();
 }

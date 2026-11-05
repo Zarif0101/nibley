@@ -18,7 +18,6 @@ title Amplitude on a sine graph
 He asks "what is the slope?" with a straight line on a grid.
 ```
 say The slope is how steep the line is: it climbs 2 for every 1 across.
-ring 520 420 30 | start here
 say Look here: move one step right and the line climbs two steps.
 arrow 520 420 -> 600 420 | 1 across
 arrow 600 420 -> 600 260 | 2 up

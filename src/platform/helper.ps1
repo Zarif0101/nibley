@@ -198,6 +198,13 @@ public static class Nib {
         try { exe = Process.GetProcessById((int)pid).ProcessName; } catch { }
         return ",\"title\":" + Q(t.ToString()) + ",\"exe\":" + Q(exe);
       }
+      case "url": { // address bar text of the foreground Brave/Chrome/Edge window ("Now studying", NEXT-ROUND phase 1 step 5)
+        var bar = AutomationElement.FromHandle(GetForegroundWindow()).FindFirst(TreeScope.Descendants, new AndCondition(
+          new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit),
+          new PropertyCondition(AutomationElement.NameProperty, "Address and search bar")));
+        object vp;
+        return ",\"url\":" + Q(bar != null && bar.TryGetCurrentPattern(ValuePattern.Pattern, out vp) ? ((ValuePattern)vp).Current.Value : "");
+      }
       case "mic_users": { // apps Windows lists as using the microphone right now (LastUsedTimeStop = 0)
         var names = new System.Collections.Generic.List<string>();
         using (var root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone")) {

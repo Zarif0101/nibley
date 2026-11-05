@@ -4,7 +4,7 @@
 //   node test/eval/run.js                  normal run
 //   node test/eval/run.js --baseline       mark this run as the baseline
 //   node test/eval/run.js --only q01,q05   a few questions
-// Env: CLAUDE_PATH (default: claude), NIBLEY_MODEL (default: haiku), NIBLEY_EVAL_STYLES=0 to leave the style section out.
+// Env: CLAUDE_PATH (default: claude), NIBLEY_MODEL (default: haiku), NIBLEY_EFFORT (claude --effort; default: none), NIBLEY_EVAL_STYLES=0 to leave the style section out.
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -34,17 +34,19 @@ function askOnce(item) {
   const header = useStyles ? snapshot({ style, pace: { words: 16, lines: 4, rate: 0 }, analogy }) : '';
   return new Promise((resolve) => {
     const t0 = Date.now();
+    let sofar = '', first_ms = null; // first_ms: first full say line, when the voice could start
     brain.ask({
       png, text: header ? `${header}\n\n${item.question}` : item.question,
-      onEnd: (full) => resolve({ script: full, ms: Date.now() - t0, style }),
-      onError: (kind, detail) => resolve({ script: '', error: `${kind}: ${detail}`, ms: Date.now() - t0, style }),
+      onText: (d) => { sofar += d; if (first_ms === null && /^say .*\n/m.test(sofar)) first_ms = Date.now() - t0; },
+      onEnd: (full) => resolve({ script: full, ms: Date.now() - t0, first_ms, style }),
+      onError: (kind, detail) => resolve({ script: '', error: `${kind}: ${detail}`, ms: Date.now() - t0, first_ms, style }),
     });
   });
 }
 
 (async () => {
   brain.start({
-    model: process.env.NIBLEY_MODEL || 'haiku',
+    model: process.env.NIBLEY_MODEL || 'haiku', effort: process.env.NIBLEY_EFFORT,
     claudePath: process.env.CLAUDE_PATH || 'claude',
     buildPrompt: () => [prompt.build({ vaultPath: vault, apps: {} }), useStyles ? styles.section() : ''].filter(Boolean).join('\n\n'),
     onFatal: (e) => { console.error('brain failed:', e); process.exit(1); },
@@ -53,15 +55,17 @@ function askOnce(item) {
   for (const item of items) {
     const r = await askOnce(item);
     const s = scoreScript(r.script, item);
-    results.push({ id: item.id, question: item.question, style: r.style, ms: r.ms, error: r.error, script: r.script, scores: s });
+    results.push({ id: item.id, question: item.question, style: r.style, ms: r.ms, first_ms: r.first_ms, error: r.error, script: r.script, scores: s });
     console.log(`${item.id} ${s.score.toFixed(2)} ${r.error ? `ERROR ${r.error}` : ''}${item.question}`);
   }
   brain.stop();
   const sum = summarize(results);
   const date = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-  const out = { date, model: process.env.NIBLEY_MODEL || 'haiku', styles: useStyles, baseline: process.argv.includes('--baseline'), ...sum, items: results };
+  const firsts = results.map((r) => r.first_ms).filter((x) => x != null).sort((a, b) => a - b);
+  const first_ms = { median: firsts[Math.floor(firsts.length / 2)], p90: firsts[Math.floor(firsts.length * 0.9)] };
+  const out = { date, model: process.env.NIBLEY_MODEL || 'haiku', effort: process.env.NIBLEY_EFFORT || 'default', styles: useStyles, first_ms, baseline: process.argv.includes('--baseline'), ...sum, items: results };
   fs.mkdirSync(path.join(ROOT, 'test', 'out'), { recursive: true });
   const file = path.join(ROOT, 'test', 'out', `eval-${date}.json`);
   fs.writeFileSync(file, JSON.stringify(out, null, 2));
-  console.log(`\nscore ${sum.score} ${JSON.stringify(sum.scores)}\nsaved ${path.relative(ROOT, file)}`);
+  console.log(`\nscore ${sum.score} ${JSON.stringify(sum.scores)} first say line ${JSON.stringify(first_ms)} ms\nsaved ${path.relative(ROOT, file)}`);
 })();

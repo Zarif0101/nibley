@@ -1,6 +1,6 @@
 # Nibley next round: interview capture + handoff plan
 Date: 2026-11-05 · Goal: turn Zarif's wish list (3D character, sidebar, better marks, better voice, interface, resource gathering, leftovers) into a plan a new session can resume.
-Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. "First steps" done; resume at Phase 1 step 0.
+Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 session 1 (2026-11-05): steps 0, 1, 2, 3, 4, 5, 7, 8 done (numbers in BUILD-LOG). Resume at phase 1 step 6 (aim on real lecture frames).
 Raw capture: `Second Brain/brainstorms/2026-11-05-nibley-sidebar-voice-marks.md` · Project copy: `docs/NEXT-ROUND.md`
 Context sources: docs/QUALITY-PLAN.md, docs/PRD-v2.md, docs/BUILD-LOG.md, docs/DESIGN.md
 
@@ -234,6 +234,6 @@ Zarif used Nibley and listed what bothers him: the flat 2D mascot, marks that po
 - Merge the pill and the big 3D Nibley into one? -> Zarif, with an animated mockup in phase 4.
 - Tray icon stays 16 px pixel art (DESIGN.md) -> Zarif, if he wants it 3D too.
 - Esc to clear marks vs YouTube full screen (Esc exits it) -> live test in phase 3, then Zarif.
-- Kokoro download (new exe + model, ~300 MB?) needs the security check and Zarif's OK before install -> Zarif.
-- Uncommitted test changes on `quality-pass` (`test/scorecard.js`, `test/subtitle-check.js`, `test/out/subtitle-results.json`, two `test/out/*.png`) -> new session: read the diff, run them, then ask Zarif to commit or drop.
+- ~~Kokoro download~~ Zarif said no (2026-11-05): Christopher kept, chain Christopher -> Piper -> Windows.
+- ~~Uncommitted test changes~~ read and run 2026-11-05 (subtitle check 10/10, scorecard reads them); commit with phase 1.
 - QUALITY-PLAN open decisions 2 (teaching style Auto vs fixed) and 3 (learner data in vault vs app) still open -> Zarif, before PRD-v2 phase 2.

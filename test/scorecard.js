@@ -46,9 +46,9 @@ function score(events, { e2e = [], evals = [] } = {}) {
     : row('Q3', 'Feedback', 'seen or heard ≤ 150 ms after press', '-', 'no data'));
 
   const e2eRow = (re) => e2e.find((r) => re.test(r.name));
-  // Q4 subtitles: an e2e check named "subtitle".
-  const sub = e2eRow(/subtitle/i);
-  rows.push(sub ? row('Q4', 'Understand', 'subtitle on every line, ±150 ms', sub.detail || '', sub.pass ? 'pass' : 'fail')
+  // Q4 subtitles: every check named "subtitle ..." (test/subtitle-check.js writes them).
+  const subs = e2e.filter((r) => /subtitle/i.test(r.name));
+  rows.push(subs.length ? row('Q4', 'Understand', 'subtitle on every line, ±150 ms', `${subs.filter((r) => r.pass).length}/${subs.length} subtitle checks`, subs.every((r) => r.pass) ? 'pass' : 'fail')
     : row('Q4', 'Understand', 'subtitle on every line, ±150 ms', '-', 'no data'));
 
   // Q5 aim: eval S3 when there is an eval run, else e2e PRD 1-3.
@@ -129,12 +129,14 @@ function format(rows) {
 function readJson(file, fallback) { try { return JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return fallback; } }
 
 function main(argv) {
-  const files = argv.filter((a) => !a.startsWith('--'));
+  // --since <ISO time>: only events from one run (the day's log holds every run)
+  const since = argv.includes('--since') ? argv[argv.indexOf('--since') + 1] : null;
+  const files = argv.filter((a) => !a.startsWith('--') && a !== since);
   const logDir = path.join(ROOT, 'logs');
   const logs = files.length ? files : (fs.existsSync(logDir) ? fs.readdirSync(logDir).filter((f) => /^nibley-.*\.log$/.test(f)).sort().slice(-1).map((f) => path.join(logDir, f)) : []);
-  const events = logs.flatMap((f) => parseLog(fs.readFileSync(f, 'utf8')));
+  const events = logs.flatMap((f) => parseLog(fs.readFileSync(f, 'utf8'))).filter((e) => !since || e.t >= since);
   const out = path.join(ROOT, 'test', 'out');
-  const e2e = readJson(path.join(out, 'e2e-results.json'), []);
+  const e2e = [...readJson(path.join(out, 'e2e-results.json'), []), ...readJson(path.join(out, 'subtitle-results.json'), [])];
   const evals = fs.existsSync(out) ? fs.readdirSync(out).filter((f) => /^eval-.*\.json$/.test(f)).sort().map((f) => readJson(path.join(out, f), null)).filter((e) => e && typeof e.score === 'number') : [];
   const rows = score(events, { e2e, evals });
   console.log(`Logs: ${logs.map((f) => path.relative(ROOT, f)).join(', ') || 'none'}\n`);

@@ -27,9 +27,10 @@ function warm() {
 }
 
 // One sentence to an MP3 buffer. Rejects if no audio arrives within giveUpMs.
+// onChunk (optional): gets each MP3 piece as it arrives, so playback can start before the sentence is done (P7).
 // Logs one edge_req line per sentence (QUALITY-PLAN T1): connect, first audio, done. After a timeout it keeps
 // listening up to 15 s, so the log tells "slow but arrives" (late_ms) from "never answers".
-async function synth(text, giveUpMs = GIVE_UP_MS) {
+async function synth(text, giveUpMs = GIVE_UP_MS, onChunk = null) {
   warm();
   const conn = spare;
   spare = connect(); // ready for the next sentence
@@ -43,7 +44,7 @@ async function synth(text, giveUpMs = GIVE_UP_MS) {
         seen.ready_ms = Date.now() - t0;
         ({ audioStream: stream } = tts.toStream(esc(text)));
         const chunks = [];
-        stream.on('data', (c) => { seen.first_ms ??= Date.now() - t0; chunks.push(c); clearTimeout(timer); });
+        stream.on('data', (c) => { if (timedOut) return; seen.first_ms ??= Date.now() - t0; chunks.push(c); clearTimeout(timer); onChunk?.(c); });
         stream.on('end', () => (chunks.length ? resolve(Buffer.concat(chunks)) : reject(new Error('empty audio'))));
         stream.on('error', reject);
       }, reject);

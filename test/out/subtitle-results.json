@@ -1,0 +1,52 @@
+[
+  {
+    "name": "subtitle slide: subtitle = spoken line at each audio start",
+    "pass": true,
+    "detail": "#0 ok, #1 ok, #2 ok"
+  },
+  {
+    "name": "subtitle slide: max 2 lines, never over a mark",
+    "pass": true,
+    "detail": "4 subtitles shown"
+  },
+  {
+    "name": "subtitle slide: long line split into parts",
+    "pass": true,
+    "detail": "\"Here is a deliberately ov...\" + \"starts moving while empti...\""
+  },
+  {
+    "name": "subtitle slide: moved to top over the ring",
+    "pass": true,
+    "detail": "see test/out/sub-slide.png"
+  },
+  {
+    "name": "subtitle slide: cleared after the answer",
+    "pass": true,
+    "detail": "display=none"
+  },
+  {
+    "name": "subtitle slide: in sync with the voice (+-150 ms)",
+    "pass": true,
+    "detail": "show after audio start 0/0/0 ms; hide after audio end 0/0/0 ms"
+  },
+  {
+    "name": "subtitle diagram: subtitle = spoken line at each audio start",
+    "pass": true,
+    "detail": "#0 ok, #1 ok"
+  },
+  {
+    "name": "subtitle diagram: max 2 lines, never over a mark",
+    "pass": true,
+    "detail": "2 subtitles shown"
+  },
+  {
+    "name": "subtitle diagram: cleared after the answer",
+    "pass": true,
+    "detail": "display=none"
+  },
+  {
+    "name": "subtitle diagram: in sync with the voice (+-150 ms)",
+    "pass": true,
+    "detail": "show after audio start 0/0 ms; hide after audio end 0/0 ms"
+  }
+]
