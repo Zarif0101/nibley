@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nibley sidebar mockup</title>
+<!-- NEXT-ROUND phase 2 mockup for Zarif's OK. Uses only docs/DESIGN.md tokens. Lecture pictures come from
+     test/out/aim-frames (gitignored, made by test/aim-grab.js), so this file only works on Zarif's PC. -->
+<style>
+  @font-face { font-family: Inter; font-weight: 400; src: url(../src/overlay/fonts/inter-latin-400-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 600; src: url(../src/overlay/fonts/inter-latin-600-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 700; src: url(../src/overlay/fonts/inter-latin-700-normal.woff2); }
+  :root {
+    --ink: #2F8BFF; --deep: #1E6FEB; --sky: #4DA3FF; --text: #2B3A4B; --muted: #6B7A90; --bg: #F7FAFF; --line: #E6EEF8;
+    --chip-shadow: 0 2px 8px rgba(43,58,75,.28); --card-shadow: 0 1px 3px rgba(43,58,75,.08);
+    --ease: cubic-bezier(.3,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #FFFFFF; color: var(--text); font: 400 14px/20px Inter, sans-serif; padding: 16px; }
+  .page-head { max-width: 1600px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+  .page-head h1 { font: 600 20px/28px Inter; margin: 0; }
+  .page-head p { margin: 0; color: var(--muted); }
+  .controls { max-width: 1600px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .controls button { font: 600 14px/20px Inter; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--deep); background: #FFFFFF; color: var(--deep); cursor: pointer; }
+  .controls button.primary { background: var(--deep); color: #FFFFFF; }
+  .controls button:hover { border-color: var(--ink); }
+  .controls button:focus-visible, .side button:focus-visible, .edge-tab:focus-visible, .lesson:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .step-note { max-width: 1600px; margin: 0 auto 12px; min-height: 20px; font-weight: 600; color: var(--deep); }
+
+  /* The fake 1600x900 screen, scaled to fit */
+  .stage { max-width: 1600px; margin: 0 auto; aspect-ratio: 16 / 9; position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); }
+  .screen { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; background: #0F0F0F; }
+
+  /* Brave + YouTube, shrinks when the sidebar docks */
+  .browser { position: absolute; left: 0; top: 0; bottom: 0; right: 0; transition: right 220ms var(--ease); display: flex; flex-direction: column; background: #0F0F0F; color: #F1F1F1; }
+  .tabs { height: 36px; background: #202124; display: flex; align-items: end; padding-left: 8px; }
+  .tabs span { background: #0F0F0F; height: 30px; padding: 6px 14px; border-radius: 8px 8px 0 0; font-size: 12px; color: #E8EAED; max-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .addr { height: 36px; background: #0F0F0F; padding: 4px 12px; border-bottom: 1px solid #2A2A2A; }
+  .addr span { display: block; height: 28px; border-radius: 14px; background: #202124; padding: 4px 14px; font-size: 13px; color: #BDC1C6; }
+  .yt { flex: 1; display: flex; gap: 24px; padding: 20px 24px; min-width: 0; }
+  .yt-main { flex: 1; min-width: 0; }
+  .video { width: 100%; aspect-ratio: 1090 / 613; border-radius: 12px; background: #000 url(../test/out/aim-frames/frame-2.png) no-repeat;
+           background-size: 145.3% auto; background-position: 3.2% 27.4%; }
+  .yt-title { font: 600 20px/28px Inter; margin: 12px 0 4px; }
+  .yt-sub { color: #AAAAAA; font-size: 13px; }
+  .yt-side { width: 400px; flex: none; display: flex; flex-direction: column; gap: 12px; transition: width 220ms var(--ease), opacity 220ms; }
+  .yt-side div { height: 94px; border-radius: 8px; background: #272727; }
+  .narrow .yt-side { width: 0; opacity: 0; }
+
+  /* Edge tab: always visible, right edge, top */
+  .edge-tab { position: absolute; top: 84px; right: 0; width: 40px; height: 48px; border: 0; padding: 0 0 0 4px; cursor: pointer;
+              background: #FFFFFF; border-radius: 12px 0 0 12px; box-shadow: var(--chip-shadow); display: grid; place-items: center;
+              transition: right 220ms var(--ease); z-index: 3; }
+  .edge-tab:hover { box-shadow: 0 0 0 1.5px var(--sky), var(--chip-shadow); }
+
+  /* Sidebar */
+  .side { position: absolute; top: 0; right: 0; bottom: 0; width: 360px; background: var(--bg); border-left: 1px solid var(--line);
+          transform: translateX(100%); transition: transform 220ms var(--ease), width 0ms; display: flex; flex-direction: column; z-index: 2; }
+  .open .side { transform: none; }
+  .grip { position: absolute; left: -4px; top: 0; bottom: 0; width: 8px; cursor: ew-resize; }
+  .grip::after { content: ''; position: absolute; left: 3px; top: 50%; width: 2px; height: 40px; margin-top: -20px; border-radius: 1px; background: var(--line); transition: background 120ms; }
+  .grip:hover::after, .dragging .grip::after { background: var(--ink); }
+  .width-chip { position: absolute; left: 12px; top: 50%; margin-top: 30px; background: var(--deep); color: #FFFFFF; font: 600 12px/16px Inter; padding: 4px 8px; border-radius: 8px; opacity: 0; transition: opacity 120ms; }
+  .dragging .width-chip { opacity: 1; }
+  .side-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
+  .side-head b { font: 600 16px/24px Inter; flex: 1; }
+  .icon-btn { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+  .icon-btn:hover { background: var(--line); color: var(--text); }
+  .nav { display: flex; gap: 4px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .nav button { font: 600 14px/20px Inter; padding: 8px 4px 10px; margin-right: 16px; border: 0; background: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--deep); }
+  .panel { flex: 1; overflow: hidden; padding: 16px; display: none; }
+  .panel.on { display: block; }
+
+  /* Settings rows */
+  .row { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .row:last-child { border-bottom: 0; }
+  .row-label { font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .row-hint { color: var(--muted); font-size: 12px; line-height: 16px; margin-top: 6px; }
+  .seg { display: flex; background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+  .seg button { flex: 1; font: 600 13px/18px Inter; padding: 6px 8px; border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--deep); color: #FFFFFF; }
+  .voice { display: flex; gap: 8px; }
+  .voice .select { flex: 1; background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; display: flex; justify-content: space-between; }
+  .voice .select i { font-style: normal; color: var(--muted); }
+  .play { font: 600 13px/18px Inter; border: 1.5px solid var(--deep); color: var(--deep); background: #FFFFFF; border-radius: 8px; padding: 6px 12px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .play.playing { background: var(--deep); color: #FFFFFF; }
+  .switch { width: 40px; height: 24px; border-radius: 12px; background: var(--line); border: 0; position: relative; cursor: pointer; transition: background 150ms; }
+  .switch::after { content: ''; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #FFFFFF; box-shadow: var(--card-shadow); transition: left 150ms var(--ease); }
+  .switch[aria-checked="true"] { background: var(--deep); }
+  .switch[aria-checked="true"]::after { left: 19px; }
+
+  /* Lessons */
+  .lesson { display: grid; grid-template-columns: 112px 1fr; gap: 12px; padding: 10px; margin-bottom: 10px; background: #FFFFFF; border: 1px solid var(--line);
+            border-radius: 12px; box-shadow: var(--card-shadow); cursor: pointer; transition: border-color 120ms; }
+  .lesson:hover { border-color: var(--sky); }
+  .thumb { width: 112px; height: 63px; border-radius: 8px; background-repeat: no-repeat; background-size: 230% auto; }
+  .lesson b { display: block; font: 600 14px/18px Inter; }
+  .lesson p { margin: 4px 0; color: var(--text); font-size: 12px; line-height: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .lesson small { color: var(--muted); font-size: 12px; }
+  .replay { display: none; flex-direction: column; gap: 12px; }
+  .replay.on { display: flex; }
+  .back { align-self: flex-start; font: 600 14px/20px Inter; border: 0; background: none; color: var(--deep); padding: 4px 0; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .replay-shot { width: 100%; aspect-ratio: 16 / 9; border-radius: 8px; background: #000 url(../test/out/aim-frames/frame-2.png) no-repeat; background-size: 145.3% auto; background-position: 3.2% 27.4%; position: relative; }
+  .replay-shot svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .say { background: var(--text); color: #FFFFFF; font: 600 14px/20px Inter; padding: 8px 12px; border-radius: 8px; box-shadow: var(--chip-shadow); }
+  .esc { color: var(--muted); font-size: 12px; }
+
+  /* Mascot loop strip (src/overlay/mascot-loop.js format: 30 frames in one row) */
+  .m3d { display: block; background-repeat: no-repeat; animation: m3d 2.5s steps(30) infinite; }
+  .m3d-28 { width: 28px; height: 28px; background-size: 840px 28px; --w: -840px; }
+  .m3d-32 { width: 32px; height: 32px; background-size: 960px 32px; --w: -960px; }
+  @keyframes m3d { to { background-position: var(--w) 0; } }
+  .happy { background-image: url(../src/overlay/mascot3d/happy.webp); }
+  .speaking { background-image: url(../src/overlay/mascot3d/speaking.webp); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .browser, .edge-tab, .side, .yt-side, .switch::after { transition: none; }
+    .m3d { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Sidebar, first version</h1>
+    <p>Settings and Lessons only. It docks on the right and the browser gets narrower, so the video is never covered.</p>
+  </div>
+  <div class="controls">
+    <button class="primary" id="replayBtn">Play the walkthrough</button>
+    <button id="toggleBtn">Open / close</button>
+  </div>
+  <div class="step-note" id="note" aria-live="polite">Click the Nibley tab on the right edge, or play the walkthrough.</div>
+
+  <div class="stage" id="stage">
+    <div class="screen" id="screen">
+      <div class="browser" id="browser">
+        <div class="tabs"><span>Organic oxidation-reduction reactions - YouTube</span></div>
+        <div class="addr"><span>youtube.com/watch?v=bJMUKNbAsTY</span></div>
+        <div class="yt">
+          <div class="yt-main">
+            <div class="video" role="img" aria-label="Khan Academy lecture frame: oxidation and reduction"></div>
+            <div class="yt-title">Organic oxidation-reduction reactions | Organic chemistry | Khan Academy</div>
+            <div class="yt-sub">Khan Academy Organic Chemistry · 161K views</div>
+          </div>
+          <div class="yt-side"><div></div><div></div><div></div><div></div><div></div></div>
+        </div>
+      </div>
+
+      <button class="edge-tab" id="edgeTab" aria-label="Open Nibley sidebar (Win+Shift+`)" aria-expanded="false"><span class="m3d m3d-28 happy"></span></button>
+
+      <aside class="side" id="side" aria-label="Nibley sidebar">
+        <div class="grip" id="grip" role="separator" aria-orientation="vertical" aria-label="Drag to change sidebar width"><span class="width-chip" id="widthChip">360 px</span></div>
+        <div class="side-head">
+          <span class="m3d m3d-32 happy"></span>
+          <b>Nibley</b>
+          <button class="icon-btn" id="closeBtn" aria-label="Close sidebar">
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="nav" role="tablist">
+          <button role="tab" id="tabSettings" aria-selected="true">Settings</button>
+          <button role="tab" id="tabLessons" aria-selected="false">Lessons</button>
+        </div>
+
+        <div class="panel on" id="pSettings" role="tabpanel">
+          <div class="row">
+            <div class="row-label">Model</div>
+            <div class="seg"><button aria-pressed="true">Haiku</button><button aria-pressed="false">Sonnet</button></div>
+            <div class="row-hint">Haiku answers in about 2 seconds. Sonnet is slower and better at long working-outs.</div>
+          </div>
+          <div class="row">
+            <div class="row-label">Voice</div>
+            <div class="voice">
+              <div class="select">Christopher <i>US, male</i></div>
+              <button class="play" id="playBtn"><svg width="10" height="12" viewBox="0 0 10 12" aria-hidden="true"><path d="M1 1l8 5-8 5z" fill="currentColor"/></svg><span>Sample</span></button>
+            </div>
+          </div>
+          <div class="row">
+            <div class="row-label">Opening sites and apps</div>
+            <div class="seg"><button aria-pressed="false">Ask first</button><button aria-pressed="true">Auto</button></div>
+            <div class="row-hint">New sites always ask first, even in Auto.</div>
+          </div>
+          <div class="row">
+            <div class="row-label">Listen to the lecture <button class="switch" role="switch" aria-checked="true" aria-label="Listen to the lecture"></button></div>
+            <div class="row-hint">Nibley hears the last minute of the video, so it knows what the teacher just said.</div>
+          </div>
+        </div>
+
+        <div class="panel" id="pLessons" role="tabpanel">
+          <div id="lessonList">
+            <div class="lesson" tabindex="0" id="lesson0">
+              <div class="thumb" style="background-image:url(../test/out/aim-frames/frame-2.png);background-position:49% 0%"></div>
+              <div><b>Oxidation: LEO GER</b><p>You asked: what does LEO mean here?</p><small>Today, 9:41 PM</small></div>
+            </div>
+            <div class="lesson" tabindex="0">
+              <div class="thumb" style="background-image:url(../test/out/aim-frames/frame-1.png);background-position:66% 41%"></div>
+              <div><b>Why this nitrogen is sp2</b><p>You asked: why is it planar if it has a lone pair?</p><small>Today, 9:12 PM</small></div>
+            </div>
+            <div class="lesson" tabindex="0">
+              <div class="thumb" style="background-image:url(../test/out/aim-frames/frame-10.png);background-position:22% 14%"></div>
+              <div><b>Assembler</b><p>You asked: what does an assembler do?</p><small>Yesterday, 8:05 PM</small></div>
+            </div>
+          </div>
+          <div class="replay" id="replay">
+            <button class="back" id="backBtn"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 2L4 7l5 5" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Back to lessons</button>
+            <div class="replay-shot"><svg viewBox="0 0 320 180" aria-hidden="true"><ellipse id="ring" cx="225" cy="26" rx="15" ry="8" fill="none" stroke="#2F8BFF" stroke-width="2.4" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg></div>
+            <div class="say">LEO: losing electrons is oxidation. The carbon here loses a bond to H and gains one to O.</div>
+            <div class="esc">Esc also goes back.</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const screenEl = $('screen'), browser = $('browser'), side = $('side'), edge = $('edgeTab'), note = $('note');
+let width = 360, open = false;
+
+function fit() { screenEl.style.transform = `scale(${$('stage').clientWidth / 1600})`; }
+addEventListener('resize', fit); fit();
+
+function layout() {
+  side.style.width = `${width}px`;
+  browser.style.right = open ? `${width}px` : '0';
+  edge.style.right = open ? `${width}px` : '0';
+  browser.classList.toggle('narrow', open && width > 400);
+  $('widthChip').textContent = `${width} px`;
+}
+function setOpen(v) {
+  open = v;
+  screenEl.classList.toggle('open', v);
+  edge.setAttribute('aria-expanded', String(v));
+  edge.setAttribute('aria-label', v ? 'Close Nibley sidebar (Win+Shift+`)' : 'Open Nibley sidebar (Win+Shift+`)');
+  layout();
+}
+function tab(which) {
+  const s = which === 'settings';
+  $('tabSettings').setAttribute('aria-selected', String(s));
+  $('tabLessons').setAttribute('aria-selected', String(!s));
+  $('pSettings').classList.toggle('on', s);
+  $('pLessons').classList.toggle('on', !s);
+}
+function replayLesson(on) {
+  $('lessonList').style.display = on ? 'none' : '';
+  $('replay').classList.toggle('on', on);
+  const r = $('ring');
+  r.style.transition = 'none'; r.style.strokeDashoffset = '100';
+  if (on) requestAnimationFrame(() => requestAnimationFrame(() => { r.style.transition = 'stroke-dashoffset 450ms cubic-bezier(.3,.7,.2,1)'; r.style.strokeDashoffset = '0'; }));
+}
+
+edge.onclick = () => setOpen(!open);
+$('closeBtn').onclick = () => setOpen(false);
+$('toggleBtn').onclick = () => setOpen(!open);
+$('tabSettings').onclick = () => tab('settings');
+$('tabLessons').onclick = () => tab('lessons');
+document.querySelectorAll('.lesson').forEach((l) => { l.onclick = () => replayLesson(true); l.onkeydown = (e) => { if (e.key === 'Enter') replayLesson(true); }; });
+$('backBtn').onclick = () => replayLesson(false);
+addEventListener('keydown', (e) => { if (e.key === 'Escape') replayLesson(false); });
+document.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => { b.onclick = () => g.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); }));
+document.querySelector('.switch').onclick = (e) => e.currentTarget.setAttribute('aria-checked', String(e.currentTarget.getAttribute('aria-checked') !== 'true'));
+$('playBtn').onclick = (e) => { const b = e.currentTarget; b.classList.add('playing'); b.querySelector('span').textContent = 'Playing'; setTimeout(() => { b.classList.remove('playing'); b.querySelector('span').textContent = 'Sample'; }, 1600); };
+
+// Drag the left edge to resize (300-560 px, like the real window will)
+let drag = null;
+$('grip').addEventListener('pointerdown', (e) => { drag = { x: e.clientX, w: width }; screenEl.classList.add('dragging'); e.target.setPointerCapture(e.pointerId); });
+addEventListener('pointermove', (e) => { if (!drag) return; const k = 1600 / $('stage').clientWidth; width = Math.round(Math.min(560, Math.max(300, drag.w - (e.clientX - drag.x) * k))); browser.style.transition = side.style.transition = 'none'; layout(); });
+addEventListener('pointerup', () => { if (!drag) return; drag = null; screenEl.classList.remove('dragging'); browser.style.transition = side.style.transition = ''; });
+
+// Walkthrough
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let run = 0;
+async function walkthrough() {
+  const me = ++run, alive = () => me === run;
+  const say = (t) => { note.textContent = t; };
+  setOpen(false); tab('settings'); replayLesson(false); width = 360; layout();
+  say('1. The Nibley tab sits at the top of the right edge. The video has the full width.'); await sleep(1800); if (!alive()) return;
+  say('2. Click the tab (or Win+Shift+`, or say "open sidebar"). The sidebar docks and the browser gets narrower.'); setOpen(true); await sleep(2200); if (!alive()) return;
+  say('3. Settings: model, voice with a sample, how sites open, lecture listening.'); $('playBtn').click(); await sleep(2400); if (!alive()) return;
+  say('4. Lessons moved in here. No separate window any more.'); tab('lessons'); await sleep(1800); if (!alive()) return;
+  say('5. Open a lesson: it replays inside the sidebar, with a Back button. Esc works too.'); replayLesson(true); await sleep(2600); if (!alive()) return;
+  replayLesson(false); await sleep(600); if (!alive()) return;
+  say('6. Drag the left edge to make it wider. The width is remembered.'); screenEl.classList.add('dragging');
+  browser.style.transition = side.style.transition = 'none';
+  for (let w = 360; w <= 460 && alive(); w += 5) { width = w; layout(); await sleep(16); }
+  browser.style.transition = side.style.transition = ''; await sleep(1200); screenEl.classList.remove('dragging'); if (!alive()) return;
+  say('7. Close it (X, the tab, the hotkey, or voice). The video gets its space back.'); setOpen(false); await sleep(1600); if (!alive()) return;
+  width = 360; layout(); tab('settings');
+  say('Done. Click anything to try it yourself.');
+}
+$('replayBtn').onclick = walkthrough;
+</script>
+</body>
+</html>

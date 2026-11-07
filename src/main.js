@@ -142,7 +142,7 @@ async function captureClean() {
 function edgeFor(bmp, w, m) {
   if (!bmp) return '#2B3A4B';
   const cx = m.x ?? (m.x1 + m.x2) / 2, cy = m.y ?? (m.y1 + m.y2) / 2;
-  const x0 = m.type === 'highlight' ? m.x + m.w / 2 : cx, y0 = m.type === 'highlight' ? m.y + m.h / 2 : cy;
+  const box = m.type === 'highlight' || m.type === 'note', x0 = box ? m.x + m.w / 2 : cx, y0 = box ? m.y + m.h / 2 : cy;
   let sum = 0, n = 0;
   for (let dy = -20; dy <= 20; dy += 5) for (let dx = -20; dx <= 20; dx += 5) {
     const x = Math.round(x0 + dx), y = Math.round(y0 + dy);
@@ -554,12 +554,36 @@ ipcMain.on('waiting', (_e, at) => {
 ipcMain.on('waiting-done', () => { stopClicks?.(); stopClicks = null; });
 // Answer buttons (QUALITY-PLAN T13). While they show: the mouse reaches the overlay only over the buttons, and the
 // helper takes Enter, Esc, 1-3 (any other key lets go at once, so typing is never blocked).
+let choicesOn = false, cardsOn = false;
+const mouseThrough = () => overlay.setIgnoreMouseEvents(true, choicesOn || cardsOn ? { forward: true } : undefined); // forward: hover works
 ipcMain.on('choices:shown', (_e, on) => {
   if (replaying) return;
-  overlay.setIgnoreMouseEvents(true, on ? { forward: true } : undefined);
+  choicesOn = on;
+  mouseThrough();
   platform.grabKeys(on).catch((e) => log({ ev: 'helper_error', err: e.message }));
 });
-ipcMain.on('choices:mouse', (_e, over) => { if (!replaying) overlay.setIgnoreMouseEvents(!over, { forward: true }); });
+ipcMain.on('choices:mouse', (_e, over) => { if (!replaying) (over ? overlay.setIgnoreMouseEvents(false) : mouseThrough()); });
+// Note cards (NEXT-ROUND phase 3 v2). While marks show: the mouse over a card keeps them (hover needs forwarded moves),
+// and they clear at once when he switches window or tab (the foreground title changes), so nothing lingers (Q3).
+let screenWatch = null;
+ipcMain.on('cards:shown', async (_e, on) => {
+  if (replaying) return;
+  cardsOn = on;
+  mouseThrough();
+  clearInterval(screenWatch);
+  screenWatch = null;
+  if (!on) return;
+  const base = (await platform.foreground().catch(() => null))?.title;
+  if (!cardsOn || base == null || screenWatch) return;
+  screenWatch = setInterval(async () => {
+    const now = (await platform.foreground().catch(() => null))?.title;
+    if (now == null || now === base || !screenWatch) return;
+    clearInterval(screenWatch);
+    screenWatch = null;
+    log({ ev: 'marks_cleared', why: 'window_changed' });
+    send('marks:clear');
+  }, 400);
+});
 ipcMain.on('choice', (_e, { text, how }) => {
   log({ ev: 'choice', text, how });
   bargeIn();

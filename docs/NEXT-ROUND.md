@@ -1,6 +1,6 @@
 # Nibley next round: interview capture + handoff plan
 Date: 2026-11-05 · Goal: turn Zarif's wish list (3D character, sidebar, better marks, better voice, interface, resource gathering, leftovers) into a plan a new session can resume.
-Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). Resume at phase 2 (sidebar shell, mockup first).
+Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). 2026-11-08 update (Zarif): new order A, B, C below; Phase 3 v2 built 2026-11-08 (BUILD-LOG); resume at group B (floating sidebar interview). Capture: `Second Brain/brainstorms/2026-11-08-nibley-notes-over-screen.md`.
 Raw capture: `Second Brain/brainstorms/2026-11-05-nibley-sidebar-voice-marks.md` · Project copy: `docs/NEXT-ROUND.md`
 Context sources: docs/QUALITY-PLAN.md, docs/PRD-v2.md, docs/BUILD-LOG.md, docs/DESIGN.md
 
@@ -15,6 +15,22 @@ Zarif used Nibley and listed what bothers him: the flat 2D mascot, marks that po
 5. Pattern for `me/how-i-work.md` (suggest to Zarif): he picked every option in 9 of 10 multi-select questions. Next interviews: ask him to rank, or pick one, instead of multi-select.
 
 ## Build plan (order from Q17; each phase: build, test, log numbers in BUILD-LOG, then next)
+
+## 2026-11-08 update: note cards first, sidebar floats (Zarif, capture `brainstorms/2026-11-08-nibley-notes-over-screen.md`)
+Order now: **A** Phase 3 v2 (note cards, replaces phase 3) -> **B** phase 2 sidebar, but floating -> **C** teacher talk, voice pace, video awareness (interview later).
+
+### Phase 3 v2: note cards instead of free circles (about 2 sessions)
+Why: "someone who's watching is actually getting blasted with random instant circles"; circles and arrows all look the same; old marks stay after he switches screens.
+1. **Animated mockup** on a real lecture frame (`design/notes-mockup.html`), Zarif OKs it, then rewrite DESIGN.md "Marks on screen".
+2. **Card:** small white card (title + key fact/formula, notebook-style, max ~12 words, never a copy of the voice). Placed in empty space beside the video; in full screen, over the video part farthest from the target.
+3. **Line + soft mark:** a thin line draws from the card to the target and ends in a soft mark picked by the target: underline for text, thin outline for a shape. No free circles or arrows.
+4. **Timing:** a card appears when Nibley starts that point; text writes in with his voice; max 2 cards; all fade ~5 s after the answer ends (mouse on a card keeps it).
+5. **How-to steps:** numbered cards with lines, one step at a time; the next draws in after his click.
+6. **Bug:** marks and cards clear at once when the foreground window/tab changes or the screen under them changes.
+7. Prompt + parser: a `note` command with target box + title + text; tests; aim >= 90% on fixtures + real frames.
+
+### Phase 2 change
+- Sidebar floats over the screen (no AppBar, the browser keeps its size). Replaces Q3 "push the video". Details in the B interview.
 
 ### Phase 1: bugs + voice (about 2 sessions)
 0. **Eval baseline first** (QUALITY-PLAN T9) on the fixtures, so the prompt and thinking changes below can be judged. Save `test/out/eval-<date>.json`.

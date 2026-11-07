@@ -6,20 +6,18 @@
   @font-face { font-family: 'Inter'; font-weight: 400; src: url(fonts/inter-latin-400-normal.woff2) format('woff2'); }
   @font-face { font-family: 'Inter'; font-weight: 600; src: url(fonts/inter-latin-600-normal.woff2) format('woff2'); }
   @font-face { font-family: 'Inter'; font-weight: 700; src: url(fonts/inter-latin-700-normal.woff2) format('woff2'); }
-  :root { --ink: #2F8BFF; --deep: #1E6FEB; --swipe: #FFD98C; --text: #2B3A4B; --white: #FFFFFF; --shadow: 0 2px 8px rgba(43, 58, 75, .28); }
+  :root { --ink: #2F8BFF; --deep: #1E6FEB; --text: #2B3A4B; --white: #FFFFFF; --shadow: 0 2px 8px rgba(43, 58, 75, .28); }
   html, body { margin: 0; width: 1366px; height: 768px; overflow: hidden; background: transparent; font-family: 'Inter'; user-select: none; }
   #bg { position: absolute; inset: 0; width: 100%; height: 100%; display: none; }
   svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  #layer, #swipes { position: absolute; inset: 0; }
+  #layer { position: absolute; inset: 0; }
   .pen { fill: none; stroke: var(--ink); stroke-width: 3.5px; stroke-linecap: round; stroke-linejoin: round; }
   .edge { fill: none; stroke-width: 6.5px; stroke-linecap: round; stroke-linejoin: round; }
-  .swipe { position: absolute; transform-origin: left center; }
-  .swipe polygon { fill: var(--swipe); fill-opacity: .45; mix-blend-mode: multiply; }
-  .chip { position: absolute; background: var(--deep); color: var(--white); border-radius: 8px; padding: 6px 10px; box-shadow: var(--shadow);
-          font: 600 14px/20px 'Inter'; white-space: nowrap; }
-  .step { position: absolute; width: 28px; height: 28px; border-radius: 8px; background: var(--deep); color: var(--white); box-shadow: var(--shadow);
-          font: 700 16px/28px 'Inter'; text-align: center; }
-  .done { opacity: .35; }
+  .pen.thin { stroke-width: 2px; } .edge.thin { stroke-width: 5px; } .pen.soft { stroke-width: 3px; } .edge.soft { stroke-width: 6px; }
+  .card { position: absolute; box-sizing: border-box; padding: 10px 12px 12px; border-radius: 12px; background: var(--white); box-shadow: var(--shadow); }
+  .card .k { display: flex; align-items: center; gap: 8px; font: 600 15px/20px 'Inter'; color: var(--deep); }
+  .card .num { width: 22px; height: 22px; flex: none; border-radius: 6px; background: var(--deep); color: var(--white); font: 700 13px/22px 'Inter'; text-align: center; }
+  .card .v { margin-top: 4px; font: 400 14px/20px 'Inter'; color: var(--text); }
   #sub { position: absolute; display: none; box-sizing: border-box; width: max-content; max-width: 760px; padding: 8px 16px; border-radius: 8px;
          background: var(--text); color: var(--white); box-shadow: var(--shadow); font: 600 20px/28px 'Inter'; text-align: center; }
   #status-wrap { position: absolute; left: 0; right: 0; bottom: 184px; display: flex; justify-content: center; pointer-events: none; }
@@ -35,7 +33,6 @@
 </head>
 <body>
   <img id="bg" alt="">
-  <div id="swipes"></div>
   <svg id="svg"></svg>
   <div id="layer"></div>
   <div id="sub"></div>

@@ -8,17 +8,12 @@ const W = 1366, H = 768;
 const EASE = 'cubic-bezier(.3,.7,.2,1)';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (id) => document.getElementById(id);
-const svg = $('svg'), layer = $('layer'), swipes = $('swipes'); // swipes sit under pen strokes
+const svg = $('svg'), layer = $('layer');
 // Everything is drawn at 1366x768 (the screenshot size Claude sees) and scaled to the real screen (1600x900 since 2026-11).
 const K = Math.min(innerWidth / W, innerHeight / H) || 1;
 Object.assign(document.documentElement.style, { transformOrigin: '0 0', transform: `scale(${K})` });
 
 // ---------- helpers ----------
-function rng(seed) { // mulberry32: same mark, same wobble, so replays look identical
-  let a = seed >>> 0;
-  return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
-}
-const seedOf = (m) => [...JSON.stringify(m)].reduce((h, c) => Math.imul(h ^ c.charCodeAt(0), 16777619), 2166136261);
 const el = (tag, attrs = {}, parent) => {
   const e = document.createElementNS(NS, tag);
   for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
@@ -27,13 +22,12 @@ const el = (tag, attrs = {}, parent) => {
 };
 const div = (cls, style = {}, parent = layer) => { const d = document.createElement('div'); d.className = cls; Object.assign(d.style, style); parent.append(d); return d; };
 const pts = (list) => list.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join(' ');
-const grid4 = (v) => Math.round(v / 4) * 4;
 
 // A pen stroke with its edge outline underneath; draws on over `ms`, starting after `delay`.
-function stroke(d, edge, ms, delay = 0) {
+function stroke(d, edge, ms, delay = 0, kind = '') {
   const g = el('g', {}, svg);
-  const e = el('path', { d, class: 'edge', stroke: edge || '#2B3A4B' }, g);
-  const p = el('path', { d, class: 'pen' }, g);
+  const e = el('path', { d, class: `edge ${kind}`, stroke: edge || '#2B3A4B' }, g);
+  const p = el('path', { d, class: `pen ${kind}` }, g);
   const len = p.getTotalLength();
   for (const s of [e, p]) {
     s.style.strokeDasharray = `${len} ${len}`;
@@ -47,18 +41,17 @@ function stroke(d, edge, ms, delay = 0) {
   return g;
 }
 
-// Label chip: slides 6 px in from the left and fades in.
-function note(text, x, y, delay = 0) {
-  const d = div('chip', { left: `${x}px`, top: `${y}px` });
-  d.textContent = text;
-  if (!reduced) d.animate([{ transform: 'translateX(-6px)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1 }], { duration: 180, delay, easing: EASE, fill: 'backwards' });
-  d.erase = () => { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduced ? 0 : 200, fill: 'forwards' }); setTimeout(() => d.remove(), 220); };
-  return d;
-}
-
-// Place a note outside the mark's box, toward the calmest screen area, never over a mark or another note.
+// Calm screen areas (busy map from main.js) and the boxes already used this turn, so cards go to empty space.
 const placed = []; // boxes of every mark and note drawn this turn
 let busy = null;   // {cell, cols, data}: how busy each screenshot cell is (0 = flat)
+function inked(x, y, w, h, min = 3) {
+  if (!busy) return 0;
+  let n = 0;
+  for (let cy = Math.floor(y / busy.cell); cy <= Math.floor((y + h) / busy.cell); cy++) {
+    for (let cx = Math.floor(x / busy.cell); cx <= Math.floor((x + w) / busy.cell); cx++) if ((busy.data[cy * busy.cols + cx] || 0) >= min) n++;
+  }
+  return n;
+}
 function busyAt(x, y, w, h) {
   if (!busy) return 0;
   let s = 0, n = 0;
@@ -67,66 +60,6 @@ function busyAt(x, y, w, h) {
   }
   return n ? s / n : 0;
 }
-function placeNote(text, box, delay, across = false) {
-  const d = note(text, 0, 0, delay);
-  const w = d.offsetWidth, h = d.offsetHeight, gap = 12;
-  const [bx, by, bw, bh] = box;
-  const side = [[bx + bw + gap, by + bh / 2 - h / 2], [bx - gap - w, by + bh / 2 - h / 2]];
-  const vert = [[bx + bw / 2 - w / 2, by - gap - h], [bx + bw / 2 - w / 2, by + bh + gap]];
-  // across: the box is a line (arrow), so put the note beside the line, not along it
-  const cands = [...(across ? vert : side), ...(across ? side : vert), [bx + bw + gap, by + bh + gap], [bx - gap - w, by - gap - h]];
-  const fits = ([x, y]) => x >= 4 && y >= 4 && x + w <= W - 4 && y + h <= H - 4;
-  const hits = ([x, y]) => (subRect ? [...placed, subRect] : placed).filter((r) => x < r[0] + r[2] && x + w > r[0] && y < r[1] + r[3] && y + h > r[1]).length;
-  const score = (c, i) => hits(c) * 1000 + busyAt(c[0], c[1], w, h) + i * 3; // order breaks near-ties
-  const best = cands.map((c, i) => [c, score(c, i)]).filter(([c]) => fits(c)).sort((a, b) => a[1] - b[1])[0];
-  const [x, y] = best ? best[0] : [Math.min(Math.max(4, bx), W - w - 4), Math.min(Math.max(4, by + bh + gap), H - h - 4)];
-  Object.assign(d.style, { left: `${Math.round(x)}px`, top: `${Math.round(y)}px` });
-  placed.push([x, y, w, h]);
-  return d;
-}
-
-// ---------- mark shapes ----------
-function ringPath(x, y, r, rand) {
-  // Starts at ~10 o'clock, goes round once, overshoots ~25° so the ends cross; radius wobbles ±4%.
-  const p1 = rand() * 6.28, p2 = rand() * 6.28, sweep = (385 + rand() * 10) * Math.PI / 180, start = 210 * Math.PI / 180;
-  const out = [];
-  for (let i = 0; i <= 80; i++) {
-    const t = i / 80, a = start + sweep * t;
-    const k = 1 + 0.04 * (0.6 * Math.sin(2 * a + p1) + 0.4 * Math.sin(3 * a + p2)) - 0.06 * t;
-    out.push([x + Math.cos(a) * r * 1.06 * k, y + Math.sin(a) * r * 0.96 * k]);
-  }
-  return pts(out);
-}
-
-function arrowPaths(x1, y1, x2, y2, rand) {
-  const dx = x2 - x1, dy = y2 - y1, len = Math.hypot(dx, dy) || 1;
-  const nx = -dy / len, ny = dx / len, bend = len * (0.06 + rand() * 0.04) * (rand() < 0.5 ? -1 : 1);
-  const cx = (x1 + x2) / 2 + nx * bend * 2, cy = (y1 + y2) / 2 + ny * bend * 2;
-  const ex = x2 - (x2 - cx) / Math.hypot(x2 - cx, y2 - cy) * 6, ey = y2 - (y2 - cy) / Math.hypot(x2 - cx, y2 - cy) * 6; // stop short of the target
-  const ang = Math.atan2(ey - cy, ex - cx), head = 14, spread = 0.5;
-  const h1 = [ex - head * Math.cos(ang - spread), ey - head * Math.sin(ang - spread)];
-  const h2 = [ex - head * Math.cos(ang + spread), ey - head * Math.sin(ang + spread)];
-  return { shaft: `M${x1} ${y1} Q${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}`, head: pts([h1, [ex, ey], h2]), mid: [(x1 + 2 * cx + x2) / 4, (y1 + 2 * cy + y2) / 4] };
-}
-
-function tickPath(x, y, rand) {
-  const ox = x - 70, oy = y + 2 + rand() * 4; // beside the target, left of its ring
-  return pts([[ox, oy - 8], [ox + 8, oy + 2], [ox + 26, oy - 18]]);
-}
-
-function swipe(x, y, w, h, rand, delay) {
-  const d = div('swipe', { left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`, transform: 'rotate(-2deg)' }, swipes);
-  const s = el('svg', { width: w, height: h, viewBox: `0 0 ${w} ${h}` });
-  s.style.position = 'static';
-  const j = () => 2 + rand(); // ragged short ends, 2-3 px
-  const poly = [[j(), 0], [w - j(), 0], [w - j() + 1, h * 0.33], [w - j(), h * 0.66], [w - j(), h], [j(), h], [j() - 1, h * 0.6], [j(), h * 0.3]];
-  el('polygon', { points: poly.map((p) => p.join(',')).join(' ') }, s);
-  d.append(s);
-  if (!reduced) d.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: 350, delay, easing: EASE, fill: 'backwards' });
-  d.erase = () => { d.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 0 0 100%)' }], { duration: reduced ? 0 : 200, fill: 'forwards' }); setTimeout(() => d.remove(), 220); };
-  return d;
-}
-
 let marks = [], currentStep = null, groups = []; // groups: one per drawn mark {made, boxes, step}, oldest first
 
 // Answer guard (T6, NEXT-ROUND Q8): max 2 marks on screen, so the oldest non-step mark fades before a new one.
@@ -139,48 +72,105 @@ function fadeOldest() {
   for (const b of g.boxes) { const i = placed.indexOf(b); if (i >= 0) placed.splice(i, 1); }
 }
 
-function draw(m) {
-  const rand = rng(seedOf(m));
-  const made = [], p0 = placed.length;
-  const block = (x, y, w, h) => placed.push([x, y, w, h]);
-  if (m.type === 'ring') {
-    block(m.x - m.r * 1.1, m.y - m.r, m.r * 2.2, m.r * 2);
-    made.push(stroke(ringPath(m.x, m.y, m.r, rand), m.edge, 450));
-    if (m.label) made.push(placeNote(m.label, [m.x - m.r * 1.1, m.y - m.r, m.r * 2.2, m.r * 2], 300));
-  } else if (m.type === 'point') {
-    block(m.x - 72, m.y - 30, 102, 60);
-    made.push(stroke(tickPath(m.x, m.y, rand), m.edge, 250), stroke(ringPath(m.x, m.y, 28, rand), m.edge, 450, 150));
-    if (m.label) made.push(placeNote(m.label, [m.x - 50, m.y - 30, 80, 60], 300));
-  } else if (m.type === 'arrow') {
-    const a = arrowPaths(m.x1, m.y1, m.x2, m.y2, rand);
-    const xs = [m.x1, m.x2, a.mid[0]], ys = [m.y1, m.y2, a.mid[1]];
-    block(Math.min(...xs) - 8, Math.min(...ys) - 8, Math.max(...xs) - Math.min(...xs) + 16, Math.max(...ys) - Math.min(...ys) + 16);
-    made.push(stroke(a.shaft, m.edge, 220), stroke(a.head, m.edge, 80, 220));
-    if (m.label) {
-      const flat = Math.abs(m.x2 - m.x1) >= Math.abs(m.y2 - m.y1);
-      made.push(placeNote(m.label, [a.mid[0] - 10, a.mid[1] - 10, 20, 20], 250, flat));
-    }
-  } else if (m.type === 'highlight') {
-    block(m.x, m.y, m.w, m.h);
-    made.push(swipe(m.x, m.y, m.w, m.h, rand, 0));
-    if (m.label) made.push(placeNote(m.label, [m.x, m.y, m.w, m.h], 300));
-  } else if (m.type === 'label') {
-    made.push(placeNote(m.text, [m.x - 4, m.y - 4, 8, 8], 0));
-  } else if (m.type === 'step') {
-    if (currentStep) currentStep.forEach((x) => x.classList?.add('done') ?? x.style.setProperty('opacity', '.35'));
-    const r = 28;
-    block(m.x - r * 1.1 - 36, m.y - r - 20, r * 2.2 + 36, r * 2 + 20);
-    const blk = div('step', { left: `${grid4(m.x - r * 1.1 - 36)}px`, top: `${grid4(m.y - r - 20)}px` });
-    blk.textContent = m.n;
-    if (!reduced) blk.animate([{ transform: 'scale(0.6)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 150, easing: EASE });
-    blk.erase = () => { blk.animate([{ clipPath: 'inset(0 0 0 0)' }, { clipPath: 'inset(0 100% 0 0)' }], { duration: reduced ? 0 : 200, fill: 'forwards' }); setTimeout(() => blk.remove(), 220); };
-    made.push(blk, stroke(ringPath(m.x, m.y, r, rand), m.edge, 450));
-    if (m.label) made.push(placeNote(m.label, [m.x - r * 1.1 - 36, m.y - r - 20, r * 2.2 + 36, r * 2 + 20], 300));
-    currentStep = made;
+// ---------- note cards (NEXT-ROUND phase 3 v2, Zarif 2026-11-08) ----------
+// No free circles or arrows: a small card in a calm spot, a thin line that draws itself to the target, and a soft mark
+// there (underline under text, thin outline round a shape). Older mark commands are drawn the same way.
+const CARD_W = 240, NO_GO = [W / 2 - 400, H - 260, 800, 260]; // bottom centre: pill, answer buttons, subtitle
+function targetOf(m) {
+  switch (m.type) {
+    case 'note': case 'highlight': return { box: [m.x, m.y, m.w, m.h], title: m.title || m.label, text: m.text };
+    case 'ring': return { box: [m.x - m.r, m.y - m.r, m.r * 2, m.r * 2], title: m.label };
+    case 'point': return { box: [m.x - 16, m.y - 16, 32, 32], title: m.label };
+    case 'arrow': return { box: [m.x2 - 20, m.y2 - 20, 40, 40], title: m.label };
+    case 'label': return { box: [m.x - 12, m.y - 12, 24, 24], title: m.text };
+    case 'step': return { box: [m.x - 22, m.y - 16, 44, 32], title: m.label || `Step ${m.n}`, n: m.n };
   }
+  return null;
+}
+const overlaps = (a, b, pad = 0) => a[0] < b[0] + b[2] + pad && a[0] + a[2] + pad > b[0] && a[1] < b[1] + b[3] + pad && a[1] + a[3] + pad > b[1];
+// Best spot for a card: off the target and other marks, out of the bottom centre, calm (busy map), not too far.
+function cardSpot(target, w, h) {
+  const [tx, ty, tw, th] = target, cx = tx + tw / 2, cy = ty + th / 2;
+  const others = subRect ? [...placed, subRect, NO_GO] : [...placed, NO_GO];
+  let best = null;
+  for (let y = 8; y + h <= H - 8; y += 16) for (let x = 8; x + w <= W - 8; x += 16) {
+    const r = [x, y, w, h];
+    if (overlaps(r, target, 16)) continue;
+    // inked: cells with anything drawn in them (thin chalk lines on black average out as calm, so count them)
+    const score = others.filter((o) => overlaps(r, o, 8)).length * 1000 + inked(x, y, w, h) * 40 + busyAt(x, y, w, h) + Math.hypot(x + w / 2 - cx, y + h / 2 - cy) * 0.03;
+    if (!best || score < best[2]) best = [x, y, score];
+  }
+  return best || [8, 8];
+}
+function card(t, x, y, delay) {
+  const d = div('card', { left: `${x}px`, top: `${y}px`, width: `${CARD_W}px` });
+  const k = document.createElement('div');
+  k.className = 'k';
+  if (t.n) { const b = document.createElement('span'); b.className = 'num'; b.textContent = t.n; k.append(b); }
+  k.append(t.title || '');
+  d.append(k);
+  if (t.text) {
+    const v = document.createElement('div');
+    v.className = 'v';
+    v.textContent = t.text;
+    d.append(v);
+    if (!reduced) { // writes in like a pen, while he speaks
+      const ms = Math.min(1100, t.text.length * 28);
+      v.animate([{ clipPath: 'inset(0 100% 0 0)' }, { clipPath: 'inset(0 0 0 0)' }], { duration: ms, delay: delay + 180, easing: 'linear', fill: 'backwards' });
+    }
+  }
+  if (!reduced) d.animate([{ transform: 'translateY(6px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 180, delay, easing: EASE, fill: 'backwards' });
+  d.addEventListener('mouseenter', () => holdCards(true));
+  d.addEventListener('mouseleave', () => holdCards(false));
+  d.erase = () => { d.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduced ? 0 : 600, fill: 'forwards' }); setTimeout(() => d.remove(), 620); };
+  return d;
+}
+// Line from the card side nearest the target to the target's anchor, then the soft mark.
+function pointer(t, r, edge, delay) {
+  const [bx, by, bw, bh] = t.box, under = bh <= 48 && bw >= bh * 1.6;
+  const [x, y, w, h] = r, left = bx + bw / 2 < x, right = bx + bw / 2 > x + w;
+  const sx = left ? x : right ? x + w : x + w / 2, sy = left || right ? y + h / 2 : (by + bh / 2 < y ? y : y + h);
+  const tx = under ? bx + bw / 2 : left ? bx + bw + 6 : right ? bx - 6 : bx + bw / 2;
+  const ty = under ? by + bh + 5 : left || right ? by + bh / 2 : (by + bh / 2 < sy ? by + bh + 6 : by - 6);
+  const mx = (sx + tx) / 2;
+  const line = left || right ? `M${sx} ${sy} C${mx} ${sy} ${mx} ${ty} ${tx} ${ty}` : `M${sx} ${sy} C${sx} ${(sy + ty) / 2} ${tx} ${(sy + ty) / 2} ${tx} ${ty}`;
+  return [stroke(line, edge, 380, delay, 'thin'), softMark(t.box, edge, delay + 380)];
+}
+function softMark([bx, by, bw, bh], edge, delay) {
+  if (bh <= 48 && bw >= bh * 1.6) return stroke(`M${bx} ${by + bh + 4} q${bw / 2} 5 ${bw} -1`, edge, 300, delay); // underline under text
+  const p = 6, x = bx - p, y = by - p, w = bw + p * 2, h = bh + p * 2, r = Math.min(12, w / 4, h / 4);
+  return stroke(`M${x + r} ${y} H${x + w - r} Q${x + w} ${y} ${x + w} ${y + r} V${y + h - r} Q${x + w} ${y + h} ${x + w - r} ${y + h} H${x + r} Q${x} ${y + h} ${x} ${y + h - r} V${y + r} Q${x} ${y} ${x + r} ${y}`, edge, 450, delay, 'soft');
+}
+
+function draw(m) {
+  const t = targetOf(m);
+  if (!t) return;
+  const made = [], p0 = placed.length;
+  if (m.type === 'step' && currentStep) { // one step at a time: the last one goes when the next draws in (Q7)
+    const g = groups.find((x) => x.made === currentStep);
+    if (g) { groups = groups.filter((x) => x !== g); g.made.forEach((x) => x.erase()); marks = marks.filter((x) => !g.made.includes(x)); }
+  }
+  placed.push(t.box.map(Math.round));
+  if (t.title || t.text) {
+    const c = card(t, 0, 0, 0), w = c.offsetWidth, h = c.offsetHeight, [x, y] = cardSpot(t.box, w, h);
+    Object.assign(c.style, { left: `${x}px`, top: `${y}px` });
+    placed.push([x, y, w, h]);
+    made.push(c, ...pointer(t, [x, y, w, h], m.edge, 250));
+  } else made.push(softMark(t.box, m.edge, 0));
+  cardsShown(true);
+  if (m.type === 'step') currentStep = made;
   marks.push(...made);
   groups.push({ made, boxes: placed.slice(p0), step: m.type === 'step' });
   if (subRect) placeSub(); else layoutStack(); // a new mark may sit where the subtitle or pill is
+}
+
+// Cards fade ~5 s after the answer; the mouse on a card keeps them (Q3). The overlay gets the mouse only over cards.
+let cardsOn = false, hovering = false, answerDone = false;
+function cardsShown(on) { if (on !== cardsOn) { cardsOn = on; ipcRenderer.send('cards:shown', on); } }
+function holdCards(on) {
+  hovering = on;
+  clearTimeout(clearTimer);
+  if (!on && answerDone && !replay) clearTimer = setTimeout(eraseAll, 5000);
 }
 
 function eraseAll() {
@@ -189,6 +179,7 @@ function eraseAll() {
   groups = [];
   placed.length = 0;
   currentStep = null;
+  cardsShown(false);
   layoutStack();
 }
 
@@ -370,7 +361,8 @@ async function run(id) {
     } else if (it.kind === 'end') {
       ipcRenderer.send('turn:done', id);
       clearTimeout(clearTimer);
-      if (!replay) clearTimer = setTimeout(eraseAll, 20000);
+      answerDone = true;
+      if (!replay && !hovering) clearTimer = setTimeout(eraseAll, 5000);
       return;
     }
   }
@@ -390,6 +382,7 @@ function stopAll() {
 ipcRenderer.on('turn', (_e, id, opts = {}) => {
   stopAll();
   turn = id;
+  answerDone = false;
   items = [];
   audios = new Map();
   replay = !!opts.replay;
@@ -409,6 +402,7 @@ ipcRenderer.on('ink', (_e, ink) => document.documentElement.style.setProperty('-
 ipcRenderer.on('bg', (_e, src) => { const bg = $('bg'); bg.src = src; bg.style.display = 'block'; }); // tests: show the fixture under the marks
 ipcRenderer.on('stop', () => { stopAll(); const bg = $('bg'); bg.style.display = 'none'; bg.removeAttribute('src'); });
 ipcRenderer.on('advance', () => advanceWait && advanceWait());
+ipcRenderer.on('marks:clear', () => { clearTimeout(clearTimer); eraseAll(); }); // he switched window or tab: nothing lingers
 addEventListener('keydown', (e) => { if (e.key === 'Escape') ipcRenderer.send('replay:close'); });
 
 // ---------- answer buttons (QUALITY-PLAN T13): a pick counts as if he said it ----------

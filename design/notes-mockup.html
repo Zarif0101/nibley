@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nibley note cards mockup</title>
+<!-- NEXT-ROUND "Phase 3 v2" step 1: note cards + drawn pointer lines, for Zarif's OK (2026-11-08).
+     Tokens from docs/DESIGN.md. Lecture picture: test/out/aim-frames/frame-2.png (gitignored, test/aim-grab.js), so it only works on Zarif's PC.
+     Serve with the "design-mockups" launch config: http://localhost:8778/design/notes-mockup.html -->
+<style>
+  @font-face { font-family: Inter; font-weight: 400; src: url(../src/overlay/fonts/inter-latin-400-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 600; src: url(../src/overlay/fonts/inter-latin-600-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 700; src: url(../src/overlay/fonts/inter-latin-700-normal.woff2); }
+  :root { --ink: #2F8BFF; --deep: #1E6FEB; --text: #2B3A4B; --muted: #6B7A90; --line: #E6EEF8; --ease: cubic-bezier(.3,.7,.2,1);
+          --chip-shadow: 0 2px 8px rgba(43,58,75,.28); }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; background: #FFFFFF; color: var(--text); font: 400 14px/20px Inter, sans-serif; }
+  .head, .controls, .note { max-width: 1584px; margin: 0 auto 12px; }
+  .head { display: flex; flex-wrap: wrap; gap: 4px 24px; align-items: baseline; }
+  .head h1 { margin: 0; font: 600 20px/28px Inter; }
+  .head p { margin: 0; color: var(--muted); }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px; }
+  .controls button { font: 600 14px/20px Inter; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--deep); background: #FFFFFF; color: var(--deep); cursor: pointer; }
+  .controls button.primary { background: var(--deep); color: #FFFFFF; }
+  .controls button:hover { border-color: var(--ink); }
+  .controls button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .note { min-height: 20px; font-weight: 600; color: var(--deep); }
+
+  .stage { max-width: 1584px; margin: 0 auto; aspect-ratio: 1584 / 861; position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); }
+  .screen { position: absolute; left: 0; top: 0; width: 1584px; height: 861px; transform-origin: 0 0; background: #0F0F0F; }
+  .shot { position: absolute; inset: 0; background: #0F0F0F url(../test/out/aim-frames/frame-2.png) no-repeat 0 0 / 1584px 861px; }
+  .full .shot { background-size: 2302px auto; background-position: -23px -96px; } /* the video part scaled to the whole screen */
+  .other-tab { position: absolute; inset: 0; background: #FFFFFF; display: none; padding: 80px; font: 600 28px/36px Inter; color: var(--text); }
+  .switched .other-tab { display: block; }
+
+  svg.ink { position: absolute; inset: 0; width: 1584px; height: 861px; pointer-events: none; }
+  .stroke { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+  .edge { fill: none; stroke: #FFFFFF; stroke-linecap: round; stroke-linejoin: round; }
+
+  .card { position: absolute; width: 300px; background: #FFFFFF; border-radius: 12px; box-shadow: var(--chip-shadow); padding: 12px 14px 14px;
+          opacity: 0; transform: translateY(6px); transition: opacity 180ms var(--ease), transform 180ms var(--ease); }
+  .card.on { opacity: 1; transform: none; }
+  .card.fade { opacity: 0; transition: opacity 600ms ease; }
+  .card .k { display: flex; align-items: center; gap: 8px; font: 600 16px/22px Inter; color: var(--deep); }
+  .card .num { width: 22px; height: 22px; border-radius: 6px; background: var(--deep); color: #FFFFFF; font: 700 13px/22px Inter; text-align: center; }
+  .card .v { margin-top: 4px; font: 400 15px/21px Inter; color: var(--text); min-height: 21px; }
+
+  .pill { position: absolute; left: 50%; bottom: 184px; transform: translateX(-50%); background: #FFFFFF; border-radius: 999px; box-shadow: var(--chip-shadow);
+          padding: 4px 14px 4px 6px; display: flex; gap: 8px; align-items: center; font: 600 14px/20px Inter; opacity: 0; transition: opacity 170ms; }
+  .pill.on { opacity: 1; }
+  .m3d { width: 28px; height: 28px; background: url(../src/overlay/mascot3d/speaking.webp) no-repeat 0 0 / 840px 28px; animation: m3d 2.5s steps(30) infinite; }
+  @keyframes m3d { to { background-position: -840px 0; } }
+  .sub { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); max-width: 760px; background: var(--text); color: #FFFFFF;
+         font: 600 20px/28px Inter; padding: 8px 16px; border-radius: 8px; box-shadow: var(--chip-shadow); text-align: center; opacity: 0; transition: opacity 150ms; }
+  .sub.on { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) { .card, .pill, .sub { transition: none; } .m3d { animation: none; } }
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>Note cards instead of circles</h1>
+    <p>Question asked: "What does LEO mean here?" The video stays where it is. Cards sit in the empty space.</p>
+  </div>
+  <div class="controls">
+    <button class="primary" id="playNormal">Play: normal page</button>
+    <button id="playFull">Play: full-screen video</button>
+    <button id="playSwitch">Play: switch tab mid-answer</button>
+  </div>
+  <div class="note" id="note" aria-live="polite">Pick one of the three to watch it.</div>
+
+  <div class="stage" id="stage">
+    <div class="screen" id="screen">
+      <div class="shot" role="img" aria-label="YouTube page with a Khan Academy lecture on oxidation and reduction"></div>
+      <div class="other-tab">Your notes.docx: Chapter 4, redox</div>
+      <svg class="ink" id="ink" viewBox="0 0 1584 861" aria-hidden="true"></svg>
+      <div class="card" id="c1"><div class="k">LEO</div><div class="v"></div></div>
+      <div class="card" id="c2"><div class="k">This carbon</div><div class="v"></div></div>
+      <div class="pill" id="pill"><span class="m3d"></span><span>Explaining</span></div>
+      <div class="sub" id="sub"></div>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const NS = 'http://www.w3.org/2000/svg';
+const screenEl = $('screen'), ink = $('ink');
+const fit = () => { screenEl.style.transform = `scale(${$('stage').clientWidth / 1584})`; };
+addEventListener('resize', fit); fit();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+let run = 0;
+
+// Layouts in screen pixels (1584x861). Normal: cards over YouTube's side column. Full screen: far side from the target.
+const LAYOUTS = {
+  normal: {
+    c1: { x: 1140, y: 96 }, c2: { x: 1140, y: 300 },
+    t1: { kind: 'underline', x: 742, y: 182, w: 78 },              // "LEO" on the slide
+    t2: { kind: 'outline', x: 322, y: 362, w: 86, h: 66 },        // the carbon with +1
+  },
+  full: {
+    c1: { x: 1200, y: 470 }, c2: { x: 60, y: 640 }, // no crossing lines
+    t1: { kind: 'underline', x: 1055, y: 168, w: 113 },
+    t2: { kind: 'outline', x: 445, y: 430, w: 125, h: 96 },
+  },
+};
+
+function path(d, width, cls) {
+  const p = document.createElementNS(NS, 'path');
+  p.setAttribute('d', d); p.setAttribute('class', cls); p.setAttribute('stroke-width', width);
+  return p;
+}
+// Draw a stroke like a pen: white edge under the ink so it reads on any frame (DESIGN.md `edge`).
+async function draw(d, width, ms, alive) {
+  const g = document.createElementNS(NS, 'g');
+  const e = path(d, width + 3, 'edge'), s = path(d, width, 'stroke');
+  g.append(e, s); ink.append(g);
+  for (const p of [e, s]) { const L = p.getTotalLength(); p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect(); p.style.transition = `stroke-dashoffset ${ms}ms cubic-bezier(.3,.7,.2,1)`; p.style.strokeDashoffset = 0; }
+  await sleep(ms); return alive();
+}
+async function writeIn(el, text, ms, alive) {
+  el.textContent = '';
+  for (let i = 1; i <= text.length; i++) { if (!alive()) return false; el.textContent = text.slice(0, i); await sleep(ms / text.length); }
+  return true;
+}
+// Line from the card's nearest side to the target, a gentle curve, then the soft mark.
+async function pointer(card, pos, t, alive) {
+  const cw = 300, ch = card.offsetHeight;
+  const fromLeft = t.x < pos.x, sx = fromLeft ? pos.x : pos.x + cw, sy = pos.y + ch / 2;
+  const tx = t.kind === 'underline' ? t.x + t.w / 2 : (fromLeft ? t.x + t.w : t.x), ty = t.kind === 'underline' ? t.y + 6 : t.y + t.h / 2;
+  const mx = (sx + tx) / 2;
+  if (!await draw(`M${sx} ${sy} C${mx} ${sy} ${mx} ${ty} ${tx} ${ty}`, 2, 380, alive)) return false;
+  if (t.kind === 'underline') return draw(`M${t.x} ${t.y} q${t.w / 2} 5 ${t.w} -1`, 3.5, 300, alive);
+  const { x, y, w, h } = t, r = 12;
+  return draw(`M${x + r} ${y} H${x + w - r} Q${x + w} ${y} ${x + w} ${y + r} V${y + h - r} Q${x + w} ${y + h} ${x + w - r} ${y + h} H${x + r} Q${x} ${y + h} ${x} ${y + h - r} V${y + r} Q${x} ${y} ${x + r} ${y}`, 3, 450, alive);
+}
+
+function reset(mode) {
+  ink.innerHTML = '';
+  screenEl.classList.toggle('full', mode === 'full');
+  screenEl.classList.remove('switched');
+  for (const id of ['c1', 'c2']) { const c = $(id); c.className = 'card'; c.querySelector('.v').textContent = ''; }
+  $('pill').classList.remove('on'); $('sub').classList.remove('on');
+}
+function clearAll() { // the screen changed: everything goes at once, no lingering marks
+  ink.innerHTML = '';
+  for (const id of ['c1', 'c2']) $(id).className = 'card';
+  $('pill').classList.remove('on'); $('sub').classList.remove('on');
+}
+const say = (t) => { const s = $('sub'); s.textContent = t; s.classList.add('on'); };
+
+async function play(mode) {
+  const me = ++run, alive = () => me === run;
+  const L = LAYOUTS[mode === 'full' ? 'full' : 'normal'];
+  reset(mode === 'full' ? 'full' : 'normal');
+  $('note').textContent = mode === 'full' ? 'Full-screen video: the cards sit on the far side from what they explain.'
+    : mode === 'switch' ? 'Watch: you switch to another window halfway, and everything clears at once.'
+    : 'Normal page: the cards sit over the side column, the video is never covered.';
+  await sleep(500); if (!alive()) return;
+  $('pill').classList.add('on');
+  // Point 1
+  say('LEO is a memory trick for oxidation.');
+  const c1 = $('c1'); Object.assign(c1.style, { left: `${L.c1.x}px`, top: `${L.c1.y}px` }); c1.classList.add('on');
+  await sleep(250); if (!alive()) return;
+  if (!await writeIn(c1.querySelector('.v'), 'Lose Electrons = Oxidation', 900, alive)) return;
+  if (!await pointer(c1, L.c1, L.t1, alive)) return;
+  await sleep(900); if (!alive()) return;
+  if (mode === 'switch') { screenEl.classList.add('switched'); clearAll(); $('note').textContent = 'Switched window: cards, lines and marks are gone instantly. Nothing is left over the new screen.'; return; }
+  // Point 2
+  say('Here, this carbon gives up a bond to H and takes one to O, so it is oxidised.');
+  const c2 = $('c2'); Object.assign(c2.style, { left: `${L.c2.x}px`, top: `${L.c2.y}px` }); c2.classList.add('on');
+  await sleep(250); if (!alive()) return;
+  if (!await writeIn(c2.querySelector('.v'), 'Loses C–H, gains C–O: oxidised', 1100, alive)) return;
+  if (!await pointer(c2, L.c2, L.t2, alive)) return;
+  await sleep(1800); if (!alive()) return;
+  // Answer ends; everything fades about 5 s later
+  $('sub').classList.remove('on'); $('pill').classList.remove('on');
+  $('note').textContent = 'Answer finished. The cards stay about 5 seconds so you can read them, then fade (mouse on a card keeps it).';
+  await sleep(5000); if (!alive()) return;
+  for (const id of ['c1', 'c2']) $(id).classList.add('fade');
+  ink.style.transition = 'opacity 600ms'; ink.style.opacity = 0; await sleep(650); if (!alive()) return;
+  ink.innerHTML = ''; ink.style.transition = ''; ink.style.opacity = 1;
+  $('note').textContent = 'Done. The video is clean again.';
+}
+$('playNormal').onclick = () => play('normal');
+$('playFull').onclick = () => play('full');
+$('playSwitch').onclick = () => play('switch');
+</script>
+</body>
+</html>

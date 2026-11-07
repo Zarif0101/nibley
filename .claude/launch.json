@@ -9,6 +9,13 @@
       "autoPort": false
     },
     {
+      "name": "design-mockups",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8778", "--bind", "127.0.0.1"],
+      "port": 8778,
+      "autoPort": false
+    },
+    {
       "name": "sound-lab",
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/arko4/Desktop/nibley-brand/sound/export.js", "--serve"],

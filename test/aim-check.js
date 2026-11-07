@@ -71,7 +71,7 @@ function page(n) {
     <h1 style="margin:28px 40px;font:600 30px Georgia;color:#222">Lecture ${n + 1}: Motion and energy</h1>${items.join('')}</body>`;
 }
 
-const centre = (m) => m.type === 'highlight' ? [m.x + m.w / 2, m.y + m.h / 2] : m.type === 'arrow' ? [m.x2, m.y2] : [m.x, m.y];
+const centre = (m) => m.type === 'highlight' || m.type === 'note' ? [m.x + m.w / 2, m.y + m.h / 2] : m.type === 'arrow' ? [m.x2, m.y2] : [m.x, m.y];
 const dist = (a, b) => Math.round(Math.hypot(a[0] - b[0], a[1] - b[1]));
 
 // One turn: Claude's first pointing mark (raw, screenshot pixels).
@@ -90,7 +90,7 @@ function ask(text, png) {
     const timer = setTimeout(finish, 60000);
     main.events.on('send', onSend);
     main.events.on('turn:done', onDone);
-    main.testTurn(text, png, { showShot: false });
+    main.testTurn(text, png, { showShot: !!REPLAY }); // replay: the saved screenshot shows under the marks, so proofs need no live screen
   });
 }
 
@@ -147,7 +147,7 @@ async function run() {
     const t0 = Date.now();
     const { marks, says } = await ask(`circle the ${truth.name}`, png);
     const ms = Date.now() - t0;
-    const m = marks.find((x) => ['ring', 'point', 'highlight', 'arrow', 'step'].includes(x.type));
+    const m = marks.find((x) => ['note', 'ring', 'point', 'highlight', 'arrow', 'step'].includes(x.type));
     const row = { n, name: truth.name, shot: [sw, sh], truth, ms, says, mark: m || null };
     if (m) {
       const raw = centre(m);
@@ -157,7 +157,10 @@ async function run() {
       Object.assign(row, { raw, aim: dist(raw, want), draw: dist(drawn, belongs), total: dist(drawn, truth.at), drawn: drawn.map(Math.round) });
       const [bx, by, bw, bh] = truth.box;
       row.hit = drawn[0] >= bx - 30 && drawn[0] <= bx + bw + 30 && drawn[1] >= by - 30 && drawn[1] <= by + bh + 30;
-      if (!saved) {
+      if (saved) { // proof straight from the overlay window: the screenshot it shows + the cards drawn over it
+        await sleep(1500);
+        fs.writeFileSync(path.join(OUT, `proof-${n}.png`), (await main.overlay.webContents.capturePage()).toPNG());
+      } else {
         await sleep(1200); // ring stroke finishes drawing
         const ink = await inkCentre();
         if (m.type === 'ring' && ink.at) row.inkCheck = dist(ink.at, drawn); // pixel proof of the draw maths

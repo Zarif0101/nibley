@@ -32,19 +32,19 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 - Uses: status pill, tray icon (happy; error face when something needs fixing), lessons header and empty state, app icon (mascot on an `ink` rounded square).
 - 3D version (`design/mascot-3d/`, Zarif 2026-11-04): same sky blues. Extras for cuteness: blush cheeks (`error` coral at ~60%, soft edge), a small white-blue spark star beside the tuft (`sky` #BDE9FF, glow #8BD9FC; Zarif 2026-11-04: not yellow), nub hands, second eye glint. For marketing, onboarding and mood loops; the 16 px tray icon stays pixel art.
 
-## Marks on screen
-- **Ring:** a hand-drawn loop, not a perfect ellipse. Starts at ~10 o'clock, goes round once, overshoots ~25° so the ends cross. Radius jitter ±4%. Seeded per mark, so replays look identical.
-- **Arrow:** a slightly curved line (one bend, 6-10% of length), short open arrowhead, two strokes.
-- **Highlight:** a highlighter swipe: ragged short ends, skewed −2°, `swipe` colour. Drawn left to right. Sits under pen strokes.
-- **Point:** a short pen tick beside the target, plus a small ring.
-- **Label:** a `deep` chip with white Inter 600, never covering a mark or another label, placed on the calmest side (least busy part of the screenshot). Max 6 words. Beside an arrow, not along it.
-- **Step:** a 28 px `deep` rounded block with the number, plus a ring on the target. Current step full colour; done steps 35% opacity; next steps not shown until reached.
-- **Clear:** pen marks erase by running the pen backwards (200 ms); chips fade out.
+## Marks on screen: note cards (Zarif OK'd the mockup 2026-11-08, `design/notes-mockup.html`)
+No free circles, arrows, ticks or highlighter swipes: they popped in and all looked the same. Every mark is a card with a line.
+- **Card:** white, radius 12, chip shadow, 240 px wide (at 1366x768). Title Inter 600 15/20 `deep`; note Inter 400 14/20 `text`. Notebook-style: title + key fact or formula, max 12 words, never a copy of the voice.
+- **Place:** the calmest empty spot near the target: never over the target, another card or anything drawn on the slide (any inked 16 px cell counts), never in the bottom-centre zone (pill, answer buttons, subtitle). In full screen this lands on the far side of the video.
+- **Line:** a thin pen line (2 px, `edge` 5 px under it), a gentle curve from the card side nearest the target.
+- **Soft mark** where the line ends: an underline (3.5 px) under text (box ≤ 48 px tall and wider than 1.6x its height), else a thin rounded outline (3 px, radius ≤ 12, 6 px padding) round the shape.
+- **Step:** the same card with a 22 px `deep` number block; only the current step shows, the last one goes when the next draws in.
+- **Max 2 cards** on screen; the oldest fades first (answer guard).
+- **Leave:** cards fade (600 ms) about 5 s after the answer ends; the mouse on a card keeps them. Everything clears at once when he switches window or tab.
 
 ## Motion
-- Pen speed like a hand: rings 450 ms, arrows 300 ms, swipes 350 ms. `cubic-bezier(.3,.7,.2,1)`.
-- Marks start when their `say` line starts, spaced across the line.
-- Chips slide 6 px from the left and fade in (180 ms).
+- Card rises 6 px and fades in (180 ms); its note writes in left to right (≤ 1.1 s); the line draws (380 ms), then the soft mark (underline 300 ms, outline 450 ms). `cubic-bezier(.3,.7,.2,1)`.
+- Cards start when their `say` line starts, spaced across the line.
 - `prefers-reduced-motion`: marks appear whole, no animation, mascot doesn't animate.
 
 ## Status pill

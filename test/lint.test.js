@@ -63,3 +63,11 @@ test('null and non-say commands pass through', () => {
   const t = { type: 'title', text: 'Very long title that should not be touched by the guard at all because titles are not spoken aloud' };
   assert.equal(l.check(t).cmd, t);
 });
+
+test('note cards count as marks: max 2 on screen, the oldest fades', () => {
+  const { createLint } = require('../src/lint');
+  const l = createLint(), n = { type: 'note', x: 1, y: 1, w: 9, h: 9, title: 'A' };
+  assert.equal(l.check(n).fadeOldest, undefined);
+  assert.equal(l.check(n).fadeOldest, undefined);
+  assert.equal(l.check(n).fadeOldest, true);
+});

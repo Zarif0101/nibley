@@ -78,3 +78,13 @@ test('choices: 2-3 click-to-answer options, each cut to 4 words', () => {
   assert.equal(parseLine('choices Yes').type, 'bad');
   assert.equal(parseLine('choices Yes | Yes').type, 'bad', 'duplicates collapse to one option');
 });
+
+test('note: target box, title, short note; clamped and cut to size (phase 3 v2)', () => {
+  assert.deepEqual(parseLine('note 700 140 80 36 | LEO | Lose Electrons = Oxidation'),
+    { type: 'note', x: 700, y: 140, w: 80, h: 36, title: 'LEO', text: 'Lose Electrons = Oxidation' });
+  assert.deepEqual(parseLine('note 1360 760 300 300'), { type: 'note', x: 1360, y: 760, w: 6, h: 8, title: undefined, text: undefined });
+  const long = parseLine('note 10 10 50 50 | one two three four five six | a b c d e f g h i j k l m n');
+  assert.equal(long.title, 'one two three four five');
+  assert.equal(long.text.split(' ').length, 12);
+  assert.equal(parseLine('note 10 10 | LEO').type, 'bad');
+});

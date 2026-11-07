@@ -249,3 +249,16 @@ Newest at the bottom. A new session reads this to resume.
 - Disk C: had 400 MB free; one run crashed with ENOSPC. Nibley's own files are small (test/out 26 MB, logs 0.5 MB).
 - Earlier today (log 2026-11-08): one turn where Whisper returned its own hint ("A student asks a question about the video.") for a 15 s clip, so nothing was drawn. Not fixed: a guard that drops transcripts that echo the hint.
 - NEXT: phase 2 (sidebar shell, animated mockup first for Zarif's OK).
+
+## 2026-11-08 Phase 3 v2: note cards instead of circles (Zarif's interview Q1-Q8, mockup OK'd)
+- DONE. New `note x y w h | title | short note` command (`src/script.js`, guard counts it as a mark). Prompt teaches only `note` + `step`; old ring/point/arrow/highlight/label still parse and draw as cards (a mark with no label = just the soft mark).
+- Overlay (`src/overlay/overlay.js`): card in the calmest empty spot (busy map + any inked cell + bottom-centre no-go zone), thin line drawn to the target, soft mark (underline for text, rounded outline for shapes). Old ring/arrow/tick/swipe/chip code and CSS removed.
+- Fade 5 s after the answer (was 20 s); mouse over a card keeps them (overlay gets forwarded mouse moves while cards show).
+- Clear on window/tab switch: main polls the foreground title every 0.4 s while marks show; a change sends `marks:clear` (logged `marks_cleared`).
+- Tests: unit 213/213 (+2: note parse, note cap). `test/cards-check.js` 5/5 (2 cards max, 4 strokes, still there at 3.5 s, gone at 6.5 s, cleared 0.9 s after a window switch). Aim replay on the 10 real lecture shots with note cards: 10/10, median 5 px (`test/out/aim-notes/`). Subtitle check 10/10.
+  - First card-check picture showed a card over the drawn molecule: thin chalk on black averaged as "calm". Fix: count inked cells. Also the check first used the 1584 px frame instead of the 1365 px capture, so the busy map was wrong.
+  - Live aim run (`--frames`) could not keep the test page on top while Zarif used WhatsApp/music: 0/10, nothing measured. The replay mode now saves proofs straight from the overlay, so it needs no live screen.
+  - Pause check 2/5 on new AND old code: Zarif's running Nibley (since 00:40) holds port 47711, so the fake extension talks to his app. Not a regression; rerun with the app closed.
+  - `ear.test.js` failed once in the full run, passed 5/5 alone (timing under load).
+- Not checked: mouse-hover keeps cards (needs a real mouse); a real spoken turn with Edge voice; full-screen video placement live.
+- NEXT: Zarif tries it live. Then group B (floating sidebar) interview, then C.

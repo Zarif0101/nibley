@@ -3,7 +3,7 @@
 //   if (!r.cmd) return; a mark with r.fadeOldest is sent as { kind: 'mark', fadeOldest: true }; then handle r.cmd as before.
 // Create one guard per turn: ctx.lint = createLint().
 
-const MARKS = new Set(['ring', 'point', 'arrow', 'highlight', 'label']);
+const MARKS = new Set(['note', 'ring', 'point', 'arrow', 'highlight', 'label']);
 const FILLER = /^(great|good|nice|excellent) question[,.!]?\s+|^(sure|okay|ok|alright|so)[,.!]?\s+(so[,.]?\s+)?/i;
 const BANNED = /\b(easy|easily|obviously|just|simply)\b/i;
 

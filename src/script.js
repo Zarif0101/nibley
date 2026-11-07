@@ -1,7 +1,7 @@
 // Parser for the line script Claude writes (ARCHITECTURE.md section 4). Pure: no I/O.
 
 const SCREEN = { w: 1366, h: 768 };
-const COMMANDS = new Set(['say', 'point', 'ring', 'arrow', 'highlight', 'label', 'step', 'wait_click', 'action', 'title', 'clear', 'choices']);
+const COMMANDS = new Set(['say', 'note', 'point', 'ring', 'arrow', 'highlight', 'label', 'step', 'wait_click', 'action', 'title', 'clear', 'choices']);
 const ACTIONS = new Set(['click', 'type', 'key', 'scroll', 'open_url', 'open_app']);
 
 const nums = (s) => (s.match(/-?\d+(?:\.\d+)?/g) || []).map(Number);
@@ -27,6 +27,14 @@ function parseLine(raw, screen = SCREEN) {
     return options.length >= 2 ? { type: 'choices', options } : bad('choices needs 2 or 3 options');
   }
   if (cmd === 'action') return parseAction(rest, X, Y) || bad('bad action');
+  // note <x> <y> <w> <h> | <title> | <text>  -> a note card with a drawn line to the box (NEXT-ROUND phase 3 v2, 2026-11-08)
+  if (cmd === 'note') {
+    const [head, t = '', v = ''] = rest.split('|');
+    const n = nums(head);
+    if (n.length < 4) return bad('missing numbers');
+    const x = X(n[0]), y = Y(n[1]), title = words(t, 5), text = words(v, 12);
+    return { type: 'note', x, y, w: clamp(n[2], 4, screen.w - x), h: clamp(n[3], 4, screen.h - y), title: title || undefined, text: text || undefined };
+  }
 
   const bar = rest.indexOf('|');
   const head = bar < 0 ? rest : rest.slice(0, bar);
