@@ -14,6 +14,9 @@ process.env.NIBLEY_SETTINGS = path.join(TMP, 'settings.json');
 const { app } = require('electron');
 const brain = require('../src/brain');
 const main = require('../src/main');
+const platform = require('../src/platform'); // fake: Brave on the video's page (NEXT-ROUND phase 1 step 5 source line)
+platform.foregroundWin = { title: 'Gradient descent - YouTube - Brave', exe: 'brave' };
+platform.browserUrlNow = 'youtube.com/watch?v=IHZwWFHWa-w';
 
 let asked = null;
 brain.ask = ({ text, video, onEnd }) => { asked = { text, video }; setTimeout(() => onEnd('say Okay.'), 300); return { cancel() {} }; };
@@ -37,7 +40,9 @@ async function run() {
   for (let i = 0; i < 50 && !asked; i++) await sleep(100);
   const v = asked?.video || '';
   check('question keeps his words only', asked?.text === 'what did he just say?', JSON.stringify(asked?.text));
-  check('video block names the video and time', v.startsWith('[Video: "Gradient descent" at 4:12 of 20:33, paused]'), v.split('\n')[0]);
+  const [srcLine, videoLine] = v.split('\n');
+  check('source line names page, link and video time', srcLine === '[Source: Gradient descent - YouTube | youtube.com/watch?v=IHZwWFHWa-w | 4:12 of 20:33]', srcLine);
+  check('video block names the video and time', videoLine?.startsWith('[Video: "Gradient descent" at 4:12 of 20:33, paused]'), videoLine);
   check('transcript part is 2:12-4:42', v.includes('[Transcript 2:12-4:42]') && v.includes('2:12 gradient line 22') && v.includes('4:42 gradient line 47') && !v.includes('gradient line 48'), `${v.split('\n').length - 2} lines`);
   check('transcript saved in the vault', fs.existsSync(path.join(TMP, 'vault', 'nibley', 'videos', 'IHZwWFHWa-w.json')));
   const configAfter = fs.existsSync(path.join(__dirname, '..', 'extension', 'config.js')) && fs.readFileSync(path.join(__dirname, '..', 'extension', 'config.js'), 'utf8');

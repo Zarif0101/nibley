@@ -6,6 +6,9 @@ const platform = require('./platform');
 const brain = require('./brain');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
+const { createLint } = require('./lint');
+const { pickSource } = require('./screen');
+const { createPillSequencer } = require('./overlay/pill-sequence');
 const gate = require('./gate');
 const stt = require('./stt');
 const tts = require('./tts');
@@ -13,6 +16,7 @@ const piper = require('./piper');
 const memory = require('./memory');
 const lessons = require('./lessons');
 const youtube = require('./youtube');
+const { sourceLine } = require('./source');
 const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
 
@@ -28,7 +32,8 @@ function findClaude() {
   }
   return path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe');
 }
-const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-AvaMultilingualNeural', ink: '#2F8BFF', apps: { chrome: 'chrome', notepad: 'notepad' }, claudePath: '', vaultPath: 'C:\\Users\\arko4\\Desktop\\Second Brain', pendingQuestion: null };
+// Christopher: classic Edge voices stayed under 0.9 s in Edge's slow periods; Ava/Andrew took 1.5-8 s (BUILD-LOG 2026-11-05 T1)
+const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { brave: 'brave', notepad: 'notepad' }, claudePath: '', vaultPath: 'C:\\Users\\arko4\\Desktop\\Second Brain', pendingQuestion: null };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS, 'utf8')) }; } catch { /* first run */ }
 if (!settings.claudePath || !fs.existsSync(settings.claudePath)) settings.claudePath = findClaude();
@@ -116,10 +121,12 @@ function buildMenu() {
 // ---------- screenshot ----------
 async function capture() {
   const t = Date.now();
-  const [src] = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: SCREEN.w, height: SCREEN.h } });
+  const sources = await desktopCapturer.getSources({ types: ['screen'], thumbnailSize: { width: SCREEN.w, height: SCREEN.h } });
+  const src = pickSource(sources.map((s) => ({ s, display_id: s.display_id, size: s.thumbnail.getSize() })), screen.getAllDisplays(), screen.getPrimaryDisplay()).s;
   const img = src.thumbnail;
   const { width, height } = img.getSize();
-  if (width !== SCREEN.w || height !== SCREEN.h) log({ ev: 'shot_size_mismatch', width, height });
+  // 1600x900 scales to 1365x768: 1 px short is fine
+  if (Math.abs(width - SCREEN.w) > 2 || Math.abs(height - SCREEN.h) > 2) log({ ev: 'shot_size_mismatch', width, height, src: src.name });
   return { png: img.toPNG(), bmp: img.toBitmap(), w: width, ms: Date.now() - t };
 }
 
@@ -173,23 +180,33 @@ function sayLine(ctx, text) {
   send('item', ctx.id, { kind: 'say', i, text });
   // Edge voice, else Piper (offline), else the Windows voice.
   ctx.voice = ctx.voice.then(async () => {
+    const t0 = Date.now(), ms = () => Date.now() - t0; // synth_ms for the line_voice log (T0)
     // First sentence: Piper starts at once in parallel, so it is ready the moment Edge's budget runs out
     const early = i === 0 ? piper.synth(text).catch(() => null) : null;
     if (!ttsBackup && !ctx.backup) {
+      // Streamed (SPEED-TOKEN-PLAN P7): the overlay starts playing at the first MP3 piece, not the full sentence.
+      let started = false;
+      const onChunk = (c) => {
+        if (!started) { started = true; send('item', ctx.id, { kind: 'audio', i, stream: true, mime: 'audio/mpeg', src: 'edge', synth_ms: ms() }); }
+        send('audio:chunk', ctx.id, i, c);
+      };
       try {
-        send('item', ctx.id, { kind: 'audio', i, buf: await tts.synth(text, i === 0 ? EDGE_FIRST_MS : EDGE_NEXT_MS), mime: 'audio/mpeg', src: 'edge' });
+        await tts.synth(text, i === 0 ? EDGE_FIRST_MS : EDGE_NEXT_MS, onChunk);
+        send('audio:end', ctx.id, i);
         return;
       } catch (e) {
+        if (started) { send('audio:end', ctx.id, i); log({ ev: 'tts_cut', i, err: e.message }); return; } // already playing: keep what came
         ttsBackup = true; // backup voice for the rest of this answer
         log({ ev: 'tts_fallback', i, err: e.message });
         setTray();
       }
     }
     try {
-      send('item', ctx.id, { kind: 'audio', i, buf: (await early) || await piper.synth(text), mime: 'audio/wav', src: 'piper' });
+      const buf = (await early) || await piper.synth(text);
+      send('item', ctx.id, { kind: 'audio', i, buf, mime: 'audio/wav', src: 'piper', synth_ms: ms() });
     } catch (e) {
       log({ ev: 'piper_error', err: e.message });
-      send('item', ctx.id, { kind: 'audio', i, fallback: true, src: 'windows' });
+      send('item', ctx.id, { kind: 'audio', i, fallback: true, src: 'windows', synth_ms: ms() });
     }
   });
 }
@@ -200,11 +217,20 @@ function speak(text, backup = false) {
   sayLine(ctx, text);
   send('item', ctx.id, { kind: 'end' });
 }
-const say = (kind, text) => { const c = screen.getCursorScreenPoint(); send('status', kind, text, c.x, c.y); };
+// Status pill in a fixed order (QUALITY-PLAN T12): press -> (screen grabbed) Listening -> Thinking -> Speaking -> none.
+const pill = createPillSequencer((kind, text) => send('status', kind, text));
+const say = (kind, text) => pill.push(kind, text);
 
 // ---------- turn loop ----------
 let turnId = 0, active = null, lastDone = null, pendingAsk = null, timing = {};
-let rec = { armed: false, ptt: false }, pttDownAt = 0, shot = null, replaying = false;
+let rec = { armed: false, ptt: false }, pttDownAt = 0, shot = null, source = null, replaying = false;
+
+// "Now studying" (NEXT-ROUND phase 1 step 5): foreground window + browser address bar, read at the press.
+async function sourceNow() {
+  const fg = await platform.foreground();
+  const url = /^(brave|chrome|msedge)$/i.test(fg.exe) ? await platform.browserUrl().catch(() => '') : '';
+  return { ...fg, url };
+}
 let sessionTurns = [], lastActivity = Date.now(), learning = false, interview = { asked: false, open: false };
 let actSeq = 0;
 const acts = new Map();
@@ -234,9 +260,12 @@ function onPtt(ev) {
     if (replaying) closeReplay();
     bargeIn();
     reassertTop();
+    pill.press(); // nothing on screen until the screenshot is taken, so the pill is never in it
     const id = turnId;
     shot = captureClean();
-    shot.then(() => { if (id === turnId && !timing.ptt_up) say('listening', 'Listening'); }, (e) => log({ ev: 'shot_error', err: e.message }));
+    source = sourceNow();
+    const ready = () => { if (id !== turnId) return; timing.feedback_ms ??= Date.now() - pttDownAt; pill.ready(); };
+    shot.then(ready, (e) => { log({ ev: 'shot_error', err: e.message }); ready(); });
     setTray('listening');
   } else if (ev === 'ptt_up') {
     timing.ptt_up = Date.now();
@@ -286,6 +315,12 @@ async function handleText(text, id) {
   }
   // A new question instead of an answer just closes the interview.
   if (interview.open && /\?\s*$|^\W*(what|how|why|when|where|who|which|explain|can|could|show|tell|is|are|do|does)/i.test(text)) interview.open = false;
+  if (interview.open && /^\W*skip\W*$/i.test(text)) { // the Skip button: no answer, don't ask again
+    interview.open = false;
+    settings.pendingQuestion = null;
+    saveSettings();
+    return say('none');
+  }
   if (interview.open) {
     interview.open = false;
     memory.addLearning(settings.vaultPath, [`Asked "${settings.pendingQuestion}". He said: ${text}`]);
@@ -305,6 +340,8 @@ async function ask(text, id) {
   await ear.settled(1500); // the lecture piece cut at the hotkey press is usually back from Groq by now
   if (id !== turnId) return;
   timing.shot_ms = s.ms;
+  const src = sourceLine(await Promise.race([source?.catch(() => null), new Promise((r) => setTimeout(r, 1000))]), youtube.current());
+  if (src) log({ ev: 'source', turn: id, line: src });
   const ctx = { id, text, png: s.png, bmp: s.bmp, w: s.w, says: 0, voice: Promise.resolve(), asks: [], title: null, full: '', sayLines: [] };
   active = ctx;
   send('turn', id, { busy: busyMap(s.bmp, s.w) });
@@ -313,7 +350,7 @@ async function ask(text, id) {
     { onBad: (b) => log({ ev: 'bad_line', line: b.line, why: b.why }) });
   ctx.handle = brain.ask({
     // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when the extension has them, else the sound
-    png: s.png, text, video: youtube.context() || ear.context(),
+    png: s.png, text, turn: id, video: [src, youtube.context() || ear.context()].filter(Boolean).join('\n') || null,
     onText: (d) => { timing.claude_first_token ||= Date.now(); parser.push(d); },
     onEnd: (full) => { ctx.full = full; parser.end(); chain = chain.then(() => endTurn(ctx)); },
     onError: (kind, detail) => { chain = chain.then(() => brainError(ctx, kind, detail)); },
@@ -323,16 +360,31 @@ async function ask(text, id) {
 async function onCmd(ctx, cmd) {
   if (ctx.id !== turnId && !ctx.replay) return;
   if (cmd.prose) log({ ev: 'prose_line', text: cmd.text });
-  if (cmd.type === 'say') { ctx.sayLines.push(cmd.text); return sayLine(ctx, cmd.text); }
+  // Answer guard (QUALITY-PLAN T6): long lines cut, max 5 say lines, max 2 marks on screen (oldest fades)
+  const r = (ctx.lint ??= createLint()).check(cmd);
+  r.fixes.forEach((rule) => log({ ev: 'lint', rule, turn: ctx.id }));
+  if (!r.cmd) return;
+  cmd = r.cmd;
+  if (cmd.type === 'say') {
+    if (!ctx.replay) timing.first_say ||= Date.now(); // SPEED-TOKEN-PLAN P0: first full say line parsed
+    ctx.sayLines.push(cmd.text);
+    return sayLine(ctx, cmd.text);
+  }
   if (cmd.type === 'title') { ctx.title = cmd.text; return; }
+  if (cmd.type === 'choices') return send('item', ctx.id, { kind: 'choices', options: cmd.options });
   if (cmd.type === 'clear') return send('item', ctx.id, { kind: 'clear' });
   if (cmd.type === 'wait_click') return ctx.replay || send('item', ctx.id, { kind: 'wait', x: cmd.x, y: cmd.y });
   if (cmd.type === 'action') return ctx.replay || onAction(ctx, cmd);
-  send('item', ctx.id, { kind: 'mark', mark: { ...cmd, edge: edgeFor(ctx.bmp, ctx.w, cmd) } });
+  send('item', ctx.id, { kind: 'mark', mark: { ...cmd, edge: edgeFor(ctx.bmp, ctx.w, cmd) }, fadeOldest: r.fadeOldest });
 }
+
+// Claude's coordinates are screenshot pixels (1366x768); clicks and UI Automation need real screen pixels (1600x900).
+const toScreen = (x, y) => { const b = screen.getPrimaryDisplay().bounds; return [Math.round(b.x + x * b.width / SCREEN.w), Math.round(b.y + y * b.height / SCREEN.h)]; };
 
 async function onAction(ctx, a) {
   let info = {};
+  if (a.kind === 'click') { const [x, y] = toScreen(a.x, a.y); a = { ...a, x, y }; }
+  if (a.kind === 'key' && PLAY_PAUSE.test(a.name)) a = { ...a, want: /\b(pause|stop|hold on)\b/i.test(ctx.text) ? 'pause' : /\b(play|resume|continue|unpause|start)\b/i.test(ctx.text) ? 'play' : null };
   try {
     if (a.kind === 'click') info = await platform.elementAt(a.x, a.y);
     if (a.kind === 'type') info = { isPassword: await platform.focusedIsPassword() };
@@ -351,8 +403,33 @@ async function onAction(ctx, a) {
   else { acts.set(++actSeq, a); send('item', ctx.id, { kind: 'act', id: actSeq }); }
 }
 
+// The video pauses while Nibley explains and plays again after (NEXT-ROUND Q19, phase 1 step 8). Media key, like the
+// pause action; only when the extension says the YouTube video on screen is playing, so it never starts a paused one.
+const PLAY_PAUSE = /^(media_play_pause|k|space)$/;
+let pausedByUs = false;
+async function pauseVideo() {
+  const v = youtube.current();
+  if (pausedByUs || !v || v.paused) return;
+  pausedByUs = true;
+  await platform.key('media_play_pause').catch((e) => log({ ev: 'auto_pause_error', err: e.message }));
+  log({ ev: 'auto_pause', videoId: v.videoId, t: Math.round(v.t) });
+}
+async function resumeVideo() {
+  if (!pausedByUs) return;
+  pausedByUs = false;
+  const v = youtube.current();
+  if (!v || !v.paused) return; // he played it himself, or the video is gone
+  await platform.key('media_play_pause').catch((e) => log({ ev: 'auto_pause_error', err: e.message }));
+  log({ ev: 'auto_resume', videoId: v.videoId, t: Math.round(v.t) });
+}
+
 async function runAction(a) {
   try {
+    if (a.kind === 'key' && PLAY_PAUSE.test(a.name)) {
+      pausedByUs = false; // he controls the video now: no auto resume
+      const v = youtube.current(); // play/pause keys toggle: skip when the video is already how he wants it
+      if (v && a.want && (a.want === 'pause') === v.paused) return log({ ev: 'action_skip', action: a, why: `already ${a.want === 'pause' ? 'paused' : 'playing'}` });
+    }
     if (a.kind === 'click') await platform.click(a.x, a.y);
     else if (a.kind === 'type') {
       if (await platform.focusedIsPassword().catch(() => true)) return speak("I can't type into a password box, that's yours to do.");
@@ -372,10 +449,12 @@ function endTurn(ctx) {
   if (ctx.id !== turnId) return;
   if (ctx.asks.length) {
     sayLine(ctx, `Should I ${ctx.asks.map((x) => x.describe).join(', then ')}?`);
+    send('item', ctx.id, { kind: 'choices', options: ['Yes', 'No'] }); // QUALITY-PLAN T13: buttons Nibley's code adds
     pendingAsk = { actions: ctx.asks.map((x) => x.a), until: Date.now() + 20000 };
   } else if (ctx.says && settings.pendingQuestion && !interview.asked) {
     interview = { asked: true, open: true }; // mini-interview: at most once per session
     sayLine(ctx, `Quick question: ${settings.pendingQuestion}`);
+    send('item', ctx.id, { kind: 'choices', options: ['Skip'] });
   }
   send('item', ctx.id, { kind: 'end' });
   if (!ctx.says && !ctx.asks.length) say('none');
@@ -449,23 +528,44 @@ function closeReplay() {
 
 // ---------- IPC ----------
 ipcMain.on('rec:data', (_e, buf, dur) => onUtterance(buf, dur));
-ipcMain.on('voice:start', (_e, { turn, i, src }) => {
-  if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now(); // the overlay switches the pill to Speaking
-  // One line per spoken sentence, so the log shows which voice really played (local brief, task 1).
-  log(src === 'edge' ? { ev: 'voice_line', turn, i, voice: settings.voice } : { ev: 'backup_voice', turn, i, src });
+ipcMain.on('voice:start', (_e, { turn, i, src, synth_ms, wait_ms }) => {
+  if (turn === turnId && i === 0 && !timing.first_audio) timing.first_audio = Date.now();
+  // Claude's answer starts speaking (not a confirmation, not an Ask-first question): the video waits for him
+  if (turn === turnId && i === 0 && active?.id === turn && !active.asks.length && !replaying) pauseVideo();
+  // Speaking after Listening/Thinking or from nothing (spoken confirmations); an error or message stays up
+  if (turn === turnId && !replaying && ['listening', 'thinking', 'none'].includes(pill.current)) say('speaking', 'Speaking');
+  // One line per spoken sentence, so the log shows which voice really played (QUALITY-PLAN T0, scorecard Q1).
+  log({ ev: 'line_voice', turn, i, src, voice: src === 'edge' ? settings.voice : undefined, synth_ms, wait_ms });
 });
 ipcMain.on('turn:done', (_e, id) => {
   events.emit('turn:done', id);
+  if (id === turnId) resumeVideo(); // after a barge-in the old turn never ends: the next answer's end plays it again
+  if (id === turnId && !['error', 'msg'].includes(pill.current)) say('none'); // the answer ended: the pill leaves
   if (id !== turnId || !timing.ptt_down || timing.logged) return;
   timing.turn_end = Date.now();
   timing.logged = true;
   log({ ev: 'turn', model: settings.model, ...rel(timing) });
 });
-ipcMain.on('waiting', (_e, { x, y }) => {
+ipcMain.on('waiting', (_e, at) => {
   stopClicks?.();
+  const [x, y] = toScreen(at.x, at.y); // the mouse hook reports real screen pixels
   stopClicks = platform.onMouseClick((cx, cy) => { if (Math.hypot(cx - x, cy - y) <= 40) { stopClicks?.(); stopClicks = null; send('advance'); } });
 });
 ipcMain.on('waiting-done', () => { stopClicks?.(); stopClicks = null; });
+// Answer buttons (QUALITY-PLAN T13). While they show: the mouse reaches the overlay only over the buttons, and the
+// helper takes Enter, Esc, 1-3 (any other key lets go at once, so typing is never blocked).
+ipcMain.on('choices:shown', (_e, on) => {
+  if (replaying) return;
+  overlay.setIgnoreMouseEvents(true, on ? { forward: true } : undefined);
+  platform.grabKeys(on).catch((e) => log({ ev: 'helper_error', err: e.message }));
+});
+ipcMain.on('choices:mouse', (_e, over) => { if (!replaying) overlay.setIgnoreMouseEvents(!over, { forward: true }); });
+ipcMain.on('choice', (_e, { text, how }) => {
+  log({ ev: 'choice', text, how });
+  bargeIn();
+  timing = { ptt_down: Date.now(), ptt_up: Date.now(), stt_done: Date.now(), choice: how }; // first word is timed from the pick
+  handleText(text, turnId);
+});
 ipcMain.on('act', (_e, id) => { const a = acts.get(id); acts.delete(id); if (a) runAction(a); });
 ipcMain.on('replay:close', () => replaying && closeReplay());
 ipcMain.on('ear', (_e, r) => log({ ev: 'ear', ...r }));
@@ -499,8 +599,10 @@ setInterval(async () => {
 if (!app.requestSingleInstanceLock()) app.quit();
 app.whenReady().then(async () => {
   const d = screen.getPrimaryDisplay();
-  log({ ev: 'start', display: d.bounds, scale: d.scaleFactor, settings: { model: settings.model, mode: settings.mode, voice: settings.voice } });
-  if (d.scaleFactor !== 1 || d.bounds.width !== SCREEN.w || d.bounds.height !== SCREEN.h) log({ ev: 'display_mismatch', note: 'Built for 1366x768 at 100%; marks may be off.' });
+  log({ ev: 'start', display: d.bounds, scale: d.scaleFactor, settings: { model: settings.model, mode: settings.mode, voice: settings.voice }, lint: true }); // lint: answer guard wired (scorecard Q9)
+  // Any 16:9 screen at 100% works (screenshot and marks scale); other shapes or scaling are untested.
+  if (d.scaleFactor !== 1 || Math.abs(d.bounds.width / d.bounds.height - SCREEN.w / SCREEN.h) > 0.02) log({ ev: 'display_mismatch', note: 'Tested on 16:9 at 100%; marks may be off.' });
+  if (screen.getAllDisplays().length > 1) log({ ev: 'displays', n: screen.getAllDisplays().length, note: 'Nibley sees and draws on the primary screen only.' });
   const isOverlay = (wc) => overlay && wc && wc.id === overlay.webContents.id;
   const allowed = (wc, perm) => ['media', 'display-capture'].includes(perm) && isOverlay(wc);
   session.defaultSession.setPermissionRequestHandler((wc, perm, cb) => cb(allowed(wc, perm)));
@@ -523,6 +625,7 @@ app.whenReady().then(async () => {
   setTray('starting');
   platform.onError((e) => log({ ev: 'helper_error', err: String(e).slice(0, 300) }));
   platform.onPtt(onPtt);
+  platform.onKey((name) => send('choices:key', name));
   brain.start({
     model: settings.model, claudePath: settings.claudePath,
     buildPrompt: () => prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }),
@@ -558,6 +661,7 @@ function testTurn(text, png, { showShot = true } = {}) {
   timing = { ptt_down: Date.now(), ptt_up: Date.now(), stt_done: Date.now() };
   const img = nativeImage.createFromBuffer(png);
   shot = Promise.resolve({ png, bmp: img.toBitmap(), w: img.getSize().width, ms: 0 });
+  source = sourceNow();
   const showBg = (ch) => { if (ch !== 'turn') return; events.off('send', showBg); send('bg', `data:image/png;base64,${png.toString('base64')}`); };
   if (showShot) events.on('send', showBg);
   return handleText(text, turnId);

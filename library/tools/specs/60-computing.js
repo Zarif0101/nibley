@@ -1,0 +1,83 @@
+// Computing and coding diagrams (arrays, stacks, trees, networks, git...). Drawn as shapes only: no text.
+const { line, arrow, poly, closed, rect, curve, ellipse, circle, arc, earc, dash, dots, group } = require('../draw');
+
+const node = (x, y, r = 11) => circle(x, y, r, { smooth: true });
+const rad = (d) => (d * Math.PI) / 180;
+const headCcw = (cx, cy, r, a, size = 9) => {
+  const px = cx + r * Math.cos(rad(a)), py = cy - r * Math.sin(rad(a));
+  const dx = -Math.sin(rad(a)), dy = -Math.cos(rad(a)), nx = Math.cos(rad(a)), ny = -Math.sin(rad(a));
+  return poly([[px - dx * size + nx * size * 0.7, py - dy * size + ny * size * 0.7], [px, py], [px - dx * size - nx * size * 0.7, py - dy * size - ny * size * 0.7]]);
+};
+const one = (x, y) => poly([[x - 7, y - 12], [x, y - 20], [x, y + 20]]);
+const zero = (x, y) => ellipse(x, y, 10, 20, { smooth: true });
+
+module.exports = [
+  { name: 'function-box', subject: 'computing', tags: ['function', 'input', 'output', 'machine', 'process'], desc: 'arrow into a box and arrow out: input, process, output',
+    anchors: { input: [30, 100], box: [100, 100], output: [170, 100] },
+    strokes: [rect(68, 66, 64, 68), arrow(12, 100, 62, 100), arrow(138, 100, 188, 100), circle(100, 100, 14, { smooth: true }), group(line(100, 80, 100, 86), line(100, 114, 100, 120), line(80, 100, 86, 100), line(114, 100, 120, 100))] },
+  { name: 'array-boxes', subject: 'computing', tags: ['array', 'list', 'index', 'cells', 'sequence'], desc: 'row of five cells side by side, a small mark under each position',
+    anchors: { 'cell-first': [36, 100], 'cell-last': [164, 100], row: [100, 100], index: [36, 132] },
+    strokes: [rect(20, 80, 160, 40), group(line(52, 80, 52, 120), line(84, 80, 84, 120), line(116, 80, 116, 120), line(148, 80, 148, 120)), dots([[36, 134], [68, 134], [100, 134], [132, 134], [164, 134]])] },
+  { name: 'stack-boxes', subject: 'computing', tags: ['stack', 'push', 'pop', 'last-in-first-out', 'call-stack'], desc: 'four boxes stacked up, an arrow pushing on top and one popping off',
+    anchors: { top: [100, 78], bottom: [100, 162], push: [58, 40], pop: [142, 40] },
+    strokes: [group(rect(66, 64, 68, 26), rect(66, 92, 68, 26), rect(66, 120, 68, 26), rect(66, 148, 68, 26)), arrow(52, 26, 84, 58), arrow(116, 58, 148, 26)] },
+  { name: 'queue-boxes', subject: 'computing', tags: ['queue', 'first-in-first-out', 'enqueue', 'dequeue', 'buffer'], desc: 'row of four boxes: items join at the back (right) and leave from the front (left)',
+    anchors: { front: [52, 100], back: [148, 100], in: [190, 100], out: [8, 100] },
+    strokes: [group(rect(36, 80, 32, 40), rect(68, 80, 32, 40), rect(100, 80, 32, 40), rect(132, 80, 32, 40)), arrow(196, 100, 168, 100), arrow(32, 100, 4, 100)] },
+  { name: 'linked-list', subject: 'computing', tags: ['linked-list', 'node', 'pointer', 'next', 'chain'], desc: 'three nodes, each pointing to the next, the last pointing to nothing',
+    anchors: { 'node-1': [34, 100], 'node-2': [96, 100], 'node-3': [158, 100], end: [190, 120] },
+    strokes: [group(rect(14, 84, 44, 32), line(44, 84, 44, 116)), group(rect(76, 84, 44, 32), line(106, 84, 106, 116)), group(rect(138, 84, 44, 32), line(168, 84, 168, 116)),
+      arrow(51, 100, 74, 100), arrow(113, 100, 136, 100), group(line(175, 100, 190, 100), line(190, 100, 190, 126), line(182, 126, 198, 126), line(185, 132, 195, 132))] },
+  { name: 'binary-tree', subject: 'computing', tags: ['tree', 'binary-tree', 'hierarchy', 'root', 'leaves'], desc: 'tree of seven nodes: one root, two children, four leaves',
+    anchors: { root: [100, 32], left: [56, 90], right: [144, 90], leaf: [34, 152] },
+    strokes: [group(node(100, 32), node(56, 90), node(144, 90), node(34, 152), node(78, 152), node(122, 152), node(166, 152)),
+      group(line(92, 40, 64, 82), line(108, 40, 136, 82), line(51, 100, 39, 142), line(61, 100, 73, 142), line(139, 100, 127, 142), line(149, 100, 161, 142))] },
+  { name: 'graph-nodes', subject: 'computing', tags: ['graph', 'network', 'nodes', 'edges', 'connections'], desc: 'six nodes joined in a small network',
+    anchors: { 'node-a': [36, 64], 'node-b': [100, 36], 'node-c': [164, 70], 'node-d': [150, 150], 'node-e': [72, 156], 'node-f': [100, 100] },
+    strokes: [group(node(36, 64), node(100, 36), node(164, 70), node(150, 150), node(72, 156), node(100, 100)),
+      group(line(46, 59, 90, 41), line(110, 40, 154, 65), line(161, 81, 153, 139), line(139, 152, 83, 156), line(41, 74, 67, 146), line(90, 94, 46, 70), line(110, 106, 141, 143), line(100, 47, 100, 89))] },
+  { name: 'hash-buckets', subject: 'computing', tags: ['hash-table', 'dictionary', 'buckets', 'key', 'lookup'], desc: 'a key goes through a function arrow into one of four buckets',
+    anchors: { key: [32, 100], hash: [70, 100], buckets: [134, 100], 'bucket-hit': [134, 112] },
+    strokes: [rect(14, 86, 36, 28), arrow(52, 100, 96, 112), group(rect(100, 40, 66, 24), rect(100, 72, 66, 24), rect(100, 104, 66, 24), rect(100, 136, 66, 24)), group(rect(172, 108, 18, 16))] },
+  { name: 'flowchart-decision', subject: 'computing', tags: ['if', 'decision', 'flowchart', 'condition', 'branch'], desc: 'flowchart: a step, then a diamond decision with two ways out',
+    anchors: { start: [100, 26], decision: [100, 100], yes: [100, 178], no: [180, 100] },
+    strokes: [rect(70, 14, 60, 26), arrow(100, 40, 100, 62), closed([[100, 64], [138, 100], [100, 136], [62, 100]]), arrow(100, 136, 100, 182), arrow(138, 100, 186, 100)] },
+  { name: 'loop-arrow', subject: 'computing', tags: ['loop', 'repeat', 'iteration', 'cycle', 'again'], desc: 'a box with an arrow circling back around it',
+    anchors: { box: [100, 100], loop: [100, 36], back: [170, 100] },
+    strokes: [rect(72, 80, 56, 40), arc(100, 100, 66, 150, 400), headCcw(100, 100, 66, 40)] },
+  { name: 'client-server', subject: 'computing', tags: ['client', 'server', 'request', 'response', 'web'], desc: 'laptop on the left, server rack on the right, arrows between them both ways',
+    anchors: { client: [44, 92], server: [160, 100], request: [100, 84], response: [100, 116] },
+    strokes: [rect(18, 70, 52, 38), poly([[10, 116], [78, 116], [70, 108], [18, 108], [10, 116]]), rect(136, 50, 48, 100), group(line(144, 72, 176, 72), line(144, 96, 176, 96), line(144, 120, 176, 120)),
+      arrow(82, 84, 128, 84), arrow(128, 116, 82, 116)] },
+  { name: 'database', subject: 'computing', tags: ['database', 'storage', 'data', 'records', 'sql'], desc: 'database cylinder with two bands',
+    anchors: { top: [100, 50], db: [100, 110] },
+    strokes: [ellipse(100, 50, 54, 16), group(line(46, 50, 46, 154), line(154, 50, 154, 154)), earc(100, 154, 54, 16, 180, 360), earc(100, 86, 54, 16, 180, 360), earc(100, 120, 54, 16, 180, 360)] },
+  { name: 'cloud', subject: 'computing', tags: ['cloud', 'internet', 'online', 'remote', 'hosting'], desc: 'cloud shape',
+    anchors: { cloud: [100, 106], top: [104, 56] },
+    strokes: [curve([[40, 136], [22, 118], [36, 94], [60, 92], [70, 66], [102, 56], [126, 70], [148, 66], [168, 86], [164, 106], [180, 124], [162, 140], [40, 136]])] },
+  { name: 'browser-window', subject: 'computing', tags: ['browser', 'website', 'page', 'web', 'http'], desc: 'web browser window with an address bar and page lines',
+    anchors: { address: [110, 50], page: [100, 120], 'top-bar': [40, 50] },
+    strokes: [rect(18, 34, 164, 136), line(18, 66, 182, 66), dots([[30, 50], [42, 50], [54, 50]]), rect(70, 42, 100, 16), group(line(34, 92, 166, 92), line(34, 114, 166, 114), line(34, 136, 120, 136))] },
+  { name: 'terminal', subject: 'computing', tags: ['terminal', 'command-line', 'code', 'console', 'run'], desc: 'terminal window with a prompt arrow and a cursor',
+    anchors: { prompt: [48, 92], screen: [100, 116], cursor: [76, 98] },
+    strokes: [rect(18, 40, 164, 124), line(18, 62, 182, 62), poly([[38, 82], [52, 92], [38, 102]]), line(64, 102, 84, 102), group(line(38, 126, 150, 126), line(38, 146, 110, 146))] },
+  { name: 'git-branches', subject: 'computing', tags: ['git', 'branch', 'merge', 'commits', 'version'], desc: 'main line of commits with a branch that splits off and merges back',
+    anchors: { main: [100, 134], branch: [100, 64], split: [52, 134], merge: [156, 134] },
+    strokes: [line(14, 134, 186, 134), group(node(30, 134, 8), node(76, 134, 8), node(124, 134, 8), node(172, 134, 8)), curve([[52, 134], [64, 100], [86, 66], [114, 66], [136, 100], [156, 134]]), group(node(86, 66, 8), node(114, 66, 8))] },
+  { name: 'cpu-chip', subject: 'computing', tags: ['cpu', 'processor', 'chip', 'compute', 'hardware'], desc: 'square computer chip with pins on all four sides',
+    anchors: { chip: [100, 100] },
+    strokes: [rect(56, 56, 88, 88), rect(76, 76, 48, 48), group(...[72, 92, 108, 128].flatMap((v) => [line(v, 56, v, 40), line(v, 144, v, 160), line(56, v, 40, v), line(144, v, 160, v)]))] },
+  { name: 'data-packets', subject: 'computing', tags: ['packets', 'network', 'send', 'pieces', 'internet'], desc: 'three small envelopes travelling along a dashed path',
+    anchors: { start: [20, 160], end: [180, 40], packet: [100, 100] },
+    strokes: [dash(14, 168, 186, 34, 12), group(rect(34, 122, 30, 20), poly([[34, 122], [49, 133], [64, 122]])), group(rect(86, 82, 30, 20), poly([[86, 82], [101, 93], [116, 82]])), group(rect(138, 42, 30, 20), poly([[138, 42], [153, 53], [168, 42]]))] },
+  { name: 'binary-digits', subject: 'computing', tags: ['binary', 'bits', 'zero-one', 'digital', 'code'], desc: 'the digits 1 0 1 1 drawn as pen strokes',
+    anchors: { bits: [100, 100], first: [40, 100], last: [160, 100] },
+    strokes: [one(44, 100), zero(80, 100), one(124, 100), one(160, 100)] },
+  { name: 'neural-net', subject: 'computing', tags: ['neural-network', 'ai', 'layers', 'nodes', 'machine-learning'], desc: 'three layers of nodes joined by lines: 3 in, 4 in the middle, 2 out',
+    anchors: { input: [34, 100], hidden: [100, 100], output: [166, 100] },
+    strokes: [group(node(34, 60, 9), node(34, 100, 9), node(34, 140, 9)), group(node(100, 46, 9), node(100, 86, 9), node(100, 126, 9), node(100, 166, 9)), group(node(166, 80, 9), node(166, 124, 9)),
+      group(...[60, 100, 140].flatMap((y) => [46, 86, 126, 166].map((y2) => line(43, y, 91, y2)))), group(...[46, 86, 126, 166].flatMap((y) => [80, 124].map((y2) => line(109, y, 157, y2))))] },
+  { name: 'laptop', subject: 'computing', tags: ['laptop', 'computer', 'device', 'screen', 'client'], desc: 'open laptop seen from the front',
+    anchors: { screen: [100, 82], keyboard: [100, 140] },
+    strokes: [rect(42, 40, 116, 82), rect(50, 48, 100, 66), closed([[30, 130], [170, 130], [184, 152], [16, 152]]), group(line(46, 140, 154, 140))] },
+];

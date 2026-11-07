@@ -1,0 +1,323 @@
+{
+  "arithmetic-basics": [
+    {"must": "Multiplication and division are done before addition and subtraction, unless brackets say otherwise.", "common_wrong": "always work left to right", "fix": "Brackets first, then times and divide, then plus and minus."},
+    {"must": "Subtraction and division depend on order: 8 - 3 is not 3 - 8.", "fix": "Swapping the numbers changes the answer for minus and divide, not for plus and times."},
+    {"must": "Multiplying is repeated adding: 4 × 3 means four threes.", "fix": "4 times 3 is 3 plus 3 plus 3 plus 3."}
+  ],
+  "fractions-decimals": [
+    {"must": "A fraction is equal parts: the bottom is how many parts, the top is how many you have.", "fix": "The bottom number splits the whole into equal parts; the top counts them."},
+    {"must": "To add fractions, the bottoms must match first.", "common_wrong": "add tops and bottoms", "fix": "Make the bottoms the same, then add only the tops."},
+    {"must": "A decimal is a fraction with a bottom of 10, 100, 1000 and so on.", "fix": "0.25 means 25 hundredths, which is one quarter."}
+  ],
+  "powers-roots": [
+    {"must": "A power means repeated multiplying: 2 to the 3 is 2 × 2 × 2.", "common_wrong": "2 to the 3 is 2 × 3", "fix": "2 cubed is 2 times 2 times 2, which is 8, not 6."},
+    {"must": "A square root undoes squaring: the root of 9 is 3 because 3 × 3 is 9.", "fix": "The root asks: which number times itself gives this?"},
+    {"must": "Anything to the power 0 is 1.", "fix": "Any non-zero number to the power zero is 1."}
+  ],
+  "ratios-percentages": [
+    {"must": "A ratio compares amounts: 2:3 means 2 parts for every 3 parts.", "fix": "2 to 3 means for every 2 of one, there are 3 of the other."},
+    {"must": "Percent means out of 100.", "fix": "Percent means per hundred: 40% is 40 out of 100."},
+    {"must": "A percentage of something is a fraction of it: 25% of 80 is a quarter of 80.", "fix": "Turn the percent into a fraction or decimal, then multiply."}
+  ],
+  "coordinates": [
+    {"must": "A point is written (x, y): x is across, y is up.", "common_wrong": "up first, then across", "fix": "Across first, then up: (x, y)."},
+    {"must": "The origin (0, 0) is where the axes cross.", "fix": "Every point is measured from the origin, where both axes are zero."},
+    {"must": "Negative x is left of the origin, negative y is below it.", "fix": "Minus x goes left, minus y goes down."}
+  ],
+  "scientific-notation": [
+    {"must": "A number is written as a number between 1 and 10 times a power of ten.", "fix": "Write it as one digit before the point, times ten to some power."},
+    {"must": "A positive power makes the number big, a negative power makes it small.", "fix": "Ten to the minus 3 means divide by a thousand."},
+    {"must": "The power counts how many places the decimal point moves.", "fix": "Each step in the power moves the decimal point one place."}
+  ],
+  "particles-matter": [
+    {"must": "All matter is made of tiny particles that are always moving.", "fix": "Even in a solid, the particles never stop jiggling."},
+    {"must": "In solids particles are packed and vibrate; in liquids they slide past each other; in gases they spread out fast.", "fix": "Solid: packed and shaking. Liquid: close but sliding. Gas: far apart and fast."},
+    {"must": "Heating makes particles move faster.", "common_wrong": "particles themselves get bigger when hot", "fix": "Heat makes particles move faster and spread out; the particles don't grow."}
+  ],
+  "units-si": [
+    {"must": "SI base units include metre, kilogram, second, ampere and kelvin.", "fix": "Length in metres, mass in kilograms, time in seconds."},
+    {"must": "Prefixes scale units: kilo is a thousand, milli is a thousandth.", "fix": "Kilo means times a thousand; milli means divided by a thousand."},
+    {"must": "Always convert to the same units before calculating.", "fix": "Change everything to base units first, then put numbers in the formula."}
+  ],
+  "geometry-basics": [
+    {"must": "Angles on a straight line add to 180 degrees.", "fix": "A straight line is a half turn: 180 degrees."},
+    {"must": "Angles in a triangle add to 180 degrees.", "fix": "The three angles of any triangle always add to 180."},
+    {"must": "A full turn is 360 degrees.", "fix": "All the way round is 360 degrees."}
+  ],
+  "pythagoras": [
+    {"must": "It only works in right-angled triangles.", "common_wrong": "use it on any triangle", "fix": "Pythagoras needs a 90 degree angle."},
+    {"must": "The square of the longest side equals the sum of the squares of the other two.", "fix": "Longest side squared equals the other two sides squared, added."},
+    {"must": "The longest side, the hypotenuse, is opposite the right angle.", "fix": "The hypotenuse faces the right angle and is always the longest."}
+  ],
+  "trig-ratios": [
+    {"must": "Sine is opposite over hypotenuse, cosine is adjacent over hypotenuse, tangent is opposite over adjacent.", "fix": "SOH CAH TOA: sine opposite-hypotenuse, cosine adjacent-hypotenuse, tangent opposite-adjacent."},
+    {"must": "Opposite and adjacent depend on which angle you're looking at.", "common_wrong": "the sides have fixed names", "fix": "Opposite is across from your angle; adjacent touches it."},
+    {"must": "The ratios work for right-angled triangles.", "fix": "These ratios come from a right-angled triangle."}
+  ],
+  "algebra-basics": [
+    {"must": "A letter stands for an unknown number.", "fix": "x is just a number we don't know yet."},
+    {"must": "Only like terms can be added: 3x + 2x is 5x, but 3x + 2 stays as it is.", "common_wrong": "3x + 2 = 5x", "fix": "You can only combine terms with the same letter part."},
+    {"must": "2x means 2 times x.", "fix": "A number next to a letter means multiply."}
+  ],
+  "forces-basics": [
+    {"must": "A force is a push or a pull.", "fix": "Every force is a push or a pull on something."},
+    {"must": "Forces have size and direction.", "fix": "A force has a size in newtons and a direction."},
+    {"must": "Balanced forces cause no change in motion.", "common_wrong": "if forces are balanced the object must be still", "fix": "Balanced forces mean no change: still stays still, moving keeps moving steadily."}
+  ],
+  "vectors-basics": [
+    {"must": "A vector has both size and direction.", "fix": "A vector tells you how much and which way."},
+    {"must": "Vectors add tip to tail.", "common_wrong": "just add the sizes", "fix": "Put the second arrow at the tip of the first; the result goes start to finish."},
+    {"must": "A vector can be split into horizontal and vertical parts.", "fix": "Any arrow is an across part plus an up part."}
+  ],
+  "scalars-vectors": [
+    {"must": "A scalar has only size; a vector has size and direction.", "fix": "Scalar: just how much. Vector: how much and which way."},
+    {"must": "Speed and distance are scalars; velocity and displacement are vectors.", "common_wrong": "speed and velocity are the same", "fix": "Velocity is speed with a direction."},
+    {"must": "Mass is a scalar but weight is a vector.", "fix": "Weight is a force, so it has a direction: down."}
+  ],
+  "functions": [
+    {"must": "A function gives exactly one output for each input.", "fix": "Each input goes in and exactly one output comes out."},
+    {"must": "f(x) means the output when the input is x.", "common_wrong": "f(x) means f times x", "fix": "f of x is the output for input x, not f times x."},
+    {"must": "The domain is the allowed inputs; the range is the possible outputs.", "fix": "Domain: what can go in. Range: what can come out."}
+  ],
+  "graphs-and-slope": [
+    {"must": "Slope is rise over run: how much y changes for each step in x.", "fix": "Slope is up divided by across."},
+    {"must": "A positive slope goes up to the right; a negative slope goes down.", "fix": "Uphill to the right is positive, downhill is negative."},
+    {"must": "A steeper line has a bigger slope.", "fix": "The steeper the line, the bigger the number."}
+  ],
+  "area-volume": [
+    {"must": "Area measures flat space in square units; volume measures space in cubic units.", "fix": "Area is in squares, like square metres; volume in cubes."},
+    {"must": "Rectangle area is length times width.", "fix": "Multiply the two sides for a rectangle's area."},
+    {"must": "A prism's volume is its cross-section area times its length.", "fix": "Find the end face area, then multiply by how long it is."}
+  ],
+  "energy-basics": [
+    {"must": "Energy can't be created or destroyed, only moved or changed into another form.", "common_wrong": "energy gets used up", "fix": "Energy is never used up; it moves to another store, often heat."},
+    {"must": "Energy is measured in joules.", "fix": "The unit of energy is the joule."},
+    {"must": "Moving things have kinetic energy; raised things have gravitational potential energy.", "fix": "Motion means kinetic energy; height means potential energy."}
+  ],
+  "speed-basics": [
+    {"must": "Speed is distance divided by time.", "fix": "Speed equals distance over time."},
+    {"must": "Average speed uses the total distance and the total time.", "common_wrong": "average the speeds", "fix": "Use total distance over total time, not the average of the speeds."},
+    {"must": "Speed is measured in metres per second (or km per hour).", "fix": "In physics, speed is usually in metres per second."}
+  ],
+  "displacement-velocity": [
+    {"must": "Displacement is how far from the start in a straight line, with direction.", "common_wrong": "displacement is the same as distance", "fix": "Walk round a track and back: big distance, zero displacement."},
+    {"must": "Velocity is displacement divided by time.", "fix": "Velocity is how fast and which way."},
+    {"must": "Velocity can be negative when moving the other way.", "fix": "A minus sign on velocity just means the opposite direction."}
+  ],
+  "linear-equations": [
+    {"must": "Do the same thing to both sides to keep the equation balanced.", "fix": "Whatever you do to one side, do to the other."},
+    {"must": "Undo operations in reverse order to get x alone.", "fix": "Undo the adding first, then the multiplying."},
+    {"must": "Check by putting the answer back into the equation.", "fix": "Put your x back in; both sides should match."}
+  ],
+  "acceleration": [
+    {"must": "Acceleration is how quickly velocity changes: change in velocity divided by time.", "fix": "Acceleration is change in velocity per second."},
+    {"must": "It's measured in metres per second squared.", "fix": "The unit is metres per second, per second."},
+    {"must": "Slowing down or changing direction is also acceleration.", "common_wrong": "acceleration only means speeding up", "fix": "Braking and turning are accelerations too."}
+  ],
+  "radians": [
+    {"must": "A radian is the angle where the arc length equals the radius.", "fix": "One radian: the arc is as long as the radius."},
+    {"must": "A full turn is 2π radians, so 180 degrees is π radians.", "fix": "Half a turn is pi radians, a full turn 2 pi."},
+    {"must": "Arc length is radius times angle in radians.", "fix": "Arc length equals r times the angle, in radians."}
+  ],
+  "newtons-first-law": [
+    {"must": "An object keeps its velocity (still or moving steadily) unless a net force acts.", "common_wrong": "moving things need a force to keep moving", "fix": "No net force means no change: moving things keep moving."},
+    {"must": "Things slow down in real life because of friction and air resistance.", "fix": "Friction is the force that slows things, not a lack of push."},
+    {"must": "Inertia is the tendency to resist changes in motion; more mass means more inertia.", "fix": "Heavier things are harder to start and stop."}
+  ],
+  "free-body-diagrams": [
+    {"must": "Draw only the forces acting on the one object.", "common_wrong": "include forces the object puts on others", "fix": "Only arrows for forces on this object, not forces it exerts."},
+    {"must": "Each arrow shows the force's direction, and its length shows the size.", "fix": "Arrow direction is the force's direction; longer means bigger."},
+    {"must": "Label each force, such as weight, normal force, friction, tension.", "fix": "Name every arrow so you know which force it is."}
+  ],
+  "trig-functions": [
+    {"must": "Sine and cosine graphs are waves that repeat every 360 degrees (2π).", "fix": "Sine and cosine repeat every full turn."},
+    {"must": "Sine and cosine stay between -1 and 1.", "fix": "They never go above 1 or below minus 1."},
+    {"must": "Cosine is the sine wave shifted by 90 degrees.", "fix": "Cosine is the same wave as sine, moved over a quarter turn."}
+  ],
+  "coulombs-law": [
+    {"must": "The force between two charges is proportional to the product of the charges.", "fix": "Bigger charges, bigger force."},
+    {"must": "The force gets weaker with the square of the distance.", "common_wrong": "double the distance, half the force", "fix": "Double the distance and the force drops to a quarter."},
+    {"must": "Like charges repel, opposite charges attract.", "fix": "Same signs push apart; opposite signs pull together."}
+  ],
+  "newtons-second-law": [
+    {"must": "Net force equals mass times acceleration.", "common_wrong": "a force is needed to keep moving", "fix": "Force changes motion: F equals m times a."},
+    {"must": "More mass needs more force for the same acceleration.", "fix": "A heavier thing needs a bigger push to speed up the same."},
+    {"must": "Acceleration is in the direction of the net force.", "fix": "It speeds up in the direction of the total push."},
+    {"must": "Force is measured in newtons.", "fix": "One newton speeds 1 kilogram up by 1 metre per second, every second."}
+  ],
+  "indices-surds": [
+    {"must": "When multiplying powers of the same base, add the powers.", "common_wrong": "multiply the powers", "fix": "x squared times x cubed is x to the five: add the powers."},
+    {"must": "A negative power means one over: x to the minus 1 is 1 over x.", "fix": "Negative power means divide: flip it to one over."},
+    {"must": "A surd is a root that can't be simplified to a whole number, like root 2.", "fix": "Root 2 can't be written exactly as a fraction, so we keep it as a root."}
+  ],
+  "work-done": [
+    {"must": "Work done is force times distance moved in the direction of the force.", "fix": "Work equals force times distance along the force."},
+    {"must": "Work is energy transferred, measured in joules.", "fix": "Doing work moves energy; both are in joules."},
+    {"must": "No movement in the force's direction means no work is done.", "common_wrong": "holding something heavy still does work", "fix": "Holding a bag still does no work in physics: nothing moves."}
+  ],
+  "electric-current": [
+    {"must": "Current is the rate of flow of charge: charge divided by time.", "fix": "Current is how much charge passes each second."},
+    {"must": "It is measured in amps.", "fix": "Current is measured in amps."},
+    {"must": "Current is not used up in a circuit; it's the same all the way round a single loop.", "common_wrong": "bulbs use up current", "fix": "Current is the same before and after a bulb; energy is what's transferred."}
+  ],
+  "elasticity": [
+    {"must": "An elastic object returns to its shape when the force is removed.", "fix": "Elastic means it springs back."},
+    {"must": "Hooke's law: extension is proportional to force, up to the limit of proportionality.", "fix": "Double the force, double the stretch, until the limit."},
+    {"must": "Past the elastic limit the object is permanently stretched.", "fix": "Stretch too far and it won't go back."}
+  ],
+  "shm": [
+    {"must": "In simple harmonic motion the acceleration is proportional to the displacement and points back to the middle.", "fix": "The further from the middle, the stronger the pull back."},
+    {"must": "The period doesn't depend on the amplitude.", "common_wrong": "bigger swings take longer", "fix": "Small or big swings take the same time for true simple harmonic motion."},
+    {"must": "Speed is greatest at the middle and zero at the ends.", "fix": "Fastest through the centre, momentarily still at each end."}
+  ],
+  "electric-field": [
+    {"must": "An electric field is the region where a charge feels a force.", "fix": "A field is where a charge would get pushed or pulled."},
+    {"must": "Field strength is force per unit charge.", "fix": "Field strength equals force divided by charge."},
+    {"must": "Field lines point the way a positive charge would move.", "fix": "Arrows go away from positive and towards negative."}
+  ],
+  "straight-lines": [
+    {"must": "A straight line can be written y = mx + c.", "fix": "Every straight line fits y equals m x plus c."},
+    {"must": "m is the gradient and c is where the line crosses the y-axis.", "common_wrong": "c is the gradient", "fix": "m is the slope; c is where it crosses the y-axis."},
+    {"must": "Parallel lines have the same gradient.", "fix": "Same slope means the lines never meet."}
+  ],
+  "waves-basics": [
+    {"must": "Waves transfer energy without transferring matter.", "common_wrong": "the water moves along with the wave", "fix": "The wave moves on; the water mostly bobs up and down."},
+    {"must": "Wave speed equals frequency times wavelength.", "fix": "Speed equals frequency times wavelength."},
+    {"must": "Transverse waves vibrate across the direction of travel; longitudinal waves vibrate along it.", "fix": "Transverse shakes sideways; longitudinal squashes and stretches along."}
+  ],
+  "limits": [
+    {"must": "A limit is the value a function gets closer and closer to as x approaches a number.", "fix": "A limit is where the function is heading."},
+    {"must": "The function doesn't have to actually reach that value, or even be defined there.", "common_wrong": "the limit is just the value at that point", "fix": "The limit can exist even where the function has a hole."},
+    {"must": "Limits are the basis for derivatives.", "fix": "Derivatives are built from limits of tiny changes."}
+  ],
+  "derivatives-basics": [
+    {"must": "A derivative is the rate of change: the slope of the curve at one point.", "fix": "The derivative is the slope of the tangent at that point."},
+    {"must": "It comes from the limit of change in y over change in x as the change gets tiny.", "fix": "Shrink the gap between two points until it's almost zero."},
+    {"must": "A derivative of zero means a flat point, like a peak or a dip.", "fix": "Zero slope means flat: a top, a bottom, or a pause."}
+  ],
+  "differentiation-rules": [
+    {"must": "Power rule: the derivative of x to the n is n times x to the n minus 1.", "fix": "Bring the power down in front, then lower the power by one."},
+    {"must": "The derivative of a constant is zero.", "fix": "A constant doesn't change, so its derivative is zero."},
+    {"must": "You differentiate a sum term by term.", "fix": "Differentiate each piece separately, then add them."}
+  ],
+  "what-is-a-program": [
+    {"must": "A program is a list of exact steps the computer follows.", "fix": "A program is exact steps; the computer follows them literally."},
+    {"must": "Steps run in order, top to bottom, unless the code jumps.", "fix": "Lines run top to bottom, one at a time."},
+    {"must": "The computer does what you wrote, not what you meant.", "common_wrong": "the computer understands what you meant", "fix": "It never guesses: it does exactly what the code says."}
+  ],
+  "variables-values": [
+    {"must": "A variable is a name that refers to a value.", "fix": "A variable is a name tag on a value."},
+    {"must": "Assigning again replaces the old value.", "common_wrong": "a variable keeps all its old values", "fix": "After x = 5 then x = 7, x is only 7."},
+    {"must": "The right side of = is worked out first.", "fix": "The right side is calculated first, then named."}
+  ],
+  "data-types": [
+    {"must": "Values have types such as int, float, string and boolean.", "fix": "Every value has a kind: number, text, or true/false."},
+    {"must": "Text and numbers are different even if they look alike.", "common_wrong": "\"7\" and 7 are the same", "fix": "\"7\" is text; 7 is a number."},
+    {"must": "Mixing types can cause errors unless you convert.", "fix": "Convert first, like int(\"7\"), before adding to a number."}
+  ],
+  "operators-expressions": [
+    {"must": "Operators combine values into an expression that gives one value.", "fix": "An expression works out to a single value."},
+    {"must": "Multiply and divide come before add and subtract.", "common_wrong": "always work left to right", "fix": "3 + 4 * 2 is 11: times goes first."},
+    {"must": "% gives the remainder.", "fix": "7 % 3 is 1: the remainder after dividing."}
+  ],
+  "booleans-comparisons": [
+    {"must": "Comparisons give True or False.", "fix": "A comparison answers yes or no: True or False."},
+    {"must": "== compares; = assigns.", "common_wrong": "= checks if things are equal", "fix": "Use == to compare and = to give a value."},
+    {"must": "and needs both true; or needs at least one.", "fix": "and: both must be true. or: one is enough."}
+  ],
+  "strings-text": [
+    {"must": "A string is text in quotes, a row of characters.", "fix": "A string is text: characters in a row, in quotes."},
+    {"must": "Positions start at 0.", "common_wrong": "the first character is at position 1", "fix": "The first character is at position 0."},
+    {"must": "+ joins strings.", "fix": "\"ab\" + \"cd\" makes \"abcd\"."}
+  ],
+  "input-output": [
+    {"must": "Input is data going into a program; output is what comes out.", "fix": "Input goes in, output comes out."},
+    {"must": "input() gives text, so numbers need converting.", "common_wrong": "input() gives a number", "fix": "Wrap input() in int() to get a number."},
+    {"must": "print() shows output on the screen.", "fix": "print() displays text; it doesn't return it."}
+  ],
+  "conditionals": [
+    {"must": "An if runs its code only when the condition is True.", "fix": "The if block runs only when its condition is True."},
+    {"must": "else runs when the condition is False.", "fix": "else is the other path, for when the condition fails."},
+    {"must": "Only one branch of an if-elif-else chain runs.", "common_wrong": "several elif branches can run", "fix": "The first true branch runs, then the rest are skipped."}
+  ],
+  "loops": [
+    {"must": "A loop repeats a block of code.", "fix": "A loop runs the same code again and again."},
+    {"must": "for repeats a set number of times or once per item.", "fix": "for goes through a range or each item in a list."},
+    {"must": "while repeats until its condition becomes False.", "common_wrong": "a while loop stops by itself", "fix": "while keeps going until its condition turns False; it must be able to change."}
+  ],
+  "lists-arrays": [
+    {"must": "A list stores many values in order.", "fix": "A list keeps values in order in one place."},
+    {"must": "Items are found by index, starting at 0.", "common_wrong": "the first item is at index 1", "fix": "The first item is xs[0]."},
+    {"must": "len() gives the number of items.", "fix": "len(xs) tells you how many items there are."}
+  ],
+  "functions-programming": [
+    {"must": "A function is a named, reusable set of steps.", "fix": "Write the steps once, then call them by name."},
+    {"must": "Parameters are inputs; return sends a result back.", "fix": "Inputs go in as parameters; return gives the answer back."},
+    {"must": "Defining a function doesn't run it; calling it does.", "common_wrong": "defining a function runs it", "fix": "def only defines it; call it to run it."}
+  ],
+  "scope": [
+    {"must": "Variables made inside a function are local to it.", "fix": "Names made inside a function stay inside it."},
+    {"must": "Code outside a function can't see its local variables.", "common_wrong": "you can use a function's variables anywhere", "fix": "Outside the function, its local names don't exist."},
+    {"must": "Functions share results by returning them.", "fix": "Return the value to use it outside."}
+  ],
+  "dictionaries": [
+    {"must": "A dictionary stores values under unique keys.", "fix": "Each value sits under its own key, like a labelled drawer."},
+    {"must": "You look values up by key, not position.", "common_wrong": "dictionaries are looked up by position", "fix": "Use d[key], not a number position."},
+    {"must": "Setting an existing key replaces its value.", "fix": "Assigning to a key that exists overwrites it."}
+  ],
+  "debugging": [
+    {"must": "Read the error message first: it names the problem and line.", "fix": "Start with the error message and its line number."},
+    {"must": "Test one guess at a time.", "fix": "Change one thing, re-run, and see what changed."},
+    {"must": "Print values to check what the program really holds.", "common_wrong": "you can tell what a value is by reading the code", "fix": "Print the value instead of assuming it."}
+  ],
+  "algorithms-basics": [
+    {"must": "An algorithm is clear steps that always finish and solve the problem.", "fix": "Clear steps, always ending with an answer."},
+    {"must": "Correctness comes before speed.", "fix": "First make it right, then make it fast."},
+    {"must": "Test edge cases like an empty list.", "fix": "Try the unusual inputs too, like empty or one item."}
+  ],
+  "recursion": [
+    {"must": "Recursion is a function calling itself on a smaller problem.", "fix": "It solves a big problem by solving a smaller copy."},
+    {"must": "It needs a base case that stops the calls.", "common_wrong": "recursion stops by itself", "fix": "The base case answers directly and stops it."},
+    {"must": "Each step must move closer to the base case.", "fix": "Each call must make the problem smaller."}
+  ],
+  "searching-sorting": [
+    {"must": "Sorting puts items in order.", "fix": "Sorting arranges items from smallest to largest, or by another rule."},
+    {"must": "Binary search halves a sorted list each step.", "fix": "Check the middle and throw away half, again and again."},
+    {"must": "Binary search only works on sorted data.", "common_wrong": "binary search works on any list", "fix": "Sort first, or binary search gives wrong answers."}
+  ],
+  "big-o": [
+    {"must": "Big O describes how work grows as input grows.", "common_wrong": "Big O is the exact running time", "fix": "Big O is about growth, not exact seconds."},
+    {"must": "A loop inside a loop over n is O(n squared).", "fix": "Nested loops over n items do about n times n steps."},
+    {"must": "O(log n) grows much slower than O(n).", "fix": "Halving each step grows very slowly: log n."}
+  ],
+  "objects-classes": [
+    {"must": "A class is a template; objects are made from it.", "fix": "The class is the cutter; objects are the cookies."},
+    {"must": "Each object has its own attribute values.", "common_wrong": "changing one object changes all of them", "fix": "Changing one object doesn't change the others."},
+    {"must": "Methods are functions that belong to the class.", "fix": "Methods are the actions objects can do."}
+  ],
+  "stacks-queues": [
+    {"must": "A stack is last in, first out.", "fix": "The newest item on a stack leaves first."},
+    {"must": "A queue is first in, first out.", "common_wrong": "a queue takes the newest item first", "fix": "The oldest item in a queue leaves first."},
+    {"must": "Function calls are kept on a stack.", "fix": "Each call waits on the stack until the one above it finishes."}
+  ],
+  "trees-graphs": [
+    {"must": "A graph is nodes joined by edges.", "fix": "Dots are nodes, lines are edges."},
+    {"must": "A tree has one root and no loops.", "common_wrong": "every graph is a tree", "fix": "A tree has a single root and never loops back."},
+    {"must": "Leaves are tree nodes with no children.", "fix": "Leaves are at the ends: they have no children."}
+  ],
+  "files-databases": [
+    {"must": "Files keep data after the program ends.", "fix": "Save to a file so the data survives a restart."},
+    {"must": "A database stores records you can search and update.", "fix": "A database is organised records with the same fields."},
+    {"must": "Opening a file for writing replaces its contents.", "common_wrong": "writing to a file always adds to it", "fix": "Mode \"w\" wipes the file; use \"a\" to add."}
+  ],
+  "internet-web": [
+    {"must": "The browser sends a request; the server sends a response.", "fix": "Browser asks, server answers."},
+    {"must": "DNS turns a website name into an address.", "fix": "DNS works like phone contacts: name to number."},
+    {"must": "Data travels in small packets.", "common_wrong": "a page is sent in one piece", "fix": "Pages arrive in many small packets, put back together."}
+  ],
+  "version-control-git": [
+    {"must": "A commit is a saved snapshot with a message.", "fix": "Each commit saves the project's state, with a note."},
+    {"must": "Branches let you work separately; merging combines them.", "fix": "Try ideas on a branch, then merge them back."},
+    {"must": "A merge conflict means two changes touched the same lines.", "common_wrong": "a merge conflict means the project is broken", "fix": "Conflicts are normal: choose which change to keep."}
+  ]
+}

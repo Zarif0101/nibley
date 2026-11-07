@@ -1,5 +1,8 @@
 # Brief: local session (app code)
 
+> **Updated 2026-11-04 (later):** many parts are already built and tested in the cloud; connect them with `docs/briefs/wiring-checklist.md` instead of writing them again.
+> **Updated 2026-11-04:** work from `docs/QUALITY-PLAN.md`, blueprints T0-T11 in order. Task 1 below = T1 (after T0's logging), Task 2 = T2. Task 3 (PRD v2) uses `docs/TEACHING-BIBLE.md` and `docs/LEARNING-ENGINE.md` as inputs and raises their open decisions. Merge PR Zarif0101/nibley#1 first (the `src/learn/` modules the learning engine builds on).
+
 Runs on: Zarif's subscription, Opus at extra effort, on this Windows laptop (the voice and overlay can only be tested here).
 Read first: `CLAUDE.md`, `docs/BUILD-LOG.md`, `brainstorms/2026-11-04-pregenerated-study-assets.md`.
 Do not touch `library/`. A cloud session is building it at the same time and will deliver it as a PR.

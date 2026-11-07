@@ -61,7 +61,7 @@ test('key allowlist', () => {
 });
 
 test('URL schemes', () => {
-  assert.equal(check({ kind: 'open_url', url: 'https://www.youtube.com/watch?v=1' }, {}, auto).describe, 'open youtube.com');
+  assert.equal(check({ kind: 'open_url', url: 'https://www.youtube.com/watch?v=1' }, {}, auto).describe, 'open youtube.com in a new tab');
   assert.equal(check({ kind: 'open_url', url: 'http://example.com' }, {}, auto).ok, true);
   for (const u of ['file:///C:/Windows', 'javascript:alert(1)', 'ms-settings:privacy', 'not a url', 'C:\\x.exe']) {
     assert.equal(check({ kind: 'open_url', url: u }, {}, auto).ok, false, u);
@@ -70,6 +70,9 @@ test('URL schemes', () => {
 
 test('app allowlist and scroll', () => {
   assert.equal(check({ kind: 'open_app', name: 'chrome' }, {}, auto).ok, true);
+  // opening a site or app asks first even in Auto mode (NEXT-ROUND Q15)
+  assert.equal(check({ kind: 'open_app', name: 'chrome' }, {}, auto).ask, true);
+  assert.equal(check({ kind: 'open_url', url: 'https://youtube.com' }, {}, auto).ask, true);
   assert.equal(check({ kind: 'open_app', name: 'cmd' }, {}, auto).ok, false);
   assert.equal(check({ kind: 'open_app', name: 'constructor' }, {}, auto).ok, false);
   assert.equal(check({ kind: 'scroll', dir: 'down', n: 3 }, {}, auto).ok, true);

@@ -20,6 +20,7 @@ public static class Nib {
   [DllImport("user32.dll")] static extern UIntPtr SetTimer(IntPtr hwnd, UIntPtr id, uint ms, IntPtr fn);
   [DllImport("user32.dll")] static extern uint SendInput(uint n, INPUT[] inputs, int size);
   [DllImport("user32.dll")] static extern int GetSystemMetrics(int i);
+  [DllImport("user32.dll")] static extern short GetAsyncKeyState(int vk);
   [DllImport("kernel32.dll")] static extern uint GetCurrentThreadId();
   [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string name);
   [DllImport("user32.dll")] static extern IntPtr GetForegroundWindow();
@@ -40,6 +41,8 @@ public static class Nib {
   static IntPtr kbHook, msHook;
   static uint hookTid;
   static bool winDown, active;
+  static volatile bool grab; // answer buttons showing (QUALITY-PLAN T13)
+  static readonly bool[] held = new bool[256]; // grabbed keys whose key-up must be swallowed too
   static readonly IntPtr MAGIC = (IntPtr)0x4E49424C; // tags our own SendInput events
   static readonly BlockingCollection<string> outq = new BlockingCollection<string>();
 
@@ -63,6 +66,17 @@ public static class Nib {
           if (down && !active) { active = true; Mask(); Emit("{\"ev\":\"ptt_down\"}"); }
           if (up && active) { active = false; Emit("{\"ev\":\"ptt_up\"}"); }
           return (IntPtr)1; // swallow: Start menu, Terminal quake mode and the ` char never see it
+        } else if (k.vk < 256 && up && held[k.vk]) {
+          held[k.vk] = false;
+          return (IntPtr)1;
+        } else if (grab && down && !winDown && !active) {
+          // Enter, Esc, 1-3 pick or dismiss an answer button; any other key (or Ctrl/Alt) means he is typing: let go.
+          string name = k.vk == 0x0D ? "Enter" : k.vk == 0x1B ? "Escape" : (k.vk >= 0x31 && k.vk <= 0x33) ? ((char)k.vk).ToString()
+            : (k.vk >= 0x61 && k.vk <= 0x63) ? ((char)(k.vk - 0x30)).ToString() : null;
+          bool mod = (GetAsyncKeyState(0x11) & 0x8000) != 0 || (GetAsyncKeyState(0x12) & 0x8000) != 0;
+          if (name != null && !mod) { held[k.vk] = true; Emit("{\"ev\":\"key\",\"name\":\"" + name + "\"}"); return (IntPtr)1; }
+          grab = false;
+          Emit("{\"ev\":\"key\",\"name\":\"other\",\"vk\":" + k.vk + ",\"mod\":" + (mod ? "true" : "false") + "}");
         }
       }
     }
@@ -173,6 +187,7 @@ public static class Nib {
         Process.Start(new ProcessStartInfo(Encoding.UTF8.GetString(Convert.FromBase64String(p[2]))) { UseShellExecute = true });
         return "";
       }
+      case "grab_keys": grab = p[2] == "1"; return "";
       case "watch_clicks": PostThreadMessage(hookTid, p[2] == "1" ? WM_MOUSE_ON : WM_MOUSE_OFF, IntPtr.Zero, IntPtr.Zero); return "";
       case "fg": { // foreground window title + process name (names the video, PDF or page on screen)
         IntPtr h = GetForegroundWindow();
@@ -182,6 +197,13 @@ public static class Nib {
         string exe = "";
         try { exe = Process.GetProcessById((int)pid).ProcessName; } catch { }
         return ",\"title\":" + Q(t.ToString()) + ",\"exe\":" + Q(exe);
+      }
+      case "url": { // address bar text of the foreground Brave/Chrome/Edge window ("Now studying", NEXT-ROUND phase 1 step 5)
+        var bar = AutomationElement.FromHandle(GetForegroundWindow()).FindFirst(TreeScope.Descendants, new AndCondition(
+          new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit),
+          new PropertyCondition(AutomationElement.NameProperty, "Address and search bar")));
+        object vp;
+        return ",\"url\":" + Q(bar != null && bar.TryGetCurrentPattern(ValuePattern.Pattern, out vp) ? ((ValuePattern)vp).Current.Value : "");
       }
       case "mic_users": { // apps Windows lists as using the microphone right now (LastUsedTimeStop = 0)
         var names = new System.Collections.Generic.List<string>();

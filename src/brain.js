@@ -17,7 +17,7 @@ function startProc() {
   fs.writeFileSync(file, cfg.buildPrompt());
   const args = ['-p', '--model', cfg.model, '--setting-sources', '', '--strict-mcp-config', '--tools', '', '--disable-slash-commands',
     '--no-session-persistence', '--system-prompt-file', file, '--input-format', 'stream-json', '--output-format', 'stream-json',
-    '--verbose', '--include-partial-messages'];
+    '--verbose', '--include-partial-messages', ...(cfg.effort ? ['--effort', cfg.effort] : [])];
   const child = spawn(cfg.claudePath, args, { shell: false, windowsHide: true, env: cleanEnv() });
   const p = { child, file, turns: 0, lastUsed: Date.now(), queue: [], stderr: '', loggedInit: false };
   child.stdin.on('error', () => {});
@@ -28,7 +28,7 @@ function startProc() {
     onEvent(p, m);
   });
   // The first request of a process is slow (~3-5 s, measured), so spend it on a silent warm-up.
-  p.queue.push({ text: '', done: false, cancelled: true, onText() {}, finish() { this.done = true; }, fail() { this.done = true; } });
+  p.queue.push({ text: '', done: false, cancelled: true, meta: { warmup: true }, onText() {}, finish() { this.done = true; }, fail() { this.done = true; } });
   child.stdin.write(JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text: '(Warm-up, not from Zarif. Reply with only: say ok)' }] } }) + '\n');
   child.on('exit', (code) => {
     p.dead = true;
@@ -57,10 +57,19 @@ function onEvent(p, m) {
   } else if (m.type === 'result') {
     p.queue.shift();
     clearTimeout(t.timer);
+    logUsage(t, m);
     if (m.is_error && !t.cancelled && !t.done) t.fail(classify(String(m.result || '') + ' ' + (m.errors || []).join(' ')) || 'error', String(m.result || m.subtype));
     else if (m.is_error && !t.cancelled) log({ ev: 'claude_result_error', result: String(m.result || m.subtype).slice(0, 300) });
     t.finish();
   }
+}
+
+// SPEED-TOKEN-PLAN P0: tokens and time per answer. Field names checked on a real result line (2026-11-05).
+function logUsage(t, m) {
+  const u = m.usage || {};
+  log({ ev: t.meta?.warmup ? 'claude_warmup_usage' : 'claude_usage', ...t.meta, cancelled: t.cancelled || undefined,
+    input: u.input_tokens, cache_write: u.cache_creation_input_tokens, cache_read: u.cache_read_input_tokens, output: u.output_tokens,
+    thinking: u.output_tokens_details?.thinking_tokens, cost: m.total_cost_usd, api_ms: m.duration_api_ms, ttft_ms: m.ttft_ms });
 }
 
 function classify(s) {
@@ -89,7 +98,7 @@ function rotate() {
 module.exports = {
   cleanEnv,
 
-  // opts: {model, claudePath, buildPrompt, onFatal}
+  // opts: {model, claudePath, buildPrompt, onFatal, effort?} effort: claude --effort (low..max), none = Claude's default
   start(opts) {
     cfg = { onFatal: () => {}, ...opts };
     cur = startProc();
@@ -98,7 +107,7 @@ module.exports = {
 
   // Sends one question. Callbacks: onText(delta), onEnd(fullText), onError(kind, detail). Returns {cancel}.
   // video: optional text block (YouTube title, time, transcript part) put before the question; not carried over.
-  ask({ png, text, video, onText = () => {}, onEnd = () => {}, onError = () => {} }) {
+  ask({ png, text, video, turn, onText = () => {}, onEnd = () => {}, onError = () => {} }) {
     if (!cur.queue.length && (cur.turns >= MAX_TURNS || Date.now() - cur.lastUsed > MAX_IDLE)) { carry = topic(); rotate(); }
     const p = cur;
     const content = [];
@@ -107,7 +116,7 @@ module.exports = {
     content.push({ type: 'text', text: carry ? `(Before this, we talked about: ${carry})\n\n${q}` : q });
     carry = null;
     const t = {
-      text: '', done: false, cancelled: false, onText,
+      text: '', done: false, cancelled: false, onText, meta: { turn, image: !!png, n: p.turns + 1 },
       finish() { if (t.done) return; t.done = true; clearTimeout(t.timer); if (!t.cancelled) onEnd(t.text); },
       fail(kind, detail) { if (t.done) return; t.done = true; clearTimeout(t.timer); if (!t.cancelled) onError(kind, detail); },
     };

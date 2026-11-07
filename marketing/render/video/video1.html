@@ -1,0 +1,96 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Nibley video 1</title>
+<link rel="stylesheet" href="common.css">
+<script src="../../../src/overlay/mascot.js"></script>
+<script src="marks.js"></script>
+<script src="common.js"></script>
+</head><body>
+<div id="stage"><div id="cap"></div></div>
+<script>
+const stage = document.getElementById('stage');
+const { lap, screen, wrap } = buildLaptop(stage);
+const CAM = { wrap, F: [460, 380], in: 13.9, out: 21.8 };
+// ---- lecture slide (900 x 560) ----
+const slide = h('div', { className: 'abs', style: { left: 0, top: 0, width: '900px', height: '560px', background: '#fff' } }, screen);
+h('div', { className: 'abs', style: { left: '44px', top: '34px', fontWeight: 700, fontSize: '48px', lineHeight: '58px' } }, slide, 'Forces on a block at rest');
+h('div', { className: 'abs', style: { left: '44px', top: '104px', fontWeight: 400, fontSize: '30px', lineHeight: '42px' } }, slide, 'Weight pulls it down: W = mg.');
+const ssvg = sv('svg', { class: 'pen', width: 900, height: 560, viewBox: '0 0 900 560' }, slide);
+lectureArt(ssvg, { cx: 380, floor: 490, s: 3.2 });
+printedPath(ssvg, MARKS.v1_weight[0]); printedPath(ssvg, MARKS.v1_weight[1]);
+h('div', { className: 'abs', style: { left: '402px', top: '420px', fontWeight: 400, fontSize: '29px', lineHeight: '30px' } }, slide, 'weight');
+// ---- Nibley's marks on top ----
+const psvg = sv('svg', { class: 'pen', width: 900, height: 560, viewBox: '0 0 900 560' }, slide);
+const ring = new Mark(psvg, MARKS.v1_ring);
+const up = new Mark(psvg, MARKS.v1_up, [0.85, 0.15]);
+const chip = h('div', { className: 'chip', style: { left: '356px', top: '192px', opacity: 0 } }, slide, 'the floor pushing back');
+const nib = new Mascot(slide, 8);
+// ---- below the laptop ----
+const keys = buildKeys(stage, 60, 1350);
+const bubble = h('div', { className: 'abs', style: { left: '470px', top: '1322px', width: '460px', background: '#fff', border: '1px solid #E6EEF8', borderRadius: '12px', boxShadow: '0 1px 3px rgba(43,58,75,.08)', padding: '22px 30px 24px', fontWeight: 600, fontSize: '40px', lineHeight: '52px', opacity: 0 } }, stage);
+const tail = h('div', { className: 'abs', style: { left: '448px', top: '1378px', width: '26px', height: '26px', background: '#fff', borderLeft: '1px solid #E6EEF8', borderBottom: '1px solid #E6EEF8', transform: 'rotate(45deg)', opacity: 0 } }, stage);
+const words = ['wait,', "what's", 'a', 'normal', 'force?'];
+const end = buildEndCard(stage);
+end.root.style.display = 'none';
+
+const cap = captions([
+  { a: 2.4, b: 4.9, text: 'This is Nibley.' },
+  { a: 6.35, b: 8.9, text: 'It hangs out on your screen while you study.' },
+  { a: 9.05, b: 12.6, text: 'You hold two keys and just ask.' },
+  { a: 14.45, b: 17.45, text: 'It says it simply, then draws it on the slide.' },
+  { a: 18.45, b: 21.7, text: 'Free. Actually free. Open source.' },
+  { a: 23.3, b: 25.8, text: 'Come say hi to Nibley.', top: 1170 },
+]);
+
+
+const BX = 640, BY = 330;   // Nibley's home beside the ring (slide coords)
+function nibley(t) {
+  if (t < 1.4) return nib.place(0, 0, 0, 0, 0);
+  const bob = Math.round(Math.sin(t * 4.2)) * 4;
+  let face = 'happy', s = 1, rot = 0, x = BX, y = BY + bob;
+  const talk = (a, b) => t >= a && t < b && Math.floor(t / 0.17) % 2;
+  if (t < 4.95) { s = backOut(pr(t, 1.4, 0.4)); if (talk(2.45, 4.85)) face = 'speaking'; }
+  else if (t < 9.0) {            // shy: smaller, looks down, shuffles sideways in steps
+    face = 'down'; s = 0.86;
+    x += (t > 5.6 ? 14 : 0) + (t > 6.9 ? 14 : 0) - (t > 8.0 ? 8 : 0);
+  } else if (t < 12.75) { face = 'listening'; }
+  else if (t < 13.8) { face = 'confused'; rot = -5; }
+  else if (t < 14.5) { face = 'thinking'; }
+  else if (t < 18.2) { if (talk(14.5, 17.1)) face = 'speaking'; }
+  else if (t < 23.1) {            // mischievous: happy, tilted, bounces on the giggle
+    rot = 9; s = 1.12;
+    if (t >= 21.85 && t < 23.0) { const k = ((t - 21.85) % 0.6) / 0.6; y = BY - Math.abs(Math.sin(k * Math.PI)) * 26; } else y = BY;
+  }
+  nib.set(face);
+  nib.place(x, y, s, rot, 1);
+}
+
+window.seek = (t) => {
+  laptopTilt(lap, t, 22.9, CAM);
+  // pen marks
+  ring.set(t, 0.2, 0.45);
+  up.set(t, 14.0, 0.3);
+  chipShow(chip, t, 14.35);
+  nibley(t);
+  // keys + bubble
+  keys(t, 9.0, 9.5, 13.9, 14.3);
+  const kv = 1 - pr(t, 13.95, 0.2);
+  const nw = Math.min(5, Math.max(0, Math.floor((t - 12.75) / 0.18) + 1));
+  bubble.innerHTML = words.slice(0, nw).join(' ') || '&nbsp;';
+  const bo = pr(t, 12.75, 0.15) * kv;
+  bubble.style.opacity = bo; tail.style.opacity = bo;
+  bubble.style.display = tail.style.display = bo <= 0 ? 'none' : 'block';
+  cap(t);
+  // end card
+  const e = pr(t, 23.1, 0.4);
+  end.root.style.display = e > 0 ? 'block' : 'none';
+  const hop = t >= 24.75 && t < 25.45 ? -Math.abs(Math.sin(((t - 24.75) / 0.7) * Math.PI * 2)) * 40 : 0;
+  const bob = Math.round(Math.sin(t * 4.2)) * 4;
+  end.m.set('happy'); end.m.place(80, 435 + (hop || bob), 1, hop ? 6 : 0, ease(e));
+  for (const [i, el] of [end.word, end.url, end.small].entries()) {
+    const p = ease(pr(t, 23.25 + i * 0.12, 0.3));
+    el.style.opacity = p; el.style.transform = `translateY(${((1 - p) * 14).toFixed(1)}px)`;
+  }
+  end.um.set(t, 23.9, 0.45);
+};
+document.fonts.ready.then(() => { window.READY = true; window.seek(0); });
+</script></body></html>

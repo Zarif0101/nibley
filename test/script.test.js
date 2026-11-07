@@ -70,3 +70,11 @@ test('say cap at 8, bad lines reported', () => {
 test('CRLF and trailing spaces', () => {
   assert.deepEqual(parseAll('say a\r\nring 1 2 30\r\n').map((c) => c.type), ['say', 'ring']);
 });
+
+test('choices: 2-3 click-to-answer options, each cut to 4 words', () => {
+  const { parseLine } = require('../src/script');
+  assert.deepEqual(parseLine('choices Yes | No'), { type: 'choices', options: ['Yes', 'No'] });
+  assert.deepEqual(parseLine('choices "Yes, pause it" | Not now | Show me a story version please | Fourth'), { type: 'choices', options: ['Yes, pause it', 'Not now', 'Show me a story'] });
+  assert.equal(parseLine('choices Yes').type, 'bad');
+  assert.equal(parseLine('choices Yes | Yes').type, 'bad', 'duplicates collapse to one option');
+});

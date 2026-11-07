@@ -30,6 +30,7 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 ## Mascot
 - Pixel spark (20x20 grid, `src/overlay/mascot.js`), crisp pixels, faces: happy, listening, thinking, speaking, confused, error (X eyes + `error` mark).
 - Uses: status pill, tray icon (happy; error face when something needs fixing), lessons header and empty state, app icon (mascot on an `ink` rounded square).
+- 3D version (`design/mascot-3d/`, Zarif 2026-11-04): same sky blues. Extras for cuteness: blush cheeks (`error` coral at ~60%, soft edge), a small white-blue spark star beside the tuft (`sky` #BDE9FF, glow #8BD9FC; Zarif 2026-11-04: not yellow), nub hands, second eye glint. For marketing, onboarding and mood loops; the 16 px tray icon stays pixel art.
 
 ## Marks on screen
 - **Ring:** a hand-drawn loop, not a perfect ellipse. Starts at ~10 o'clock, goes round once, overshoots ~25° so the ends cross. Radius jitter ±4%. Seeded per mark, so replays look identical.
@@ -46,8 +47,8 @@ Scope (Zarif's pick): brand on Nibley's own UI (mascot status, tray, labels, les
 - Chips slide 6 px from the left and fade in (180 ms).
 - `prefers-reduced-motion`: marks appear whole, no animation, mascot doesn't animate.
 
-## Status pill near the cursor
-White pill, 18 px below-right of where the cursor was at the hotkey press:
+## Status pill
+White pill, centred at the bottom of the screen, 184 px above the screen bottom (above the answer buttons and the subtitle): the same spot every time, shown only while Nibley is active (Zarif, 2026-11-04: it felt random next to the mouse). When a mark sits in the bottom quarter, pill, buttons and subtitle move to the top together (pill 24 px from the top). The pill sits in a full-width centred row, so its width can change without it moving off centre.
 - Listening: `deep` pill, mascot listening face, 3 white bars moving with the mic level, "Listening".
 - Thinking: mascot thinking face, 3 `ink` dots pulsing, "Thinking".
 - Speaking: mascot mouth opening and closing, "Speaking". Hides when the answer ends.
@@ -61,6 +62,15 @@ Every `say` line shows as a subtitle while its audio plays, then clears. Zarif: 
 - Longer than 2 lines: split into parts at word breaks, each shown for its share of the audio.
 - Timing: appears when the line's audio starts, fades out 150 ms when it ends. Next line replaces it in place. `prefers-reduced-motion`: no fade.
 - Why `text` and not `deep`: `deep` chips are labels on the video; the subtitle must not look like a label.
+- Cloud module `src/overlay/subtitles.js` (72 px up, 120 ms fade) differs from the built overlay above. Reconcile at QUALITY-PLAN T2.
+
+## Pill motion (proposed 2026-11-04, preview `test/out/pill-motion-preview.webp`)
+- Same order on every press: Listening → Thinking → Speaking, each at least 350 ms; never skips Listening.
+- Enter: pop from scale .82 to 1.04 to 1 with fade, 170 ms. State change: width glides to the new text, the mascot hops 3 px, colours cross-fade, 190 ms. Leave: fade + scale .92, 140 ms. Reduced motion: no animation.
+
+## Answer buttons (proposed 2026-11-04, preview `test/out/sim-ask-with-buttons-1.png`)
+- Up to 3 buttons centred just above the subtitle (follow it to the top when it moves). Inter 600 14/20, radius 8, chip shadow.
+- First option: `deep` fill, white text, key hint "Enter". Others: white fill, `deep` text and 1.5 px `deep` border, key hints "2", "3". Hover: `ink` border. Rise 6 px + fade in, 180 ms.
 
 ## Lessons window
 - `bg` background, header: mascot + "Lessons".
