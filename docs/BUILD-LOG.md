@@ -239,3 +239,13 @@ Newest at the bottom. A new session reads this to resume.
 - Scorecard `--since <ISO time>` reads one run from the day's log.
 - Seen, not investigated: two subtitle-check starts at 12:20 and 12:22 UTC logged the primary display as 768x1366 (the portrait panel); runs after 12:24 logged 1600x900.
 - NEXT: phase 1 step 6 (aim test on 10 real YouTube lecture frames, target >= 90%). Then phase 2 (sidebar shell, mockup first).
+
+## 2026-11-08 NEXT-ROUND phase 1 step 6 (phase 1 complete)
+- Step 6 DONE. Aim test on 10 real YouTube lecture frames: 10/10 marks on target (target >= 90%). Median 6 px off on screen (Claude's aim 5 px, our drawing 0 px). Worst: 53 px on the big "blue salt water column" (still inside its box). Haiku, 5-11 s per answer.
+  - Frames: `test/aim-grab.js` loads the normal watch page in a hidden 1600x900 Electron window (embeds refuse Electron: errors 152/153) and saves `test/out/aim-frames/frame-N.png`. 4 Khan Academy whiteboards, 1 MIT blackboard, 2 Crash Course, 1 A-level handwritten, Zarif's HSC ICT (Bangla). Frame 6 was a pre-roll ad, left out.
+  - Targets hand-labelled in `test/aim-targets.json`. Run: `npx electron test/aim-check.js --frames --label lecture`. Results: `test/out/aim-lecture/` (gitignored).
+  - First run 0/10: the test page never came to the front (Claude saw Zarif's music video). Fix: a 6 px magenta dot in the corner proves the frame is on screen before the screenshot (up to 4 tries), like the white check in the seeded mode.
+  - proof-9.png shows no ring, but overlay-9.png has the ring around "Assembler": only the test's picture-merge missed it. Not fixed.
+- Disk C: had 400 MB free; one run crashed with ENOSPC. Nibley's own files are small (test/out 26 MB, logs 0.5 MB).
+- Earlier today (log 2026-11-08): one turn where Whisper returned its own hint ("A student asks a question about the video.") for a 15 s clip, so nothing was drawn. Not fixed: a guard that drops transcripts that echo the hint.
+- NEXT: phase 2 (sidebar shell, animated mockup first for Zarif's OK).

@@ -7,6 +7,7 @@
 //   snap = total after moving the mark to the centre of the small UI Automation element under it (like clicks)
 // Run:  npx electron test/aim-check.js [--trials 10] [--model haiku|sonnet] [--label before]
 //       npx electron test/aim-check.js --replay test/out/aim-after --model sonnet   (same screenshots, no live screen)
+//       npx electron test/aim-check.js --frames --label frames   (real YouTube lecture frames from test/aim-grab.js, targets in test/aim-targets.json)
 // Writes test/out/aim-<label>/: shot-N.png (what Claude saw), proof-N.png (marks over the target), results.json.
 const fs = require('node:fs');
 const os = require('node:os');
@@ -14,6 +15,9 @@ const path = require('node:path');
 
 const arg = (k, d) => { const i = process.argv.indexOf(`--${k}`); return i > 0 ? process.argv[i + 1] : d; };
 const TRIALS = Number(arg('trials', 10)), MODEL = arg('model', 'haiku'), REPLAY = arg('replay', null);
+const FRAMES = process.argv.includes('--frames')
+  ? JSON.parse(fs.readFileSync(path.join(__dirname, 'aim-targets.json'), 'utf8')).targets : null;
+const FRAME_DIR = path.join(__dirname, 'out', 'aim-frames');
 const LABEL = arg('label', REPLAY ? `${path.basename(REPLAY)}-${MODEL}` : MODEL);
 const OUT = path.join(__dirname, 'out', `aim-${LABEL}`);
 fs.mkdirSync(OUT, { recursive: true });
@@ -44,6 +48,15 @@ const OBJECTS = [
   ['word mitochondria', '<span style="font:20px sans-serif;color:#333">The cell gets energy from the <b>mitochondria</b> in it.</span>'],
   ['small purple dot', '<svg width="16" height="16"><circle cx="8" cy="8" r="7" fill="#8E4EC6"/></svg>'],
 ];
+
+// Frames mode: lecture frame n stretched over the screen, with an invisible box over the labelled target (frame pixels 1584x861).
+function framePage(n) {
+  const { file, box: [x, y, w, h] } = FRAMES[n], pc = (v, of) => `${(v / of) * 100}%`;
+  const src = `data:image/png;base64,${fs.readFileSync(path.join(FRAME_DIR, file)).toString('base64')}`;
+  return `<!doctype html><body style="margin:0;background:#000;overflow:hidden"><img src="${src}" style="position:fixed;inset:0;width:100vw;height:100vh">
+    <div style="position:fixed;left:0;top:0;width:6px;height:6px;background:#f0f"></div>
+    <div id="o${n}" style="position:fixed;left:${pc(x, 1584)};top:${pc(y, 861)};width:${pc(w, 1584)};height:${pc(h, 861)}"></div></body>`;
+}
 
 // Trial n: all 10 objects in shuffled cells of a 5x4 grid (seeded), so every screenshot differs.
 function page(n) {
@@ -104,18 +117,19 @@ async function run() {
   if (win) win.setAlwaysOnTop(true, 'floating'); // over Zarif's windows, under the overlay (screen-saver level)
   const saved = REPLAY ? JSON.parse(fs.readFileSync(path.join(REPLAY, 'results.json'), 'utf8')).trials : null;
   const rows = [];
-  for (let n = 0; n < (saved ? saved.length : TRIALS); n++) {
+  for (let n = 0; n < (saved ? saved.length : FRAMES ? FRAMES.length : TRIALS); n++) {
     let png, truth, sw, sh;
     if (saved) {
       png = fs.readFileSync(path.join(REPLAY, `shot-${n}.png`));
       ({ truth } = saved[n]);
       [sw, sh] = saved[n].shot;
     } else {
-      await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(page(n))}`);
+      await win.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(FRAMES ? framePage(n) : page(n))}`);
       const r = await win.webContents.executeJavaScript(`(() => { const b = document.getElementById('o${n}').getBoundingClientRect(); return [b.x, b.y, b.width, b.height]; })()`);
-      truth = { name: OBJECTS[n][0], box: r.map(Math.round), at: [Math.round(r[0] + r[2] / 2), Math.round(r[1] + r[3] / 2)] };
+      truth = { name: FRAMES ? FRAMES[n].name : OBJECTS[n][0], box: r.map(Math.round), at: [Math.round(r[0] + r[2] / 2), Math.round(r[1] + r[3] / 2)] };
       let s, white = 0;
-      for (let tries = 0; tries < 4 && white < 0.6; tries++) { // the target page must really be on screen, over Zarif's windows
+      // the target page must really be on screen, over Zarif's windows (frames: a 6 px magenta corner dot proves it)
+      for (let tries = 0; tries < 4 && white < 0.6; tries++) {
         win.showInactive();
         win.moveTop();
         await sleep(600 + tries * 600);
@@ -123,6 +137,7 @@ async function run() {
         let w = 0;
         for (let i = 0; i < s.bmp.length; i += 400) if (s.bmp[i] > 245 && s.bmp[i + 1] > 245 && s.bmp[i + 2] > 245) w++;
         white = w / (s.bmp.length / 400);
+        if (FRAMES) white = s.bmp[s.w * 4 * 2 + 8] > 200 && s.bmp[s.w * 4 * 2 + 9] < 60 && s.bmp[s.w * 4 * 2 + 10] > 200 ? 1 : 0; // BGRA at (2,2)
       }
       if (white < 0.6) console.log(`trial ${n}: target page not on screen (white ${Math.round(white * 100)}%, visible ${win.isVisible()}, bounds ${JSON.stringify(win.getBounds())}, shot ${s.w})`);
       png = s.png;

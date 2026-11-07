@@ -1,0 +1,15 @@
+{
+  "_note": "Hand-labelled targets on real YouTube lecture frames from test/aim-grab.js (frame 6 was an ad, left out). box = [x, y, w, h] in frame pixels (1584x861).",
+  "targets": [
+    { "file": "frame-0.png", "name": "word ketone", "box": [495, 368, 90, 34] },
+    { "file": "frame-1.png", "name": "circled sp2", "box": [890, 355, 105, 75] },
+    { "file": "frame-2.png", "name": "circled word LEO", "box": [738, 136, 84, 44] },
+    { "file": "frame-3.png", "name": "FC = 0", "box": [250, 525, 118, 40] },
+    { "file": "frame-4.png", "name": "bromide ion on the right, :Br: with the minus sign", "box": [915, 190, 115, 105] },
+    { "file": "frame-5.png", "name": "word cross-linking on the blackboard", "box": [115, 310, 265, 68] },
+    { "file": "frame-7.png", "name": "yellow wedge where the two DNA strands split apart", "box": [305, 335, 82, 72] },
+    { "file": "frame-8.png", "name": "word Virus", "box": [422, 145, 64, 36] },
+    { "file": "frame-9.png", "name": "blue salt water column", "box": [395, 68, 245, 535] },
+    { "file": "frame-10.png", "name": "Assembler box", "box": [445, 222, 195, 73] }
+  ]
+}
