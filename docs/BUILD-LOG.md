@@ -272,3 +272,12 @@ Newest at the bottom. A new session reads this to resume.
 - Tests: `test/sidebar-check.js` 14/14: each open way 5/5 (tab, hotkey event, voice, tray), click-away, Esc, width saved (440) and pinned right with the tab beside it, settings saved / bad values refused, Lessons empty state, tab hidden during the screenshot, idle CPU 1.5% (7 processes). RAM working set 777-800 MB (T8 baseline). Real helper compiles and starts. Unit 213/213, cards-check 5/5.
 - Not checked: the real Win+Shift+` keypress (no key injection; Zarif tries it), drag on the real left edge with a mouse, focus on hotkey open when another app holds the foreground (if the panel doesn't get focus, click-away can't close it; X/tab/hotkey still do).
 - NEXT: Zarif tries the sidebar live. Then group C interview (teacher talk, voice pace, careful wording, video transcripts).
+
+## 2026-11-08 C1 teacher talk (Zarif Q11-Q14)
+- DONE. `src/teacher.js`: per question picks a teaching style (wires the existing `src/learn/kind.js` + `style.js`; state in `vault/nibley/style-state.json`) and sends a header `[nibley] style=X check=ok|no [again=1]`. The live prompt now includes the 5 style cards (`styles.section()`, same as the eval).
+- Habits in the prompt (`src/prompt.js` "Teaching habits"): careful with facts (say "I'm not sure", no invented numbers/sources); big question -> short answer + "Want the full working?" Yes | No; "Makes sense?" + Makes sense | Explain again | Example only when the header says check=ok; "explain again" -> new analogy, simpler words.
+- Code enforces the check limit: at most once in 3 answers (`check=no` drops a Makes-sense choices line, logged `check_not_allowed`). "Explain again" scores the last style as not landed and switches style; "Makes sense" after a check scores it as landed; "Example" = half.
+- Tests: `test/teacher.test.js` 4/4 (unit 217/217). `test/teach-check.js` live, real Claude, 7 turns: 5/5 (styles on every answer, checks at answers 2 and 5 only, explain again switched exam-coach -> picture-first, 3-4 say lines each).
+- Eval (30 questions, 2 runs, styles on): 0.823 and 0.786 = mean 0.805, inside the 0.74-0.84 baseline. First line median 2.64-2.68 s. The scorer did not know `note` marks yet (S3 showed 0.06); fixed in `test/eval/score.js`, both runs rescored and saved.
+- Seen: one check came after a quick yes/no fact ("is the right molecule a carboxylic acid?"); the prompt says not to, Claude did once. Not fixed.
+- NEXT: Zarif tries it live. Then C2 voice pace/tone interview, then C3 course transcripts.

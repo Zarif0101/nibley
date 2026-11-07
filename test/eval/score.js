@@ -3,13 +3,13 @@
 const { parseAll } = require('../../src/script');
 const { FILLER, BANNED } = require('../../src/lint');
 
-const MARKS = new Set(['ring', 'point', 'arrow', 'highlight', 'label', 'step']);
+const MARKS = new Set(['note', 'ring', 'point', 'arrow', 'highlight', 'label', 'step']);
 const TOL = 30;
 const words = (s) => s.trim().split(/\s+/).filter(Boolean).length;
 const inBox = ([x, y], [bx, by, bw, bh]) => x >= bx - TOL && x <= bx + bw + TOL && y >= by - TOL && y <= by + bh + TOL;
 function points(c) {
   if (c.type === 'arrow') return [[c.x1, c.y1], [c.x2, c.y2]];
-  if (c.type === 'highlight') return [[c.x + c.w / 2, c.y + c.h / 2]];
+  if (c.type === 'highlight' || c.type === 'note') return [[c.x + c.w / 2, c.y + c.h / 2]];
   return [[c.x, c.y]];
 }
 

@@ -1,6 +1,6 @@
 # Nibley next round: interview capture + handoff plan
 Date: 2026-11-05 · Goal: turn Zarif's wish list (3D character, sidebar, better marks, better voice, interface, resource gathering, leftovers) into a plan a new session can resume.
-Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). 2026-11-08 update (Zarif): new order A, B, C below; Phase 3 v2 built 2026-11-08 (BUILD-LOG); group B floating sidebar built 2026-11-08; resume at group C interview (teacher talk, voice, video awareness). Capture: `Second Brain/brainstorms/2026-11-08-nibley-notes-over-screen.md`.
+Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). 2026-11-08 update (Zarif): new order A, B, C below; Phase 3 v2 built 2026-11-08 (BUILD-LOG); group B floating sidebar built 2026-11-08; group C1 teacher talk built 2026-11-08; resume at C2 voice pace interview, then C3 course transcripts. Capture: `Second Brain/brainstorms/2026-11-08-nibley-notes-over-screen.md`.
 Raw capture: `Second Brain/brainstorms/2026-11-05-nibley-sidebar-voice-marks.md` · Project copy: `docs/NEXT-ROUND.md`
 Context sources: docs/QUALITY-PLAN.md, docs/PRD-v2.md, docs/BUILD-LOG.md, docs/DESIGN.md
 
@@ -28,6 +28,14 @@ Why: "someone who's watching is actually getting blasted with random instant cir
 5. **How-to steps:** numbered cards with lines, one step at a time; the next draws in after his click.
 6. **Bug:** marks and cards clear at once when the foreground window/tab changes or the screen under them changes.
 7. Prompt + parser: a `note` command with target box + title + text; tests; aim >= 90% on fixtures + real frames.
+
+### C1: teacher talk (Zarif Q11-Q14, 2026-11-08)
+- Check he understood: only after a new or tricky idea, at most once every 3 answers, never after quick facts, how-to steps or actions. One short question + choices buttons (Makes sense? | Explain again | Example).
+- Ask before going deeper: short answer first, then offer "Want the full working?" (choices) instead of a long lecture.
+- Careful with facts: "I'm not sure" instead of guessing; check formulas against the transcript/screen; no invented numbers or sources.
+- Teach his way: one of the 5 TEACHING-BIBLE styles per question (`src/styles.js`), and remember what worked.
+- "Explain again": a new analogy and simpler words, never a repeat.
+- Test: eval on the fixtures (mean of 2 runs, no lower than the 0.74-0.84 baseline) + a check-rate count over 20 turns.
 
 ### Phase 2 change
 - Sidebar floats over the screen (no AppBar, the browser keeps its size). Replaces Q3 "push the video". Details in the B interview.

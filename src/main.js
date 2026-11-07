@@ -4,6 +4,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const platform = require('./platform');
 const sidebar = require('./sidebar');
+const styles = require('./styles');
+const teacherMod = require('./teacher');
 const brain = require('./brain');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
@@ -40,6 +42,7 @@ try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS, 'utf8'))
 if (!settings.claudePath || !fs.existsSync(settings.claudePath)) settings.claudePath = findClaude();
 const saveSettings = () => fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 2));
 saveSettings();
+const teacher = teacherMod.create(settings.vaultPath); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
 
 // Key from .env (gitignored); .env.example is the public template, checked as a fallback. Never logged.
 function groqKey() {
@@ -361,7 +364,11 @@ async function ask(text, id) {
   timing.shot_ms = s.ms;
   const src = sourceLine(await Promise.race([source?.catch(() => null), new Promise((r) => setTimeout(r, 1000))]), youtube.current());
   if (src) log({ ev: 'source', turn: id, line: src });
-  const ctx = { id, text, png: s.png, bmp: s.bmp, w: s.w, says: 0, voice: Promise.resolve(), asks: [], title: null, full: '', sayLines: [] };
+  const teach = teacher.before(text);
+  const teachEv = { ev: 'teach', turn: id, kind: teach.kind, style: teach.style, check: teach.check, feedback: teach.feedback };
+  log(teachEv);
+  events.emit('teach', teachEv); // tests
+  const ctx = { id, text, check: teach.check, checked: false, png: s.png, bmp: s.bmp, w: s.w, says: 0, voice: Promise.resolve(), asks: [], title: null, full: '', sayLines: [] };
   active = ctx;
   send('turn', id, { busy: busyMap(s.bmp, s.w) });
   let chain = Promise.resolve();
@@ -369,7 +376,7 @@ async function ask(text, id) {
     { onBad: (b) => log({ ev: 'bad_line', line: b.line, why: b.why }) });
   ctx.handle = brain.ask({
     // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when the extension has them, else the sound
-    png: s.png, text, turn: id, video: [src, youtube.context() || ear.context()].filter(Boolean).join('\n') || null,
+    png: s.png, text, turn: id, video: [teach.header, src, youtube.context() || ear.context()].filter(Boolean).join('\n'),
     onText: (d) => { timing.claude_first_token ||= Date.now(); parser.push(d); },
     onEnd: (full) => { ctx.full = full; parser.end(); chain = chain.then(() => endTurn(ctx)); },
     onError: (kind, detail) => { chain = chain.then(() => brainError(ctx, kind, detail)); },
@@ -390,7 +397,13 @@ async function onCmd(ctx, cmd) {
     return sayLine(ctx, cmd.text);
   }
   if (cmd.type === 'title') { ctx.title = cmd.text; return; }
-  if (cmd.type === 'choices') return send('item', ctx.id, { kind: 'choices', options: cmd.options });
+  if (cmd.type === 'choices') {
+    if (teacherMod.isCheck(cmd)) { // "Makes sense?" at most once in 3 answers (Q13)
+      if (ctx.check !== 'ok') { log({ ev: 'lint', rule: 'check_not_allowed', turn: ctx.id }); return; }
+      ctx.checked = true;
+    }
+    return send('item', ctx.id, { kind: 'choices', options: cmd.options });
+  }
   if (cmd.type === 'clear') return send('item', ctx.id, { kind: 'clear' });
   if (cmd.type === 'wait_click') return ctx.replay || send('item', ctx.id, { kind: 'wait', x: cmd.x, y: cmd.y });
   if (cmd.type === 'action') return ctx.replay || onAction(ctx, cmd);
@@ -476,6 +489,7 @@ function endTurn(ctx) {
     send('item', ctx.id, { kind: 'choices', options: ['Skip'] });
   }
   send('item', ctx.id, { kind: 'end' });
+  if (ctx.says) teacher.after({ checked: ctx.checked });
   if (!ctx.says && !ctx.asks.length) say('none');
   timing.claude_end = Date.now();
   if (ctx.says) {
@@ -670,7 +684,7 @@ app.whenReady().then(async () => {
   platform.onKey((name) => send('choices:key', name));
   brain.start({
     model: settings.model, claudePath: settings.claudePath,
-    buildPrompt: () => prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }),
+    buildPrompt: () => [prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }), styles.section()].join('\n\n'), // same as the eval
     onFatal: (msg) => { setTray('Claude keeps crashing', true); speak(msg); },
   });
   startBridge();
