@@ -3,6 +3,7 @@ const { app, BrowserWindow, Tray, Menu, nativeImage, desktopCapturer, screen, ip
 const fs = require('node:fs');
 const path = require('node:path');
 const platform = require('./platform');
+const sidebar = require('./sidebar');
 const brain = require('./brain');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
@@ -50,7 +51,7 @@ function groqKey() {
 }
 
 // ---------- windows ----------
-let overlay, tray, lessonsWin;
+let overlay, tray, quitting = false;
 const events = new (require('node:events'))(); // test/e2e.js listens here
 const send = (...a) => { if (overlay && !overlay.isDestroyed()) overlay.webContents.send(...a); events.emit('send', ...a); };
 
@@ -97,20 +98,34 @@ const VOICES = [
 async function setVoice(id) {
   settings.voice = id;
   saveSettings();
+  sidebar.win?.webContents.send('settings:changed');
   ttsBackup = false;
   await tts.init(id).catch((e) => log({ ev: 'tts_init_error', err: e.message }));
   log({ ev: 'voice', voice: id });
   speak('Hi, this is my new voice.');
 }
 
+// One place for settings changes: the tray menu and the sidebar both call it, and both show the result.
+const SETTABLE = { model: ['haiku', 'sonnet'], mode: ['ask', 'auto'], voice: VOICES.map(([, id]) => id), ear: [true, false] };
+function setSetting(key, value) {
+  if (!SETTABLE[key]?.includes(value) || settings[key] === value) return;
+  settings[key] = value;
+  saveSettings();
+  if (key === 'model') brain.setModel(value);
+  if (key === 'voice') setVoice(value);
+  if (key === 'ear') { send(value ? 'ear:on' : 'ear:off'); log({ ev: 'ear_switch', on: value }); }
+  buildMenu();
+  sidebar.win?.webContents.send('settings:changed');
+}
+
 function buildMenu() {
-  const radio = (label, key, value, onPick) => ({ label, type: 'radio', checked: settings[key] === value, click: () => { settings[key] = value; saveSettings(); onPick?.(); } });
+  const radio = (label, key, value) => ({ label, type: 'radio', checked: settings[key] === value, click: () => setSetting(key, value) });
   tray.setContextMenu(Menu.buildFromTemplate([
-    { label: 'Model', submenu: [radio('Haiku', 'model', 'haiku', () => brain.setModel('haiku')), radio('Sonnet', 'model', 'sonnet', () => brain.setModel('sonnet'))] },
-    { label: 'Voice', submenu: VOICES.map(([label, id]) => radio(label, 'voice', id, () => setVoice(id))) },
+    { label: 'Model', submenu: [radio('Haiku', 'model', 'haiku'), radio('Sonnet', 'model', 'sonnet')] },
+    { label: 'Voice', submenu: VOICES.map(([label, id]) => radio(label, 'voice', id)) },
     { label: 'Actions', submenu: [radio('Ask first', 'mode', 'ask'), radio('Auto', 'mode', 'auto')] },
-    { label: 'Listen to lecture sound', type: 'checkbox', checked: settings.ear !== false, click: (m) => { settings.ear = m.checked; saveSettings(); send(m.checked ? 'ear:on' : 'ear:off'); log({ ev: 'ear_switch', on: m.checked }); } },
-    { label: 'Lessons', click: openLessons },
+    { label: 'Listen to lecture sound', type: 'checkbox', checked: settings.ear !== false, click: (m) => setSetting('ear', m.checked) },
+    { label: 'Lessons', click: () => sidebar.open('tray-menu', 'lessons') },
     { label: 'Undo last rule change', click: () => { const r = memory.undoLast(settings.vaultPath); speak(r ? `Undone: I ${r}.` : 'There is no rule change to undo.'); } },
     { label: 'Open log folder', click: () => shell.openPath(logDir) },
     { type: 'separator' },
@@ -134,8 +149,9 @@ async function capture() {
 // 2026-10-28), so the overlay is hidden for the moment of the screenshot.
 async function captureClean() {
   overlay.hide();
+  sidebar.hideTab();
   await new Promise((r) => setTimeout(r, 60)); // let the compositor drop the window
-  try { return await capture(); } finally { overlay.showInactive(); reassertTop(); }
+  try { return await capture(); } finally { overlay.showInactive(); sidebar.showTab(); reassertTop(); }
 }
 
 // Pen-stroke outline colour from the brightness under the mark (DESIGN.md `edge`).
@@ -249,6 +265,7 @@ function bargeIn() {
 
 function onPtt(ev) {
   lastActivity = Date.now();
+  if (ev === 'sidebar') { rec = { armed: false, ptt: false }; send('rec:cancel'); return sidebar.toggle('hotkey'); }
   if (ev === 'win_down') { rec = { armed: true, ptt: false }; send('rec:start'); } // starts early so the first word isn't cut
   else if (ev === 'ptt_down') {
     send('ear:cut'); // the lecture sound up to this moment goes to Groq while he talks
@@ -330,7 +347,9 @@ async function handleText(text, id) {
     return speak("Thanks, I'll remember that.");
   }
   if (/^\W*(please\s+)?save (this|that)\b/i.test(text)) { say('none'); return saveLesson(); }
-  if (/\b(show|open)( me)? my lessons\b/i.test(text)) { say('none'); return openLessons(); }
+  if (/\b(show|open)( me)? my lessons\b/i.test(text)) { say('none'); return sidebar.open('voice', 'lessons'); }
+  const side = text.match(/^\W*(?:please\s+)?(open|show|close|hide)\s+(?:the\s+)?side ?bar\W*$/i);
+  if (side) { say('none'); return /open|show/i.test(side[1]) ? sidebar.open('voice') : sidebar.close('voice'); }
   await ask(text, id);
 }
 
@@ -495,18 +514,11 @@ function saveLesson() {
   }
 }
 
-function openLessons() {
-  if (lessonsWin && !lessonsWin.isDestroyed()) { lessonsWin.show(); lessonsWin.focus(); return; }
-  lessonsWin = new BrowserWindow({ width: 980, height: 640, title: 'Nibley lessons', backgroundColor: '#F7FAFF', autoHideMenuBar: true, icon: path.join(__dirname, 'overlay', 'app-256.png'),
-    webPreferences: { nodeIntegration: true, contextIsolation: false } });
-  lessonsWin.loadFile(path.join(__dirname, 'overlay', 'lessons.html'), { query: { ink: settings.ink } });
-}
-
 function playLesson(dir) {
   const { png, script } = lessons.load(dir);
   bargeIn();
   replaying = true;
-  lessonsWin?.hide();
+  sidebar.close('replay');
   overlay.setIgnoreMouseEvents(false);
   overlay.setFocusable(true);
   overlay.focus();
@@ -523,7 +535,7 @@ function closeReplay() {
   send('stop');
   overlay.setIgnoreMouseEvents(true);
   overlay.setFocusable(false);
-  if (lessonsWin && !lessonsWin.isDestroyed()) lessonsWin.show();
+  sidebar.open('replay-back', 'lessons');
 }
 
 // ---------- IPC ----------
@@ -598,6 +610,10 @@ ipcMain.on('mic', (_e, r) => { log({ ev: 'mic', ...r }); if (!r.ok) { setTray('m
 ipcMain.handle('lessons:list', () => lessons.list(settings.vaultPath).map((l) => ({
   ...l, thumb: nativeImage.createFromPath(path.join(l.dir, 'shot.png')).resize({ width: 192 }).toDataURL(),
 })));
+ipcMain.handle('settings:get', () => ({ model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
+ipcMain.handle('settings:set', (_e, key, value) => { setSetting(key, value); return { model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }; });
+ipcMain.on('voice:sample', () => speak('Hi, this is how I sound.'));
+ipcMain.on('sidebar:toggle', (_e, how) => sidebar.toggle(how));
 ipcMain.on('lessons:play', (_e, dir) => {
   const rel = path.relative(lessons.root(settings.vaultPath), path.resolve(dir));
   if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) playLesson(dir);
@@ -644,7 +660,9 @@ app.whenReady().then(async () => {
   });
   createOverlay();
   screen.on('display-metrics-changed', reassertTop);
+  sidebar.create({ settings, save: saveSettings, log, quitting: () => quitting });
   tray = new Tray(trayIcon());
+  tray.on('click', () => sidebar.toggle('tray')); // right-click keeps the menu
   buildMenu();
   setTray('starting');
   platform.onError((e) => log({ ev: 'helper_error', err: String(e).slice(0, 300) }));
@@ -666,7 +684,7 @@ app.whenReady().then(async () => {
   events.emit('ready');
 });
 app.on('window-all-closed', () => {}); // keep running in the tray
-app.on('before-quit', () => { brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
+app.on('before-quit', () => { quitting = true; brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
 
 // Chrome extension bridge: the extension reads port + token from extension/config.js (gitignored), written here.
 const BRIDGE_PORT = 47711;
@@ -692,5 +710,5 @@ function testTurn(text, png, { showShot = true } = {}) {
 }
 
 module.exports = { events, groqKey, testTurn, captureClean, setVoice, VOICES, handleText, playLesson, closeReplay, onPtt, ready: new Promise((r) => events.once('ready', r)),
-  get overlay() { return overlay; }, get lessonsWin() { return lessonsWin; },
+  get overlay() { return overlay; }, get tray() { return tray; }, sidebar,
   get state() { return { turnId, lastDone, pendingAsk, replaying, timing, ttsBackup, settings }; } };

@@ -72,11 +72,13 @@ Every `say` line shows as a subtitle while its audio plays, then clears. Zarif: 
 - Up to 3 buttons centred just above the subtitle (follow it to the top when it moves). Inter 600 14/20, radius 8, chip shadow.
 - First option: `deep` fill, white text, key hint "Enter". Others: white fill, `deep` text and 1.5 px `deep` border, key hints "2", "3". Hover: `ink` border. Rise 6 px + fade in, 180 ms.
 
-## Lessons window
-- `bg` background, header: mascot + "Lessons".
-- One card per lesson: screenshot thumbnail (radius 8), title, "You asked: …" (2 lines max), date and time. Newest first.
-- Hover: `sky` border. Keyboard focus: 2 px `ink` ring. Enter/click plays the lesson.
-- Empty state: mascot + "No lessons yet. Say "save this" after an explanation."
+## Sidebar (Zarif OK'd the mockup 2026-11-08, `design/sidebar-mockup.html`; floats, no docking)
+- **Edge tab:** 40x48 white tab at the right edge, 84 px from the top, rounded 12 px on the left, Nibley's happy loop (28 px). Hover: 1.5 px `sky` ring. Moves to the sidebar's left edge while open. Never in Nibley's own screenshots.
+- **Panel:** floats over the right edge, full work-area height, `bg` background, 1 px `line` left border. Starts 360 px; drag the left edge, 300-560 px, remembered.
+- **Header:** Nibley's loop (32 px) + "Nibley" Inter 600 16/24 + X button. Tabs Settings / Lessons: Inter 600 14/20, selected `text` with a 2 px `deep` underline, others `muted`.
+- **Settings rows:** label Inter 600; hint 12/16 `muted`; 1 px `line` between rows. Two-way choices are a segmented control (selected: `deep` fill, white text). Voice: a select + an outlined "Sample" button. Lecture listening: a 40x24 switch, `deep` when on.
+- **Lessons:** cards (white, radius 12, card shadow, `line` border, `sky` on hover): 112x63 thumbnail (radius 8), title 600 14/18, "You asked: ..." 12/16 (2 lines max), time 12 px `muted`. Replay plays full screen with a white "Back to lessons" chip top-left; Esc works too; Back reopens the sidebar on Lessons.
+- **Closes:** click anywhere else, Esc, X, the tab, Win+Shift+`, tray click, or "close sidebar".
 
 ## Check before shipping
 - Squint test on a busy YouTube frame: the ring and chip are the first thing you see.

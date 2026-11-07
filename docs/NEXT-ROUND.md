@@ -1,6 +1,6 @@
 # Nibley next round: interview capture + handoff plan
 Date: 2026-11-05 · Goal: turn Zarif's wish list (3D character, sidebar, better marks, better voice, interface, resource gathering, leftovers) into a plan a new session can resume.
-Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). 2026-11-08 update (Zarif): new order A, B, C below; Phase 3 v2 built 2026-11-08 (BUILD-LOG); resume at group B (floating sidebar interview). Capture: `Second Brain/brainstorms/2026-11-08-nibley-notes-over-screen.md`.
+Status: interview complete (Q1-Q21). Plan approved by Zarif 2026-11-05. Phase 1 done (steps 0-5, 7, 8 on 2026-11-05; step 6 on 2026-11-08, 10/10 on real lecture frames; numbers in BUILD-LOG). 2026-11-08 update (Zarif): new order A, B, C below; Phase 3 v2 built 2026-11-08 (BUILD-LOG); group B floating sidebar built 2026-11-08; resume at group C interview (teacher talk, voice, video awareness). Capture: `Second Brain/brainstorms/2026-11-08-nibley-notes-over-screen.md`.
 Raw capture: `Second Brain/brainstorms/2026-11-05-nibley-sidebar-voice-marks.md` · Project copy: `docs/NEXT-ROUND.md`
 Context sources: docs/QUALITY-PLAN.md, docs/PRD-v2.md, docs/BUILD-LOG.md, docs/DESIGN.md
 

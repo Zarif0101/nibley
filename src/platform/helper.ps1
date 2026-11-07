@@ -40,7 +40,7 @@ public static class Nib {
   static HookProc kbProc = KbProc, msProc = MsProc; // kept in fields so the GC never frees them
   static IntPtr kbHook, msHook;
   static uint hookTid;
-  static bool winDown, active;
+  static bool winDown, active, side;
   static volatile bool grab; // answer buttons showing (QUALITY-PLAN T13)
   static readonly bool[] held = new bool[256]; // grabbed keys whose key-up must be swallowed too
   static readonly IntPtr MAGIC = (IntPtr)0x4E49424C; // tags our own SendInput events
@@ -62,7 +62,10 @@ public static class Nib {
             if (active) { active = false; Emit("{\"ev\":\"ptt_up\"}"); }
             Emit("{\"ev\":\"win_up\"}");
           }
-        } else if (k.scan == 0x29 && (winDown || active)) { // the key under Escape
+        } else if (k.scan == 0x29 && (winDown || active || side)) { // the key under Escape
+          // Win+Shift+`: open/close the sidebar (NEXT-ROUND Q10); its key-up is swallowed too
+          if (down && !active && !side && (GetAsyncKeyState(0x10) & 0x8000) != 0) { side = true; Mask(); Emit("{\"ev\":\"sidebar\"}"); return (IntPtr)1; }
+          if (side) { if (up) side = false; return (IntPtr)1; }
           if (down && !active) { active = true; Mask(); Emit("{\"ev\":\"ptt_down\"}"); }
           if (up && active) { active = false; Emit("{\"ev\":\"ptt_up\"}"); }
           return (IntPtr)1; // swallow: Start menu, Terminal quake mode and the ` char never see it

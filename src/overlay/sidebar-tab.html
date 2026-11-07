@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Edge tab: Nibley's face at the right edge; click opens/closes the sidebar (docs/DESIGN.md "Sidebar"). -->
+<style>
+  html, body { margin: 0; width: 40px; height: 48px; overflow: hidden; background: transparent; }
+  button { width: 40px; height: 48px; border: 0; padding: 0 0 0 4px; margin: 0; background: #FFFFFF; border-radius: 12px 0 0 12px; cursor: pointer;
+           box-shadow: inset 1px 0 0 #E6EEF8, inset 0 1px 0 #E6EEF8, inset 0 -1px 0 #E6EEF8; display: grid; place-items: center; }
+  button:hover { box-shadow: inset 0 0 0 1.5px #4DA3FF; }
+  .m3d { display: block; width: 28px; height: 28px; background: url(mascot3d/happy.webp) no-repeat 0 0 / 840px 28px; animation: m 2.5s steps(30) infinite; }
+  @keyframes m { to { background-position: -840px 0; } }
+  @media (prefers-reduced-motion: reduce) { .m3d { animation: none; } }
+</style>
+</head>
+<body>
+  <button id="b" aria-label="Open Nibley sidebar (Win+Shift+`)"><span class="m3d"></span></button>
+<script>
+const { ipcRenderer } = require('electron');
+const b = document.getElementById('b');
+b.onclick = () => ipcRenderer.send('sidebar:toggle', 'tab');
+ipcRenderer.on('tab:open', (_e, open) => b.setAttribute('aria-label', `${open ? 'Close' : 'Open'} Nibley sidebar (Win+Shift+\`)`));
+</script>
+</body>
+</html>

@@ -386,6 +386,7 @@ ipcRenderer.on('turn', (_e, id, opts = {}) => {
   items = [];
   audios = new Map();
   replay = !!opts.replay;
+  $('back').style.display = replay ? 'flex' : 'none';
   busy = opts.busy || null;
   const bg = $('bg');
   if (opts.bg) { bg.src = opts.bg; bg.style.display = 'block'; } else { bg.removeAttribute('src'); bg.style.display = 'none'; }
@@ -400,7 +401,8 @@ ipcRenderer.on('audio:chunk', (_e, id, i, c) => { const a = id === turn && audio
 ipcRenderer.on('audio:end', (_e, id, i) => { const a = id === turn && audios.get(i); if (a) { a.done = true; a.feed?.(); } });
 ipcRenderer.on('ink', (_e, ink) => document.documentElement.style.setProperty('--ink', ink));
 ipcRenderer.on('bg', (_e, src) => { const bg = $('bg'); bg.src = src; bg.style.display = 'block'; }); // tests: show the fixture under the marks
-ipcRenderer.on('stop', () => { stopAll(); const bg = $('bg'); bg.style.display = 'none'; bg.removeAttribute('src'); });
+$('back').onclick = () => ipcRenderer.send('replay:close');
+ipcRenderer.on('stop', () => { stopAll(); $('back').style.display = 'none'; const bg = $('bg'); bg.style.display = 'none'; bg.removeAttribute('src'); });
 ipcRenderer.on('advance', () => advanceWait && advanceWait());
 ipcRenderer.on('marks:clear', () => { clearTimeout(clearTimer); eraseAll(); }); // he switched window or tab: nothing lingers
 addEventListener('keydown', (e) => { if (e.key === 'Escape') ipcRenderer.send('replay:close'); });

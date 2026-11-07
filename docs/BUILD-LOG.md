@@ -262,3 +262,13 @@ Newest at the bottom. A new session reads this to resume.
   - `ear.test.js` failed once in the full run, passed 5/5 alone (timing under load).
 - Not checked: mouse-hover keeps cards (needs a real mouse); a real spoken turn with Edge voice; full-screen video placement live.
 - NEXT: Zarif tries it live. Then group B (floating sidebar) interview, then C.
+
+## 2026-11-08 Phase 2 (group B): floating sidebar (Zarif Q9-Q10: hides on click-away; hotkey Win+Shift+`)
+- DONE. `src/sidebar.js` (window + edge tab), `src/overlay/sidebar.html`, `src/overlay/sidebar-tab.html`. Floats over the right edge (no AppBar, per Zarif 2026-11-08), always on top under the overlay's cards.
+- Open/close: edge tab, Win+Shift+` (helper.ps1: Shift held on the ` press emits `sidebar`, key-up swallowed; main cancels the early mic start), voice "open/close sidebar" (+ "show my lessons" opens Lessons), tray left-click (right-click keeps the menu). Closes on blur (click-away), Esc, X.
+- Settings in the sidebar: model, voice + Sample, actions mode, lecture listening. One `setSetting()` for tray and sidebar (only known values accepted); both stay in sync.
+- Lessons moved in; the separate Lessons window and `lessons.html` are gone. Replay stays full screen (the 360 px panel is too small for the screenshot) with a visible "Back to lessons" button; Back/Esc reopens the sidebar on Lessons. Deviation from the mockup (which replayed inside the panel).
+- Edge tab is hidden for the moment of each screenshot, like the overlay.
+- Tests: `test/sidebar-check.js` 14/14: each open way 5/5 (tab, hotkey event, voice, tray), click-away, Esc, width saved (440) and pinned right with the tab beside it, settings saved / bad values refused, Lessons empty state, tab hidden during the screenshot, idle CPU 1.5% (7 processes). RAM working set 777-800 MB (T8 baseline). Real helper compiles and starts. Unit 213/213, cards-check 5/5.
+- Not checked: the real Win+Shift+` keypress (no key injection; Zarif tries it), drag on the real left edge with a mouse, focus on hotkey open when another app holds the foreground (if the panel doesn't get focus, click-away can't close it; X/tab/hotkey still do).
+- NEXT: Zarif tries the sidebar live. Then group C interview (teacher talk, voice pace, careful wording, video transcripts).
