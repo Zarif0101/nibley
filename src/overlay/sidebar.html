@@ -21,6 +21,13 @@
   @keyframes m { to { background-position: -960px 0; } }
   .icon-btn { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
   .icon-btn:hover { background: var(--line); color: var(--text); }
+  .text-btn { font: 600 13px/18px Inter; border: 1.5px solid var(--deep); color: var(--deep); background: #FFFFFF; border-radius: 8px; padding: 5px 10px; cursor: pointer; }
+  .text-btn:hover { border-color: var(--ink); }
+  .fb textarea { width: 100%; min-height: 140px; resize: vertical; font: 400 14px/20px Inter; color: var(--text); background: #FFFFFF; border: 1px solid var(--line); border-radius: 8px; padding: 10px; user-select: text; }
+  .fb textarea:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .fb label.chk { display: flex; gap: 8px; align-items: center; margin: 10px 0 14px; }
+  .fb .row-btns { display: flex; gap: 8px; align-items: center; }
+  .fb .status { margin-top: 10px; font-size: 13px; color: var(--muted); min-height: 18px; }
   .nav { display: flex; padding: 0 16px; border-bottom: 1px solid var(--line); }
   .nav button { font: 600 14px/20px Inter; padding: 8px 4px 10px; margin: 0 16px -1px 0; border: 0; background: none; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
   .nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--deep); }
@@ -107,6 +114,7 @@
   <div class="head">
     <span class="m3d" aria-hidden="true"></span>
     <b>Nibley</b>
+    <button class="text-btn" id="fb-open">Feedback</button>
     <button class="icon-btn" id="close" aria-label="Close sidebar">
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
     </button>
@@ -121,6 +129,11 @@
 
   <div class="panel" id="p-settings" role="tabpanel" aria-labelledby="t-settings">
     <div class="row">
+      <div class="label">AI brain</div>
+      <div class="seg" data-key="brain"><button data-v="claude">Claude</button><button data-v="gemini">Gemini</button></div>
+      <div class="hint">Use the AI you have a subscription for. Gemini: sign in once in the Gemini app; answers take about 10 seconds. Nibley restarts to switch.</div>
+    </div>
+    <div class="row" id="model-row">
       <div class="label">Model</div>
       <div class="seg" data-key="model"><button data-v="haiku">Haiku</button><button data-v="sonnet">Sonnet</button></div>
       <div class="hint">Haiku answers in about 2 seconds. Sonnet is slower and better at long working-outs.</div>
@@ -145,6 +158,15 @@
 
   <div class="panel" id="p-lessons" role="tabpanel" aria-labelledby="t-lessons"><div id="list"></div></div>
 
+  <div class="panel fb" id="p-feedback" aria-label="Send feedback">
+    <h3>Send feedback</h3>
+    <p class="hint" style="margin:0 0 10px">Something wrong, confusing, slow, or something you liked? It goes straight to Nibley's maker.</p>
+    <textarea id="fb-text" aria-label="Your feedback" placeholder="What happened?"></textarea>
+    <label class="chk"><input type="checkbox" id="fb-shot" checked> Add a picture of my screen</label>
+    <div class="row-btns"><button class="go" id="fb-send">Send</button><button class="text-btn" id="fb-back">Back</button></div>
+    <div class="status" id="fb-status" aria-live="polite"></div>
+  </div>
+
 <script>
 const { ipcRenderer } = require('electron');
 const $ = (id) => document.getElementById(id);
@@ -154,6 +176,7 @@ function render() {
   document.querySelectorAll('.seg').forEach((g) => g.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(s[g.dataset.key] === b.dataset.v))));
   $('voice').value = s.voice;
   $('ear').setAttribute('aria-checked', String(s.ear !== false));
+  $('model-row').hidden = s.brain === 'gemini'; // Haiku/Sonnet are Claude models
 }
 async function load() {
   s = await ipcRenderer.invoke('settings:get');
@@ -169,6 +192,7 @@ $('close').onclick = () => ipcRenderer.send('sidebar:toggle', 'x');
 addEventListener('keydown', (e) => { if (e.key === 'Escape') ipcRenderer.send('sidebar:toggle', 'esc'); });
 
 function tab(which) {
+  $('p-feedback').classList.remove('on');
   for (const t of ['study', 'lessons', 'settings']) {
     $(`t-${t}`).setAttribute('aria-selected', String(t === which));
     $(`p-${t}`).classList.toggle('on', t === which);
@@ -176,6 +200,16 @@ function tab(which) {
   if (which === 'lessons') lessons();
 }
 $('t-study').onclick = () => tab('study');
+$('fb-open').onclick = () => { document.querySelectorAll('.panel').forEach((p) => p.classList.remove('on')); document.querySelectorAll('[role=tab]').forEach((t) => t.setAttribute('aria-selected', 'false')); $('p-feedback').classList.add('on'); $('fb-status').textContent = ''; $('fb-text').focus(); };
+$('fb-back').onclick = () => tab('study');
+$('fb-send').onclick = async () => {
+  const b = $('fb-send');
+  b.disabled = true; $('fb-status').textContent = 'Sending...';
+  const r = await ipcRenderer.invoke('feedback:send', { message: $('fb-text').value, screenshot: $('fb-shot').checked });
+  $('fb-status').textContent = r.message;
+  b.disabled = false;
+  if (r.ok) $('fb-text').value = '';
+};
 $('t-settings').onclick = () => tab('settings');
 $('t-lessons').onclick = () => tab('lessons');
 

@@ -29,7 +29,7 @@ function startProc() {
   });
   // The first request of a process is slow (~3-5 s, measured), so spend it on a silent warm-up.
   p.queue.push({ text: '', done: false, cancelled: true, meta: { warmup: true }, onText() {}, finish() { this.done = true; }, fail() { this.done = true; } });
-  child.stdin.write(JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text: '(Warm-up, not from Zarif. Reply with only: say ok)' }] } }) + '\n');
+  child.stdin.write(JSON.stringify({ type: 'user', message: { role: 'user', content: [{ type: 'text', text: '(Warm-up, not from the student. Reply with only: say ok)' }] } }) + '\n');
   child.on('exit', (code) => {
     p.dead = true;
     fs.rm(file, () => {});

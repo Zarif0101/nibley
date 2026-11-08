@@ -6,7 +6,8 @@ const platform = require('./platform');
 const sidebar = require('./sidebar');
 const styles = require('./styles');
 const teacherMod = require('./teacher');
-const brain = require('./brain');
+const claudeBrain = require('./brain');
+const geminiBrain = require('./brain-gemini');
 const prompt = require('./prompt');
 const { createParser, parseAll, SCREEN } = require('./script');
 const { createLint } = require('./lint');
@@ -20,6 +21,7 @@ const memory = require('./memory');
 const lessons = require('./lessons');
 const youtube = require('./youtube');
 const studyMod = require('./study');
+const feedback = require('./feedback');
 const { sourceLine } = require('./source');
 const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
@@ -37,7 +39,7 @@ function findClaude() {
   return path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe');
 }
 // Christopher: classic Edge voices stayed under 0.9 s in Edge's slow periods; Ava/Andrew took 1.5-8 s (BUILD-LOG 2026-11-05 T1)
-const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { brave: 'brave', notepad: 'notepad' }, claudePath: '', pendingQuestion: null };
+const DEFAULTS = { brain: 'claude', name: '', model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { brave: 'brave', notepad: 'notepad' }, claudePath: '', pendingQuestion: null };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS, 'utf8')) }; } catch { /* first run */ }
 if (!settings.claudePath || !fs.existsSync(settings.claudePath)) settings.claudePath = findClaude();
@@ -52,10 +54,14 @@ if (settings.vaultPath) {
 }
 delete settings.bridgeToken; // the YouTube extension is gone (Zarif 2026-11-08: learners install nothing)
 saveSettings();
+// Brain: Claude (Claude Code login) or Gemini (Google login via Gemini CLI). Picked in Settings; switching restarts Nibley.
+const brain = settings.brain === 'gemini' ? geminiBrain : claudeBrain;
+const runAI = (o) => (settings.brain === 'gemini' ? geminiBrain.once(o) : memory.runClaude({ claudePath: settings.claudePath, ...o })); // side calls
+
 // Study page per lecture (brainstorms/2026-11-08-study-page-format.md): recaps every 10 min, quiz + cards at the end.
 const study = studyMod.create({
   dir: DATA, log, transcript: youtube.transcript,
-  run: ({ system, input, timeoutMs }) => memory.runClaude({ claudePath: settings.claudePath, system, input, timeoutMs }),
+  run: runAI,
   onChange: (p) => { const w = sidebar.win; if (w && !w.isDestroyed()) w.webContents.send('study:page', p); },
 });
 const teacher = teacherMod.create(DATA); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
@@ -125,12 +131,13 @@ async function setVoice(id) {
 }
 
 // One place for settings changes: the tray menu and the sidebar both call it, and both show the result.
-const SETTABLE = { model: ['haiku', 'sonnet'], mode: ['ask', 'auto'], voice: VOICES.map(([, id]) => id), ear: [true, false] };
+const SETTABLE = { brain: ['claude', 'gemini'], model: ['haiku', 'sonnet'], mode: ['ask', 'auto'], voice: VOICES.map(([, id]) => id), ear: [true, false] };
 function setSetting(key, value) {
   if (!SETTABLE[key]?.includes(value) || settings[key] === value) return;
   settings[key] = value;
   saveSettings();
   if (key === 'model') brain.setModel(value);
+  if (key === 'brain') { log({ ev: 'brain_switch', to: value }); app.relaunch(); app.exit(0); return; } // a different AI app: start fresh
   if (key === 'voice') setVoice(value);
   if (key === 'ear') { send(value ? 'ear:on' : 'ear:off'); log({ ev: 'ear_switch', on: value }); }
   buildMenu();
@@ -267,6 +274,8 @@ async function sourceNow() {
   return { ...fg, url };
 }
 let sessionTurns = [], lastActivity = Date.now(), learning = false, interview = { asked: false, open: false };
+const rater = feedback.createRater(); // Helpful / Not helpful after some answers (Q11)
+let pendingRating = null;
 let actSeq = 0;
 const acts = new Map();
 let stopClicks = null;
@@ -341,6 +350,20 @@ async function onUtterance(buf, durMs) {
 }
 
 async function handleText(text, id) {
+  if (pendingRating) { // the Helpful / Not helpful buttons, or the same words said out loud
+    const r = pendingRating;
+    pendingRating = null;
+    const m = Date.now() < r.until && text.match(/^\W*(not helpful|helpful)\W*$/i);
+    if (m) {
+      const good = m[1].toLowerCase() === 'helpful';
+      log({ ev: 'rating', helpful: good, turn: r.turn });
+      say('none');
+      if (good) return;
+      feedback.send({ kind: 'not helpful', message: `Question: ${r.q}\n\nNibley's answer: ${r.a}`, png: r.png, name: settings.name, brain: settings.brain, logDir })
+        .then((res) => log({ ev: 'feedback_sent', kind: 'not helpful', ok: res.ok }));
+      return speak("Thanks. I've sent that to Nibley's maker, so it gets fixed.");
+    }
+  }
   if (pendingAsk) {
     const p = pendingAsk;
     pendingAsk = null;
@@ -418,6 +441,7 @@ async function onCmd(ctx, cmd) {
       if (ctx.check !== 'ok') { log({ ev: 'lint', rule: 'check_not_allowed', turn: ctx.id }); return; }
       ctx.checked = true;
     }
+    ctx.hadButtons = true;
     return send('item', ctx.id, { kind: 'choices', options: cmd.options });
   }
   if (cmd.type === 'clear') return send('item', ctx.id, { kind: 'clear' });
@@ -503,6 +527,9 @@ function endTurn(ctx) {
     interview = { asked: true, open: true }; // mini-interview: at most once per session
     sayLine(ctx, `Quick question: ${settings.pendingQuestion}`);
     send('item', ctx.id, { kind: 'choices', options: ['Skip'] });
+  } else if (ctx.says && rater.due({ hadButtons: ctx.hadButtons })) {
+    send('item', ctx.id, { kind: 'choices', options: ['Helpful', 'Not helpful'] });
+    pendingRating = { turn: ctx.id, q: ctx.text, a: ctx.sayLines.join(' '), png: ctx.png, until: Date.now() + 120e3 };
   }
   send('item', ctx.id, { kind: 'end' });
   if (ctx.says) teacher.after({ checked: ctx.checked });
@@ -641,8 +668,8 @@ ipcMain.on('mic', (_e, r) => { log({ ev: 'mic', ...r }); if (!r.ok) { setTray('m
 ipcMain.handle('lessons:list', () => lessons.list(DATA).map((l) => ({
   ...l, thumb: nativeImage.createFromPath(path.join(l.dir, 'shot.png')).resize({ width: 192 }).toDataURL(),
 })));
-ipcMain.handle('settings:get', () => ({ model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
-ipcMain.handle('settings:set', (_e, key, value) => { setSetting(key, value); return { model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }; });
+ipcMain.handle('settings:get', () => ({ brain: settings.brain || 'claude', model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
+ipcMain.handle('settings:set', (_e, key, value) => { setSetting(key, value); return { brain: settings.brain || 'claude', model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }; });
 ipcMain.on('voice:sample', () => speak('Hi, this is how I sound.'));
 ipcMain.on('sidebar:toggle', (_e, how) => sidebar.toggle(how));
 ipcMain.on('lessons:play', (_e, dir) => {
@@ -664,6 +691,19 @@ ipcMain.handle('study:get', () => study.view());
 ipcMain.on('study:answer', (_e, i, k) => study.answer(i, k));
 ipcMain.on('study:card', (_e, i) => study.toggleCard(i));
 ipcMain.on('study:analyze', () => study.analyze());
+// "Send feedback" in the sidebar: his words, an optional screenshot of what's behind the sidebar, recent errors.
+ipcMain.handle('feedback:send', async (_e, { message, screenshot }) => {
+  let png = null;
+  if (screenshot) {
+    const open = sidebar.isOpen();
+    sidebar.win.hide();
+    try { png = (await captureClean()).png; } catch (e) { log({ ev: 'feedback_shot_error', err: e.message }); }
+    if (open) sidebar.win.showInactive();
+  }
+  const r = await feedback.send({ kind: 'feedback', message, png, name: settings.name, brain: settings.brain, logDir });
+  log({ ev: 'feedback_sent', kind: 'feedback', ok: r.ok, screenshot: !!png });
+  return r;
+});
 ipcMain.on('study:seek', (_e, t) => { if (!youtube.seek(t)) log({ ev: 'study_seek_failed' }); });
 
 // ---------- learner: after 5 min idle with 2+ turns ----------
@@ -673,7 +713,7 @@ setInterval(async () => {
   const turns = sessionTurns;
   sessionTurns = [];
   try {
-    const r = await memory.learn({ vault: DATA, claudePath: settings.claudePath, turns });
+    const r = await memory.learn({ vault: DATA, claudePath: settings.claudePath, turns, name: settings.name, run: runAI });
     if (r.ask) { settings.pendingQuestion = r.ask; saveSettings(); }
     log({ ev: 'learned', ...r });
   } catch (e) {
@@ -717,7 +757,7 @@ app.whenReady().then(async () => {
   platform.onKey((name) => send('choices:key', name));
   brain.start({
     model: settings.model, claudePath: settings.claudePath,
-    buildPrompt: () => [prompt.build({ vaultPath: DATA, apps: settings.apps }), styles.section()].join('\n\n'), // same as the eval
+    buildPrompt: () => [prompt.build({ vaultPath: DATA, apps: settings.apps, name: settings.name }), styles.section()].join('\n\n'), // same as the eval
     onFatal: (msg) => { setTray('Claude keeps crashing', true); speak(msg); },
   });
   youtube.start({ platform, vaultPath: DATA, log }); // reads YouTube from the browser window, no extension

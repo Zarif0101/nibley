@@ -4,11 +4,13 @@
 //   node test/eval/run.js                  normal run
 //   node test/eval/run.js --baseline       mark this run as the baseline
 //   node test/eval/run.js --only q01,q05   a few questions
-// Env: CLAUDE_PATH (default: claude), NIBLEY_MODEL (default: haiku), NIBLEY_EFFORT (claude --effort; default: none), NIBLEY_EVAL_STYLES=0 to leave the style section out.
+// Env: NIBLEY_BRAIN=gemini runs the Gemini brain instead (saved as gemini-eval-<date>.json, so the scorecard's Claude
+// baseline stays clean). CLAUDE_PATH (default: claude), NIBLEY_MODEL (default: haiku), NIBLEY_EFFORT (claude --effort; default: none), NIBLEY_EVAL_STYLES=0 to leave the style section out.
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const brain = require('../../src/brain');
+const GEMINI = process.env.NIBLEY_BRAIN === 'gemini';
+const brain = GEMINI ? require('../../src/brain-gemini') : require('../../src/brain');
 const prompt = require('../../src/prompt');
 const styles = require('../../src/styles');
 const { HOME } = require('../../src/learn/style');
@@ -46,9 +48,9 @@ function askOnce(item) {
 
 (async () => {
   brain.start({
-    model: process.env.NIBLEY_MODEL || 'haiku', effort: process.env.NIBLEY_EFFORT,
+    model: process.env.NIBLEY_MODEL || (GEMINI ? undefined : 'haiku'), effort: process.env.NIBLEY_EFFORT,
     claudePath: process.env.CLAUDE_PATH || 'claude',
-    buildPrompt: () => [prompt.build({ vaultPath: vault, apps: {} }), useStyles ? styles.section() : ''].filter(Boolean).join('\n\n'),
+    buildPrompt: () => [prompt.build({ vaultPath: vault, apps: {}, name: 'Zarif' }), useStyles ? styles.section() : ''].filter(Boolean).join('\n\n'),
     onFatal: (e) => { console.error('brain failed:', e); process.exit(1); },
   });
   const results = [];
@@ -63,9 +65,9 @@ function askOnce(item) {
   const date = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
   const firsts = results.map((r) => r.first_ms).filter((x) => x != null).sort((a, b) => a - b);
   const first_ms = { median: firsts[Math.floor(firsts.length / 2)], p90: firsts[Math.floor(firsts.length * 0.9)] };
-  const out = { date, model: process.env.NIBLEY_MODEL || 'haiku', effort: process.env.NIBLEY_EFFORT || 'default', styles: useStyles, first_ms, baseline: process.argv.includes('--baseline'), ...sum, items: results };
+  const out = { date, brain: GEMINI ? 'gemini' : 'claude', model: process.env.NIBLEY_MODEL || (GEMINI ? 'gemini-3-flash-preview' : 'haiku'), effort: process.env.NIBLEY_EFFORT || 'default', styles: useStyles, first_ms, baseline: process.argv.includes('--baseline'), ...sum, items: results };
   fs.mkdirSync(path.join(ROOT, 'test', 'out'), { recursive: true });
-  const file = path.join(ROOT, 'test', 'out', `eval-${date}.json`);
+  const file = path.join(ROOT, 'test', 'out', `${GEMINI ? 'gemini-' : ''}eval-${date}.json`);
   fs.writeFileSync(file, JSON.stringify(out, null, 2));
   console.log(`\nscore ${sum.score} ${JSON.stringify(sum.scores)} first say line ${JSON.stringify(first_ms)} ms\nsaved ${path.relative(ROOT, file)}`);
 })();

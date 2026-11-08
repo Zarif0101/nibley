@@ -1,0 +1,607 @@
+{
+  "date": "2026-11-08T18-20-14",
+  "brain": "gemini",
+  "model": "gemini-3-flash-preview",
+  "effort": "default",
+  "styles": true,
+  "first_ms": {
+    "median": 17555,
+    "p90": 34960
+  },
+  "baseline": false,
+  "scores": {
+    "S1": 0.533,
+    "S2": 0.567,
+    "S3": 0.688,
+    "S4": 0.2,
+    "S5": 0.2,
+    "S6": 0.667,
+    "S7": 0.933
+  },
+  "score": 0.571,
+  "items": [
+    {
+      "id": "q01",
+      "question": "what does this mean?",
+      "style": "doodle-story",
+      "ms": 30546,
+      "first_ms": 30155,
+      "script": "say This is a linear combination, using two vectors to reach a target destination.\nsay Sam is stuck on these paths and must adjust his x and y steps.\nnote 240 230 240 140 | The Paths | Sam's only allowed directions\nsay Aha! He reaches the goal exactly by mixing the two movements.\nnote 525 230 80 140 | The Goal | The resulting destination vector\nsay It's a linear combination, but math vectors can live in many dimensions.\ntitle Linear combination of vectors",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 0,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.6666666666666666,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q02",
+      "question": "explain this like a story",
+      "style": "doodle-story",
+      "ms": 16008,
+      "first_ms": 15692,
+      "script": "say A linear combination is finding the right mix of directions to reach a goal.\nsay Sam wants to reach a treasure hidden at this specific spot on his map.\nnote 535 235 60 135 | The Treasure | Target destination Sam must reach\nsay He tries walking but can only follow these two slanted paths.\nnote 265 235 200 135 | Allowed Paths | Sam's only two directions of travel\nsay Aha! By mixing the two paths, he lands right on the treasure.\nsay It's called a linear combination, but real vectors can work in any dimension.\ntitle Vector path story",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 0,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.6666666666666666,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q03",
+      "question": "show me step by step how to solve this",
+      "style": "board-builder",
+      "ms": 35342,
+      "first_ms": 34960,
+      "script": "say The solution is x equals 1 and y equals 2.\nsay Think of this as mixing two ingredients to hit a target.\nstep 1 420 260 | 2x - y = 0\nsay Row one says y must be twice x to balance to zero.\nstep 2 420 340 | -x + 2y = 3\nsay Row two then forces x to be 1, and it all checks out.\nring 260 220 340 160 | x=1, y=2\ntitle Solving the column picture",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q04",
+      "question": "how would they test this, exam style?",
+      "style": "exam-coach",
+      "ms": 11880,
+      "first_ms": 11396,
+      "script": "say Exams usually ask you to solve for x and y using the column picture.\nring 265 235 200 135 | vectors | The paths\nsay This is a \"linear combination\" pattern. Think of it as a vector recipe.\nsay Step one: turn each row into a simple equation, like 2x minus y equals zero.\nring 535 235 60 135 | target | The goal\nsay Trap: don't add top numbers to bottom ones; keep the row equations separate.\nsay Want a twin problem with a target of 1 and 2 instead?\nchoices Yes, give me one | Not now\ntitle Exam: Vector combinations",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q05",
+      "question": "quiz me on this",
+      "style": "question-buddy",
+      "ms": 12664,
+      "first_ms": 12627,
+      "script": "say Look at the top row: 2x minus y equals 0. If x is 1, what must y be?\nchoices 2 | 1 | 0\ntitle Vector combination quiz",
+      "scores": {
+        "S1": 0,
+        "S2": 1,
+        "S3": null,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q06",
+      "question": "what is a matrix?",
+      "style": "doodle-story",
+      "ms": 21128,
+      "first_ms": 20924,
+      "script": "say A matrix is a grid of numbers that acts like a vector's instruction manual.\nsay Picture Sam's robot: it has a messy pile of movement instructions.\nsay He tries a long list, but packs them into this grid box instead.\nnote 265 235 200 135 | The Matrix | A grid of rules for vectors\nsay Aha! It's a linear transformation, though real ones can be massive.\ntitle What is a matrix?",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q07",
+      "question": "why do we write it as a matrix?",
+      "style": "doodle-story",
+      "ms": 20008,
+      "first_ms": 19753,
+      "script": "say A matrix keeps giant systems of equations compact and easy to handle.\nsay Sam's robot has way too many legs to track them all separately.\nnote 265 235 200 135 | Matrix | Sam's grid for managing robot leg instructions\nsay Aha! Packing them into a grid lets him move them all together.\nsay It's matrix notation, but real robots can't always move in straight lines.\ntitle Why use matrices?",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 0,
+        "S5": null,
+        "S6": null,
+        "S7": 0,
+        "score": 0.6,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q08",
+      "question": "what does the x mean here?",
+      "style": "doodle-story",
+      "ms": 15929,
+      "first_ms": 15667,
+      "script": "say x is the amount or \"weight\" of the first direction you take.\nsay Picture Sam's map: x tells him exactly how many steps to walk on path one.\nnote 265 240 25 35 | x | The number of steps on path one\nsay Aha! By scaling path one by x, he gets closer to the goal.\nsay It's called a scalar, but real paths aren't always perfectly straight.\ntitle What is x?",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 0,
+        "S4": 1,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q09",
+      "question": "what is a system of linear equations?",
+      "style": "doodle-story",
+      "ms": 16436,
+      "first_ms": 16235,
+      "script": "say A system of linear equations is a set of rules that must all be true.\nsay Sam is looking for a meeting point where two straight paths cross each other.\nnote 260 230 350 145 | The System | Multiple rules that must work together\nsay Aha! The spot where both paths meet is the only solution.\nsay This is a linear system, but real-world curves aren't always straight lines.\ntitle Systems of linear equations",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 0,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q10",
+      "question": "can you visualize this?",
+      "style": "picture-first",
+      "ms": 17837,
+      "first_ms": 17529,
+      "script": "say This shows two arrows adding up to reach a target spot at (0, 3).\nring 535 235 50 145 | target | Destination (0, 3)\nsay Look at the target. If you change x, the first arrow stretches and shifts the tip.\narrow 300 300 -> 340 300 | shift\nring 270 235 90 145 | first path | Vector (2, -1)\nsay In x times vector one, x is just how far you walk along that first path.\ntitle Visualizing the column picture",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 0,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q11",
+      "question": "explain this diagram",
+      "style": "picture-first",
+      "ms": 24816,
+      "first_ms": 24419,
+      "script": "say This is a neural network \"brain\" recognizing the handwritten number 2.\nring 35 115 110 195 | input image | The handwritten digit Sam wrote\nsay Look at the right side. When the network sees this shape, the neuron for 2 glows brightest.\nring 510 330 25 35 | output 2 | The network's final guess\nsay Information flows through layers, where each circle is a \"neuron\" that votes on the next step.\ntitle How neural networks recognize digits",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q12",
+      "question": "what are these circles?",
+      "style": "picture-first",
+      "ms": 13731,
+      "first_ms": 13358,
+      "script": "say These circles are \"neurons\" that hold a number representing how much they're \"glowing.\"\nring 345 440 25 35 | neuron | One small processor\nsay Look at one neuron. It glows bright when it spots a specific pattern in the layer before it.\narrow 300 440 -> 345 440 | connection\nsay Each glowing neuron passes its strength along these lines to influence the next layer.\ntitle What is a neuron?",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": 1,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q13",
+      "question": "what do the lines between them mean?",
+      "style": "picture-first",
+      "ms": 37859,
+      "first_ms": 37486,
+      "script": "say They are like volume knobs, called weights, that show how much one neuron influences another.\nnote 343 150 89 560 | Weights | Connection strength\nsay Look at the bright yellow lines: they show a very strong connection.\nring 388 425 70 | strong weights\nsay If you dim a line, that specific connection becomes weaker and less important.\narrow 343 425 -> 432 425 | influence\nsay The math multiplies the neuron's brightness by this weight to pass signal on.\ntitle Neural network weights",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q14",
+      "question": "how does a neural network learn?",
+      "style": "doodle-story",
+      "ms": 11357,
+      "first_ms": 10997,
+      "script": "say It learns by adjusting its \"volume knobs\" to get more answers right.\nsay Imagine a voter who shouts \"five\" at a picture of a \"two.\"\nnote 511 430 30 30 | Oops! | Shouting the wrong number\nsay We nudge every dial until the \"two\" neuron glows the brightest.\nnote 511 325 30 30 | Aha! | Finally getting it right\nsay This is \"backpropagation,\" but real brain cells don't use this specific math.\ntitle How neural networks learn",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": null,
+        "S4": 1,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.8,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q15",
+      "question": "explain this like a story",
+      "style": "doodle-story",
+      "ms": 29835,
+      "first_ms": 29416,
+      "script": "say It is a team of specialists finding shapes in a mess.\nsay Dot the detective sees a squiggle and wonders if it's a squashed bug.\nnote 35 120 100 180 | The Problem | Messy pixels\nsay He asks friends to find edges, then loops, until they build the number.\nnote 330 150 150 560 | Feature Extraction | Finding shapes step by step\nsay \"Aha! It's a two!\" This story breaks because networks only see math, not meanings.\ntitle Feature detection story",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": 0,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 0.8333333333333334,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q16",
+      "question": "quiz me on neural networks",
+      "style": "question-buddy",
+      "ms": 6350,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": null,
+        "S5": null,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q17",
+      "question": "what is the input layer?",
+      "style": "picture-first",
+      "ms": 7343,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": null,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q18",
+      "question": "what is gradient descent?",
+      "style": "doodle-story",
+      "ms": 5886,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q19",
+      "question": "what is the output here?",
+      "style": "picture-first",
+      "ms": 6674,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": null,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q20",
+      "question": "show me visually how information flows",
+      "style": "picture-first",
+      "ms": 21610,
+      "first_ms": 21303,
+      "script": "say Information flows from the pixels on the left to the guess on the right.\nring 86 211 60 | input pixels\nsay Look at the arrows: each layer calculates its glow from the one before.\narrow 140 210 -> 250 350 | forward pass\nsay The signal cascades forward until it reaches the final column of neurons.\nring 521 311 15 | brightest neuron\nsay It is a series of weighted sums passing the \"glow\" along.\ntitle Information flow in a network",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 1,
+        "S4": null,
+        "S5": null,
+        "S6": 1,
+        "S7": 1,
+        "score": 1,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q21",
+      "question": "how do I turn on captions?",
+      "style": "doodle-story",
+      "ms": 17706,
+      "first_ms": 17555,
+      "script": "say Click the CC button at the bottom right of the video player.\nstep 1 563 735 | Click CC\nwait_click 563 735\nsay Done. The captions will show up now.",
+      "scores": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 0,
+        "S4": null,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.75,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q22",
+      "question": "what does the CC button do?",
+      "style": "doodle-story",
+      "ms": 5977,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.16666666666666666,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q23",
+      "question": "how do I make the video play slower?",
+      "style": "doodle-story",
+      "ms": 7138,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": null,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q24",
+      "question": "explain how video streaming works",
+      "style": "doodle-story",
+      "ms": 6474,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q25",
+      "question": "what is a variable in python?",
+      "style": "doodle-story",
+      "ms": 3756,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q26",
+      "question": "explain recursion",
+      "style": "doodle-story",
+      "ms": 2942,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q27",
+      "question": "what is an API?",
+      "style": "doodle-story",
+      "ms": 2025,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": null,
+        "S6": null,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q28",
+      "question": "what is compound interest?",
+      "style": "doodle-story",
+      "ms": 2185,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": 0,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q29",
+      "question": "how do I solve 2x + 3 = 11?",
+      "style": "board-builder",
+      "ms": 2923,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": null,
+        "S5": 0,
+        "S6": 0,
+        "S7": 1,
+        "score": 0.2,
+        "bad": 0
+      }
+    },
+    {
+      "id": "q30",
+      "question": "what is the derivative of x squared?",
+      "style": "exam-coach",
+      "ms": 2731,
+      "first_ms": null,
+      "error": "limit: You have exhausted your daily quota on this model.",
+      "script": "",
+      "scores": {
+        "S1": 0,
+        "S2": 0,
+        "S3": null,
+        "S4": null,
+        "S5": 0,
+        "S6": null,
+        "S7": 1,
+        "score": 0.25,
+        "bad": 0
+      }
+    }
+  ]
+}

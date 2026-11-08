@@ -1,5 +1,7 @@
 # Nibley: rules for any agent working here
 
+> Installing Nibley for someone (not developing it)? Stop here and follow `AGENT-SETUP.md`.
+
 Nibley = Zarif's voice study buddy for Windows. Hold Win+` and ask; it reads the screen, explains in simple words, draws on screen, runs on his Claude subscription.
 
 ## Read first, in this order

@@ -61,7 +61,7 @@ function undoLast(vault) {
   return null;
 }
 
-const LEARNER = `You update a study buddy's memory about its student, Zarif, after one study session.
+const LEARNER = `You update a study buddy's memory about its student, NAME, after one study session.
 You get the session's questions and answers and the current teaching rules.
 Reply with ONLY one JSON object, no other text:
 {"learning": ["..."], "rules": [{"op": "add" or "remove", "text": "...", "reason": "..."}], "ask": null}
@@ -89,9 +89,10 @@ function runClaude({ claudePath, system, input, timeoutMs = 90e3 }) {
 }
 
 // turns: [{q, a}]. Returns {learning, rules, ask} counts/question, or throws on malformed output.
-async function learn({ vault, claudePath, turns }) {
-  const input = `Current rules:\n${read(files(vault).rules)}\n\nSession:\n${turns.map((t, i) => `${i + 1}. Zarif: ${t.q}\n   Nibley: ${t.a}`).join('\n')}`;
-  const text = await runClaude({ claudePath, system: LEARNER, input });
+async function learn({ vault, claudePath, turns, name = '', run = runClaude }) {
+  const who = String(name).trim() || 'the student';
+  const input = `Current rules:\n${read(files(vault).rules)}\n\nSession:\n${turns.map((t, i) => `${i + 1}. ${who}: ${t.q}\n   Nibley: ${t.a}`).join('\n')}`;
+  const text = await run({ claudePath, system: LEARNER.replaceAll('NAME', who), input });
   const json = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
   const learning = Array.isArray(json.learning) ? json.learning.slice(0, 3) : [];
   const rules = (Array.isArray(json.rules) ? json.rules : []).filter((r) => r && ['add', 'remove'].includes(r.op)).slice(0, 2);
