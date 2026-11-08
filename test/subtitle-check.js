@@ -7,8 +7,8 @@ const path = require('node:path');
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-sub-'));
 const REAL = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'settings.json'), 'utf8'));
-fs.cpSync(path.join(REAL.vaultPath, 'nibley'), path.join(TMP, 'vault', 'nibley'), { recursive: true });
-fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ vaultPath: path.join(TMP, 'vault'), mode: 'ask', voice: REAL.voice, pendingQuestion: null }));
+fs.cpSync(path.join(REAL.dataPath || path.join(process.env.APPDATA, 'nibley'), 'nibley'), path.join(TMP, 'vault', 'nibley'), { recursive: true });
+fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ dataPath: path.join(TMP, 'vault'), mode: 'ask', voice: REAL.voice, pendingQuestion: null }));
 process.env.NIBLEY_FAKE = '1';
 process.env.NIBLEY_SETTINGS = path.join(TMP, 'settings.json');
 

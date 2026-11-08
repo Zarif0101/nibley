@@ -36,13 +36,21 @@ function findClaude() {
   return path.join(process.env.USERPROFILE || '', '.local', 'bin', 'claude.exe');
 }
 // Christopher: classic Edge voices stayed under 0.9 s in Edge's slow periods; Ava/Andrew took 1.5-8 s (BUILD-LOG 2026-11-05 T1)
-const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { brave: 'brave', notepad: 'notepad' }, claudePath: '', vaultPath: 'C:\\Users\\arko4\\Desktop\\Second Brain', pendingQuestion: null };
+const DEFAULTS = { model: 'haiku', mode: 'ask', voice: 'en-US-ChristopherNeural', ink: '#2F8BFF', apps: { brave: 'brave', notepad: 'notepad' }, claudePath: '', pendingQuestion: null };
 let settings = { ...DEFAULTS };
 try { settings = { ...DEFAULTS, ...JSON.parse(fs.readFileSync(SETTINGS, 'utf8')) }; } catch { /* first run */ }
 if (!settings.claudePath || !fs.existsSync(settings.claudePath)) settings.claudePath = findClaude();
 const saveSettings = () => fs.writeFileSync(SETTINGS, JSON.stringify(settings, null, 2));
+// Learner data (lessons, transcripts, memory, style scores) lives inside the app, not in a notes app (Zarif 2026-11-08).
+// Folder: <DATA>/nibley. Tests set dataPath. Old installs kept it in settings.vaultPath: copied once, the old copy is left alone.
+const DATA = settings.dataPath || app.getPath('userData');
+if (settings.vaultPath) {
+  const from = path.join(settings.vaultPath, 'nibley'), to = path.join(DATA, 'nibley');
+  if (fs.existsSync(from) && !fs.existsSync(to)) { fs.cpSync(from, to, { recursive: true }); log({ ev: 'data_moved', from, to }); }
+  delete settings.vaultPath;
+}
 saveSettings();
-const teacher = teacherMod.create(settings.vaultPath); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
+const teacher = teacherMod.create(DATA); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
 
 // Key from .env (gitignored); .env.example is the public template, checked as a fallback. Never logged.
 function groqKey() {
@@ -129,7 +137,7 @@ function buildMenu() {
     { label: 'Actions', submenu: [radio('Ask first', 'mode', 'ask'), radio('Auto', 'mode', 'auto')] },
     { label: 'Listen to lecture sound', type: 'checkbox', checked: settings.ear !== false, click: (m) => setSetting('ear', m.checked) },
     { label: 'Lessons', click: () => sidebar.open('tray-menu', 'lessons') },
-    { label: 'Undo last rule change', click: () => { const r = memory.undoLast(settings.vaultPath); speak(r ? `Undone: I ${r}.` : 'There is no rule change to undo.'); } },
+    { label: 'Undo last rule change', click: () => { const r = memory.undoLast(DATA); speak(r ? `Undone: I ${r}.` : 'There is no rule change to undo.'); } },
     { label: 'Open log folder', click: () => shell.openPath(logDir) },
     { type: 'separator' },
     { label: 'Quit', click: () => app.quit() },
@@ -343,7 +351,7 @@ async function handleText(text, id) {
   }
   if (interview.open) {
     interview.open = false;
-    memory.addLearning(settings.vaultPath, [`Asked "${settings.pendingQuestion}". He said: ${text}`]);
+    memory.addLearning(DATA, [`Asked "${settings.pendingQuestion}". He said: ${text}`]);
     settings.pendingQuestion = null;
     saveSettings();
     say('none');
@@ -519,7 +527,7 @@ function saveLesson() {
   if (!lastDone?.png) return speak("There's nothing to save yet.");
   const title = (lastDone.title || lastDone.text).slice(0, 80);
   try {
-    const dir = lessons.save({ vault: settings.vaultPath, png: lastDone.png, script: lastDone.full, title, question: lastDone.text });
+    const dir = lessons.save({ vault: DATA, png: lastDone.png, script: lastDone.full, title, question: lastDone.text });
     log({ ev: 'lesson_saved', dir });
     speak(`Saved: ${title}.`);
   } catch (e) {
@@ -621,7 +629,7 @@ ipcMain.on('replay:close', () => replaying && closeReplay());
 ipcMain.on('ear', (_e, r) => log({ ev: 'ear', ...r }));
 ipcMain.on('ear:piece', (_e, buf, meta) => { ear.onPiece({ buf: Buffer.from(buf), ...meta }); });
 ipcMain.on('mic', (_e, r) => { log({ ev: 'mic', ...r }); if (!r.ok) { setTray('mic blocked', true); speak("I can't use the microphone. Check Windows privacy settings for microphone access.", true); } });
-ipcMain.handle('lessons:list', () => lessons.list(settings.vaultPath).map((l) => ({
+ipcMain.handle('lessons:list', () => lessons.list(DATA).map((l) => ({
   ...l, thumb: nativeImage.createFromPath(path.join(l.dir, 'shot.png')).resize({ width: 192 }).toDataURL(),
 })));
 ipcMain.handle('settings:get', () => ({ model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
@@ -629,7 +637,7 @@ ipcMain.handle('settings:set', (_e, key, value) => { setSetting(key, value); ret
 ipcMain.on('voice:sample', () => speak('Hi, this is how I sound.'));
 ipcMain.on('sidebar:toggle', (_e, how) => sidebar.toggle(how));
 ipcMain.on('lessons:play', (_e, dir) => {
-  const rel = path.relative(lessons.root(settings.vaultPath), path.resolve(dir));
+  const rel = path.relative(lessons.root(DATA), path.resolve(dir));
   if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) playLesson(dir);
 });
 
@@ -640,7 +648,7 @@ setInterval(async () => {
   const turns = sessionTurns;
   sessionTurns = [];
   try {
-    const r = await memory.learn({ vault: settings.vaultPath, claudePath: settings.claudePath, turns });
+    const r = await memory.learn({ vault: DATA, claudePath: settings.claudePath, turns });
     if (r.ask) { settings.pendingQuestion = r.ask; saveSettings(); }
     log({ ev: 'learned', ...r });
   } catch (e) {
@@ -670,7 +678,7 @@ app.whenReady().then(async () => {
     transcribe: (buf, o) => stt.transcribe(buf, { key: groqKey(), mime: 'audio/webm', ...o }),
     micUsers: () => platform.micUsers(), foreground: () => platform.foreground(),
     ownMic: (name) => name.toLowerCase() === process.execPath.replaceAll('\\', '#').toLowerCase(), // Windows lists apps by path, # for each \
-    enabled: () => settings.ear !== false, vaultPath: settings.vaultPath, log,
+    enabled: () => settings.ear !== false, vaultPath: DATA, log,
   });
   createOverlay();
   screen.on('display-metrics-changed', reassertTop);
@@ -684,7 +692,7 @@ app.whenReady().then(async () => {
   platform.onKey((name) => send('choices:key', name));
   brain.start({
     model: settings.model, claudePath: settings.claudePath,
-    buildPrompt: () => [prompt.build({ vaultPath: settings.vaultPath, apps: settings.apps }), styles.section()].join('\n\n'), // same as the eval
+    buildPrompt: () => [prompt.build({ vaultPath: DATA, apps: settings.apps }), styles.section()].join('\n\n'), // same as the eval
     onFatal: (msg) => { setTray('Claude keeps crashing', true); speak(msg); },
   });
   startBridge();
@@ -707,7 +715,7 @@ function startBridge() {
   if (!process.env.NIBLEY_SETTINGS) { // tests run with their own settings and must not change the real extension's token
     fs.writeFileSync(path.join(ROOT, 'extension', 'config.js'), `// Written by Nibley at start. Do not commit.\nconst NIBLEY = ${JSON.stringify({ port: BRIDGE_PORT, token: settings.bridgeToken })};\n`);
   }
-  youtube.start({ port: BRIDGE_PORT, token: settings.bridgeToken, vaultPath: settings.vaultPath, log })
+  youtube.start({ port: BRIDGE_PORT, token: settings.bridgeToken, vaultPath: DATA, log })
     .then(() => log({ ev: 'bridge', port: BRIDGE_PORT }), (e) => log({ ev: 'bridge_error', err: e.message }));
 }
 

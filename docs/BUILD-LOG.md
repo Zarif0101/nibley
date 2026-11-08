@@ -288,3 +288,11 @@ Newest at the bottom. A new session reads this to resume.
 - Tests, with Zarif's app running on 47711: unit 217/217; bridge-check 8/8; pause-check 5/5 (was 2/5 with the app open); real log got 0 test lines (only the live app's own `ear_sent`), `logs/test/` got 62.
 - Fixed in passing: bridge-check read the source line as the first line of the question block; since C1 the teacher header comes first. It now finds the `[Source:` and `[Video:` lines.
 - Left alone: `test/source-check.js` stays on 47711 on purpose (it needs the real extension; the app must be closed). Today's real log (2026-11-08) is still mixed from earlier runs; clean numbers start with tomorrow's log.
+
+## 2026-11-08 Learner data moved into the app (study page interview Q5-Q6)
+- Rule (Zarif): learner data lives inside Nibley, not in Obsidian or his vault; dev logs and research stay in the vault. Saved in CLAUDE.md.
+- DONE `src/main.js`: data root `DATA = settings.dataPath || app.getPath('userData')` (= `%APPDATA%\nibley`), files under `DATA/nibley/` (same layout as before: about-me, learning, rules, changelog, lessons/, sessions/, videos/, style-state.json). The hard-coded vault path is gone from DEFAULTS.
+- One-time move: if settings still has `vaultPath` and `DATA/nibley` doesn't exist yet, `vaultPath/nibley` is copied in (logged `data_moved`), `vaultPath` is dropped from settings. The old vault folder is never deleted.
+- Tests: settings use `dataPath`; checks that copy real data read `REAL.dataPath || %APPDATA%\nibley`. New `test/data-move-check.js` 4/4 (copy, lessons, old copy kept, setting dropped). Unit 217/217, sidebar 14/14, bridge 8/8, pause 5/5.
+- Not done until Zarif restarts Nibley: his running app (old code) still writes to the vault; the copy happens at the next start. Until then, checks that copy real data (aim, subtitle, turns, voice, pill-choices) can't find `%APPDATA%\nibley\nibley`.
+- Module option names (`vaultPath`, `vault`) left as they are inside ear/prompt/memory/lessons/youtube/teacher: they now receive the app data root. Renaming is churn with no behaviour change.

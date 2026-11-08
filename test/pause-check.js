@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-pause-'));
 fs.mkdirSync(path.join(TMP, 'vault', 'nibley'), { recursive: true });
-fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ vaultPath: path.join(TMP, 'vault'), mode: 'ask', pendingQuestion: null, bridgeToken: 'pausecheck' }));
+fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ dataPath: path.join(TMP, 'vault'), mode: 'ask', pendingQuestion: null, bridgeToken: 'pausecheck' }));
 process.env.NIBLEY_FAKE = '1';
 process.env.NIBLEY_SETTINGS = path.join(TMP, 'settings.json');
 

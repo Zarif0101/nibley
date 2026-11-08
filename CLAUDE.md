@@ -15,6 +15,7 @@ Nibley = Zarif's voice study buddy for Windows. Hold Win+` and ask; it reads the
 - Zarif doesn't read code. Explain results in plain words.
 - No new dependencies beyond BUILD-PLAN section 2 without a written reason. No native npm modules.
 - Never print, log or commit `.env` or the Groq key.
-- Vault writes only inside `C:\Users\arko4\Desktop\Second Brain\nibley\` (plus one line in `logs/lessons.md` at the end).
+- Learner data (lessons, study pages, cards, transcripts, learner memory, style scores) lives inside the app: `%APPDATA%\nibley\nibley\` (setting `dataPath` overrides; tests use it). Never design around Obsidian or other third-party apps (Zarif 2026-11-08).
+- Zarif's Second Brain vault is for dev notes only: research, brainstorms, one line in `logs/lessons.md` at the end. Old `Second Brain\nibley\` is a one-time-copied legacy folder; don't write to it.
 - Spawn `claude.exe` with `shell:false`. Never use `--bare` (it blocks the subscription login).
 - Keep `docs/BUILD-LOG.md` updated as you go (what's done, what's next), so a new session can resume if limits hit.

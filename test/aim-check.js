@@ -24,8 +24,8 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-aim-'));
 const REAL = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'settings.json'), 'utf8'));
-fs.cpSync(path.join(REAL.vaultPath, 'nibley'), path.join(TMP, 'vault', 'nibley'), { recursive: true });
-fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ vaultPath: path.join(TMP, 'vault'), mode: 'ask', model: MODEL, pendingQuestion: null, ear: false }));
+fs.cpSync(path.join(REAL.dataPath || path.join(process.env.APPDATA, 'nibley'), 'nibley'), path.join(TMP, 'vault', 'nibley'), { recursive: true });
+fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ dataPath: path.join(TMP, 'vault'), mode: 'ask', model: MODEL, pendingQuestion: null, ear: false }));
 process.env.NIBLEY_FAKE = '1'; // fake hotkey; the real helper is started below only for UI Automation
 process.env.NIBLEY_SETTINGS = path.join(TMP, 'settings.json');
 

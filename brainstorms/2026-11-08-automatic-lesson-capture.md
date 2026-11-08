@@ -1,6 +1,6 @@
 # Automatic lesson capture: Brainstorm / Discovery Notes
 Date: 2026-11-08 · Goal: Nibley picks up transcript and context from YouTube, paid course sites and open courses with no setup or hassle for the user.
-Status: paused at Q2 (how much lecture text per question; suggestion: only matching parts + last 2 min). Paused 2026-11-08 for a full project audit.
+Status: in progress (resumed at Q2 after the 2026-11-08 project audit and HeyClicky gap check).
 Context sources: `src/ear.js`, `docs/NEXT-ROUND.md` (group C3: course transcripts)
 
 ## What already exists (from code, not asked)
