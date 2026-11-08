@@ -1,6 +1,6 @@
 # Study page format: Brainstorm / Discovery Notes
 Date: 2026-11-08 · Goal: decide Nibley's study page: one Markdown format with study objects (cards, quiz, progress, streak, countdown), learned from HeyClicky's "paper".
-Status: in progress
+Status: complete (mockup OK'd 2026-11-08, built the same day: src/study.js)
 Context sources: `research/2026-11-08-heyclicky-feature-structure.md` (section 2, the paper), `docs/PRD-v2.md` (note paper, flashcards, daily review), `src/learn/` (fsrs, review, quiz: built, not wired), `brainstorms/2026-11-08-automatic-lesson-capture.md` (paused at Q2)
 
 ## Already decided elsewhere (not re-asked)

@@ -80,6 +80,15 @@ Every `say` line shows as a subtitle while its audio plays, then clears. Zarif: 
 - **Lessons:** cards (white, radius 12, card shadow, `line` border, `sky` on hover): 112x63 thumbnail (radius 8), title 600 14/18, "You asked: ..." 12/16 (2 lines max), time 12 px `muted`. Replay plays full screen with a white "Back to lessons" chip top-left; Esc works too; Back reopens the sidebar on Lessons.
 - **Closes:** click anywhere else, Esc, X, the tab, Win+Shift+`, tray click, or "close sidebar".
 
+## Study page (Zarif OK'd the mockup 2026-11-08, `design/study-page-mockup.html`; code `src/study.js`)
+- First sidebar tab, **Study** (then Lessons, Settings). One page per YouTube lecture.
+- Page: lecture title Inter 600 18/24; "Watching" in `deep` with a pulsing 8 px dot, or "Finished" in `muted`. Section labels Inter 600 12/16 caps `muted`: Key ideas, Your questions, Quick check, Your cards.
+- Key ideas: rows with a `deep` time link (600 12/20, jumps the video) and the idea; a new idea gets the `swipe` highlighter once (900 ms).
+- Questions: white cards (radius 12, card shadow): question 600, time link right, answer below.
+- Quick check: 3 cards, 2 outlined `deep` buttons each; the right one fills `deep`, a wrong pick gets an `error` border; one line of why in `muted` 12/16. Score line after the third.
+- Cards: one white card with rows: an 18 px `deep` check box (filled = kept), front 600, back 13 px; unticked rows go `muted` with a strike. A quiz miss is marked "From your quick check" in `deep` 600 12/16. Footer: "N cards go into tomorrow's review."
+- The video's end opens the sidebar on Study by itself (the quick check waits there).
+
 ## Check before shipping
 - Squint test on a busy YouTube frame: the ring and chip are the first thing you see.
 - Readable on a white lecture slide and on a dark video frame (the `edge` outline does this).

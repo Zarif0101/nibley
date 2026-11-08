@@ -2,6 +2,7 @@
 let port = null;
 const connect = () => {
   port = chrome.runtime.connect({ name: 'nibley' });
+  port.onMessage.addListener((m) => { if (Number.isFinite(m?.seek)) window.postMessage({ nibley: 'cmd', seek: m.seek }, location.origin); });
   port.onDisconnect.addListener(() => { port = null; }); // the worker sleeps when idle; reconnect on the next message
 };
 window.addEventListener('message', (e) => {

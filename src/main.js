@@ -19,6 +19,7 @@ const piper = require('./piper');
 const memory = require('./memory');
 const lessons = require('./lessons');
 const youtube = require('./youtube');
+const studyMod = require('./study');
 const { sourceLine } = require('./source');
 const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
@@ -50,6 +51,12 @@ if (settings.vaultPath) {
   delete settings.vaultPath;
 }
 saveSettings();
+// Study page per lecture (brainstorms/2026-11-08-study-page-format.md): recaps every 10 min, quiz + cards at the end.
+const study = studyMod.create({
+  dir: DATA, log, transcript: youtube.transcript,
+  run: ({ system, input }) => memory.runClaude({ claudePath: settings.claudePath, system, input }),
+  onChange: (p) => { const w = sidebar.win; if (w && !w.isDestroyed()) w.webContents.send('study:page', p); },
+});
 const teacher = teacherMod.create(DATA); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
 
 // Key from .env (gitignored); .env.example is the public template, checked as a fallback. Never logged.
@@ -503,6 +510,7 @@ function endTurn(ctx) {
   if (ctx.says) {
     lastDone = ctx;
     sessionTurns.push({ q: ctx.text, a: ctx.sayLines.join(' ') });
+    study.addQuestion(youtube.current(), { q: ctx.text, a: ctx.sayLines.join(' ') }); // lands on the lecture's study page
   }
   setTray('ready');
 }
@@ -641,6 +649,21 @@ ipcMain.on('lessons:play', (_e, dir) => {
   if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) playLesson(dir);
 });
 
+// ---------- study page: every 5 s while a YouTube video is on screen ----------
+let studying = false;
+setInterval(async () => {
+  const v = youtube.current();
+  if (studying || !v) return;
+  studying = true;
+  try { if (await study.tick(v) === 'ended') sidebar.open('study-end', 'study'); } // the quick check waits in the sidebar
+  catch (e) { log({ ev: 'study_error', kind: 'tick', err: e.message }); }
+  studying = false;
+}, 5000).unref();
+ipcMain.handle('study:get', () => study.view());
+ipcMain.on('study:answer', (_e, i, k) => study.answer(i, k));
+ipcMain.on('study:card', (_e, i) => study.toggleCard(i));
+ipcMain.on('study:seek', (_e, t) => { if (!youtube.seek(t)) log({ ev: 'study_seek_failed' }); });
+
 // ---------- learner: after 5 min idle with 2+ turns ----------
 setInterval(async () => {
   if (learning || sessionTurns.length < 2 || Date.now() - lastActivity < IDLE_LEARN_MS) return;
@@ -731,6 +754,6 @@ function testTurn(text, png, { showShot = true } = {}) {
   return handleText(text, turnId);
 }
 
-module.exports = { events, groqKey, testTurn, captureClean, setVoice, VOICES, handleText, playLesson, closeReplay, onPtt, ready: new Promise((r) => events.once('ready', r)),
+module.exports = { events, groqKey, study, testTurn, captureClean, setVoice, VOICES, handleText, playLesson, closeReplay, onPtt, ready: new Promise((r) => events.once('ready', r)),
   get overlay() { return overlay; }, get tray() { return tray; }, sidebar,
   get state() { return { turnId, lastDone, pendingAsk, replaying, timing, ttsBackup, settings }; } };

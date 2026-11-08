@@ -296,3 +296,16 @@ Newest at the bottom. A new session reads this to resume.
 - Tests: settings use `dataPath`; checks that copy real data read `REAL.dataPath || %APPDATA%\nibley`. New `test/data-move-check.js` 4/4 (copy, lessons, old copy kept, setting dropped). Unit 217/217, sidebar 14/14, bridge 8/8, pause 5/5.
 - Not done until Zarif restarts Nibley: his running app (old code) still writes to the vault; the copy happens at the next start. Until then, checks that copy real data (aim, subtitle, turns, voice, pill-choices) can't find `%APPDATA%\nibley\nibley`.
 - Module option names (`vaultPath`, `vault`) left as they are inside ear/prompt/memory/lessons/youtube/teacher: they now receive the app data root. Renaming is churn with no behaviour change.
+
+## 2026-11-08 Study page (interview Q1-Q6, mockup `design/study-page-mockup.html` OK'd)
+- DONE `src/study.js`: one page per YouTube lecture in `DATA/nibley/study/<videoId>.json`. Every 5 s main ticks it with `youtube.current()`.
+  - Every 10 min of video: one Haiku call (`memory.runClaude`, now exported) turns that part of the YouTube transcript into 2-3 timestamped key ideas. The first call also decides "not a lecture" (music, vlog): the page hides and no more calls.
+  - Each answered question lands on the page with the video time (`endTurn`).
+  - End of video (videos ≥ 5 min, page has ideas or questions): last recap, then one call for 3 two-option quiz questions + ~5 cards per 10 min (3-25). The sidebar opens on Study by itself.
+  - A wrong quiz answer becomes a card. Kept cards go to `DATA/nibley/cards.json` with FSRS fields (`learn/fsrs.createCard`) for the daily review (review screen not built yet).
+  - Skipping far ahead recaps only the 10 min before where he is, not every part jumped over.
+- Sidebar: new first tab Study (`src/overlay/sidebar.html`), rendered from the page JSON with textContent only. Keyboard focus kept across re-renders.
+- Time links: `youtube.seek(t)` puts `{seek}` in the bridge's reply to that tab's next report; extension 0.2.0 passes it sw -> bridge.js -> page.js, which sets `video.currentTime`. Page reports every 3 s while paused (was: nothing) so a link works on a paused video. **Zarif must reload the extension** (brave://extensions, Reload).
+- Tests: `test/study.test.js` 6/6 (unit 223/223). `test/study-live-check.js` 6/6 with real Claude on saved transcripts: MIT 18.06 recap 3 good ideas in 6.8 s, tech review video correctly "not a lecture", end pass 3 questions + 20 cards in 20.7 s. `test/study-check.js` 8/8 in the real app (question lands at 308 s, recap, sidebar opens at the end, wrong answer -> card, untick -> cards.json, time link reaches the extension). Sidebar 14/14, bridge 8/8.
+- Not checked: a real lecture end to end with the real extension (needs his restart + extension reload); the seek on a real YouTube page; videos without captions (questions still land, no recaps: no ear fallback yet).
+- Cost: ~6 small Haiku calls per lecture hour + 1 end call (~20 s, one per lecture).

@@ -54,13 +54,19 @@
     post({ kind: 'state', state: { videoId: id, title, t: v.currentTime, paused: v.paused, duration: v.duration || 0, rate: v.playbackRate, visible: document.visibilityState === 'visible' } });
     if (done !== id && !trying && Date.now() - triedAt > 15000) sendTranscript(id, title, v.duration || 0);
   }
-  // Every 1 s while playing; on its own events otherwise. Nothing while paused (keeps idle CPU near zero).
+  // Every 1 s while playing, every 3 s while paused (so a time link from Nibley's study page still arrives).
   const sync = () => {
     report();
     const v = document.querySelector('video');
     clearInterval(playingTimer);
-    if (v && !v.paused) playingTimer = setInterval(report, 1000);
+    if (v) playingTimer = setInterval(report, v.paused ? 3000 : 1000);
   };
+  // Commands from Nibley (via bridge.js): jump to a time on the study page.
+  window.addEventListener('message', (e) => {
+    if (e.source !== window || e.data?.nibley !== 'cmd' || !Number.isFinite(e.data.seek) || !videoId()) return;
+    const v = document.querySelector('video.html5-main-video') || document.querySelector('video');
+    if (v) v.currentTime = e.data.seek;
+  });
   for (const ev of ['play', 'pause', 'seeked', 'ratechange', 'loadedmetadata']) document.addEventListener(ev, sync, true); // media events don't bubble; capture does
   document.addEventListener('visibilitychange', sync);
   window.addEventListener('yt-navigate-finish', sync); // YouTube changes videos without reloading the page

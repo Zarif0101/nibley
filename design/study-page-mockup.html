@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nibley study page mockup</title>
+<!-- Study page mockup for Zarif's OK (brainstorms/2026-11-08-study-page-format.md, Q1-Q6). Only docs/DESIGN.md tokens.
+     Lecture picture from test/out/aim-frames (gitignored), so it only shows the frame on Zarif's PC. -->
+<style>
+  @font-face { font-family: Inter; font-weight: 400; src: url(../src/overlay/fonts/inter-latin-400-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 600; src: url(../src/overlay/fonts/inter-latin-600-normal.woff2); }
+  @font-face { font-family: Inter; font-weight: 700; src: url(../src/overlay/fonts/inter-latin-700-normal.woff2); }
+  :root {
+    --ink: #2F8BFF; --deep: #1E6FEB; --sky: #4DA3FF; --swipe: rgba(255,217,140,.45); --text: #2B3A4B; --muted: #6B7A90;
+    --bg: #F7FAFF; --line: #E6EEF8; --error: #FF8B7A;
+    --chip-shadow: 0 2px 8px rgba(43,58,75,.28); --card-shadow: 0 1px 3px rgba(43,58,75,.08); --ease: cubic-bezier(.3,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #FFFFFF; color: var(--text); font: 400 14px/20px Inter, sans-serif; padding: 16px; }
+  .page-head { max-width: 1600px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 24px; }
+  .page-head h1 { font: 600 20px/28px Inter; margin: 0; }
+  .page-head p { margin: 0; color: var(--muted); }
+  .controls { max-width: 1600px; margin: 0 auto 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .controls button { font: 600 14px/20px Inter; padding: 8px 14px; border-radius: 8px; border: 1.5px solid var(--deep); background: #FFFFFF; color: var(--deep); cursor: pointer; }
+  .controls button.primary { background: var(--deep); color: #FFFFFF; }
+  .controls button:hover { border-color: var(--ink); }
+  button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .step-note { max-width: 1600px; margin: 0 auto 12px; min-height: 20px; font-weight: 600; color: var(--deep); }
+
+  .stage { max-width: 1600px; margin: 0 auto; aspect-ratio: 16 / 9; position: relative; overflow: hidden; border-radius: 8px; border: 1px solid var(--line); }
+  .screen { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; transform-origin: 0 0; background: #0F0F0F; }
+  .browser { position: absolute; inset: 0; display: flex; flex-direction: column; background: #0F0F0F; color: #F1F1F1; }
+  .tabs { height: 36px; background: #202124; display: flex; align-items: end; padding-left: 8px; }
+  .tabs span { background: #0F0F0F; height: 30px; padding: 6px 14px; border-radius: 8px 8px 0 0; font-size: 12px; color: #E8EAED; }
+  .addr { height: 36px; padding: 4px 12px; border-bottom: 1px solid #2A2A2A; }
+  .addr span { display: block; height: 28px; border-radius: 14px; background: #202124; padding: 4px 14px; font-size: 13px; color: #BDC1C6; }
+  .yt { flex: 1; padding: 20px 24px; width: 1110px; }
+  .video { width: 100%; aspect-ratio: 1090 / 613; border-radius: 12px; position: relative; overflow: hidden;
+           background: #1A1A1A url(../test/out/aim-frames/frame-2.png) no-repeat; background-size: 145.3% auto; background-position: 3.2% 27.4%; }
+  .bar { position: absolute; left: 16px; right: 16px; bottom: 14px; height: 4px; border-radius: 2px; background: rgba(255,255,255,.3); }
+  .bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; background: #FF0000; width: 0; }
+  .yt-title { font: 600 20px/28px Inter; margin: 12px 0 4px; }
+  .yt-sub { color: #AAAAAA; font-size: 13px; }
+
+  /* Floating sidebar (DESIGN.md "Sidebar"), 400 px wide here */
+  .edge-tab { position: absolute; top: 84px; right: 400px; width: 40px; height: 48px; border: 0; background: #FFFFFF;
+              border-radius: 12px 0 0 12px; box-shadow: var(--chip-shadow); display: grid; place-items: center; z-index: 3; }
+  .side { position: absolute; top: 0; right: 0; bottom: 0; width: 400px; background: var(--bg); border-left: 1px solid var(--line); display: flex; flex-direction: column; z-index: 2; }
+  .side-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
+  .side-head b { font: 600 16px/24px Inter; flex: 1; }
+  .icon-btn { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); display: grid; place-items: center; }
+  .nav { display: flex; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .nav button { font: 600 14px/20px Inter; padding: 8px 4px 10px; margin-right: 16px; border: 0; background: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .nav button[aria-selected="true"] { color: var(--text); border-bottom-color: var(--deep); }
+
+  /* The study page */
+  .page { flex: 1; overflow-y: auto; padding: 16px 16px 24px; scroll-behavior: smooth; }
+  .lec { margin-bottom: 4px; font: 600 18px/24px Inter; }
+  .lec-meta { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; line-height: 16px; margin-bottom: 16px; }
+  .live { display: inline-flex; align-items: center; gap: 6px; color: var(--deep); font-weight: 600; }
+  .live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--deep); animation: pulse 1.6s ease-in-out infinite; }
+  .done-tag { color: var(--muted); font-weight: 600; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  h3 { font: 600 12px/16px Inter; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+  h3:first-of-type { margin-top: 0; }
+  .empty { color: var(--muted); font-size: 13px; }
+
+  .idea { display: grid; grid-template-columns: 44px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .idea:last-child { border-bottom: 0; }
+  .t { font: 600 12px/20px Inter; color: var(--deep); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+  .t:hover { text-decoration: underline; }
+  .idea p { margin: 0; }
+  .idea.new p { background: linear-gradient(var(--swipe), var(--swipe)) no-repeat 0 100% / 0% 40%; animation: swipe 900ms 300ms var(--ease) forwards; }
+  @keyframes swipe { to { background-size: 100% 40%; } }
+
+  .card { background: #FFFFFF; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--card-shadow); padding: 12px; margin-bottom: 8px; }
+  .qa .q { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+  .qa .a { margin-top: 4px; }
+  .enter { animation: rise 180ms var(--ease) both; }
+  @keyframes rise { from { opacity: 0; transform: translateY(6px); } }
+
+  .quiz .q { font-weight: 600; margin-bottom: 8px; }
+  .quiz .opts { display: flex; gap: 8px; }
+  .quiz button.o { flex: 1; font: 600 14px/20px Inter; padding: 8px; border-radius: 8px; border: 1.5px solid var(--deep); background: #FFFFFF; color: var(--deep); cursor: pointer; }
+  .quiz button.o:hover { border-color: var(--ink); }
+  .quiz button.right { background: var(--deep); color: #FFFFFF; }
+  .quiz button.wrong { border-color: var(--error); color: var(--text); }
+  .quiz .fb { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--muted); min-height: 16px; }
+  .score { font-weight: 600; margin: 4px 0 0; }
+
+  .fc { display: grid; grid-template-columns: 24px 1fr; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .fc:last-child { border-bottom: 0; }
+  .fc .box { width: 18px; height: 18px; margin-top: 1px; border-radius: 5px; border: 1.5px solid var(--deep); display: grid; place-items: center; }
+  .fc[aria-checked="true"] .box { background: var(--deep); }
+  .fc .box svg { opacity: 0; }
+  .fc[aria-checked="true"] .box svg { opacity: 1; }
+  .fc[aria-checked="false"] .front, .fc[aria-checked="false"] .back { color: var(--muted); text-decoration: line-through; }
+  .fc .front { font-weight: 600; }
+  .fc .back { font-size: 13px; }
+  .fc .miss { font-size: 12px; line-height: 16px; color: var(--deep); font-weight: 600; }
+  .cards { padding: 0; }
+  .foot { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 16px; }
+  .foot b { color: var(--text); }
+
+  /* Spoken answer subtitle on the video (DESIGN.md subtitles) */
+  .sub { position: absolute; left: 50%; bottom: 64px; transform: translateX(-50%); max-width: 760px; background: var(--text); color: #FFFFFF;
+         font: 600 20px/28px Inter; padding: 8px 16px; border-radius: 8px; box-shadow: var(--chip-shadow); opacity: 0; transition: opacity 150ms; }
+  .sub.on { opacity: 1; }
+
+  .m3d { display: block; background-repeat: no-repeat; animation: m3d 2.5s steps(30) infinite; }
+  .m3d-28 { width: 28px; height: 28px; background-size: 840px 28px; --w: -840px; }
+  .m3d-32 { width: 32px; height: 32px; background-size: 960px 32px; --w: -960px; }
+  @keyframes m3d { to { background-position: var(--w) 0; } }
+  .happy { background-image: url(../src/overlay/mascot3d/happy.webp); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .m3d, .live::before, .enter, .idea.new p { animation: none; }
+    .idea.new p { background-size: 100% 40%; }
+    .page { scroll-behavior: auto; }
+  }
+</style>
+</head>
+<body>
+  <div class="page-head">
+    <h1>Study page, first version</h1>
+    <p>One page per lecture, in the sidebar. It fills in while you watch, then ends with a quick check and your cards.</p>
+  </div>
+  <div class="controls">
+    <button class="primary" id="playBtn">Play the walkthrough</button>
+    <button id="endBtn">Jump to the end of the video</button>
+  </div>
+  <div class="step-note" id="note" aria-live="polite">Play the walkthrough, or click around the page.</div>
+
+  <div class="stage" id="stage">
+    <div class="screen" id="screen">
+      <div class="browser">
+        <div class="tabs"><span>Organic oxidation-reduction reactions - YouTube</span></div>
+        <div class="addr"><span>youtube.com/watch?v=bJMUKNbAsTY</span></div>
+        <div class="yt">
+          <div class="video" role="img" aria-label="Khan Academy lecture frame: oxidation and reduction">
+            <div class="bar"><i id="bar"></i></div>
+            <div class="sub" id="sub"></div>
+          </div>
+          <div class="yt-title">Organic oxidation-reduction reactions | Organic chemistry | Khan Academy</div>
+          <div class="yt-sub">Khan Academy Organic Chemistry · 161K views</div>
+        </div>
+      </div>
+
+      <button class="edge-tab" aria-label="Close Nibley sidebar"><span class="m3d m3d-28 happy"></span></button>
+      <aside class="side" aria-label="Nibley sidebar">
+        <div class="side-head">
+          <span class="m3d m3d-32 happy"></span><b>Nibley</b>
+          <button class="icon-btn" aria-label="Close sidebar"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+        </div>
+        <div class="nav" role="tablist">
+          <button role="tab" aria-selected="true">Study</button>
+          <button role="tab" aria-selected="false">Lessons</button>
+          <button role="tab" aria-selected="false">Settings</button>
+        </div>
+
+        <div class="page" id="page" role="tabpanel" aria-label="Study page for this lecture">
+          <div class="lec">Organic oxidation-reduction</div>
+          <div class="lec-meta"><span id="status" class="live">Watching</span><span id="clock">0:00 of 13:42</span></div>
+
+          <h3>Key ideas</h3>
+          <div id="ideas"><div class="empty" id="ideasEmpty">Every 10 minutes, Nibley writes down what the teacher covered.</div></div>
+
+          <h3>Your questions</h3>
+          <div id="qs"><div class="empty" id="qsEmpty">Ask anything while you watch. It lands here with the video time.</div></div>
+
+          <div id="end" hidden>
+            <h3>Quick check</h3>
+            <div id="quiz"></div>
+            <h3>Your cards</h3>
+            <div class="card cards" id="cards"></div>
+            <div class="foot" id="foot"></div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fit = () => { $('screen').style.transform = `scale(${$('stage').clientWidth / 1600})`; };
+addEventListener('resize', fit); fit();
+const LEN = 13 * 60 + 42;
+const mmss = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+const IDEAS = [
+  [42, 'In organic chemistry, oxidation means the carbon gains bonds to O (or loses bonds to H).'],
+  [3 * 60 + 15, 'Reduction is the reverse: more bonds to H, fewer to O.'],
+  [7 * 60 + 50, 'Rank by bonds to O: alcohol < aldehyde < carboxylic acid. Each step right is an oxidation.'],
+];
+const QA = { t: 5 * 60 + 8, q: 'What does LEO mean here?', a: 'LEO: Losing Electrons is Oxidation. The carbon gives up electron density to the oxygen, so it is oxidised.' };
+const QUIZ = [
+  { q: 'Methanol becomes formaldehyde. What happened to the carbon?', o: ['Oxidation', 'Reduction'], r: 0, why: 'It lost a bond to H and gained one to O.' },
+  { q: 'Which has the most bonds from carbon to O?', o: ['Aldehyde', 'Carboxylic acid'], r: 1, why: 'Carboxylic acid: three bonds to O.' },
+  { q: 'A ketone gains two H. Is that oxidation?', o: ['Yes', 'No'], r: 1, why: 'Gaining bonds to H is reduction.' },
+];
+const CARDS = [
+  ['Oxidation in organic chemistry?', 'Carbon gains bonds to O or loses bonds to H.'],
+  ['Reduction in organic chemistry?', 'Carbon gains bonds to H or loses bonds to O.'],
+  ['LEO GER', 'Losing Electrons is Oxidation, Gaining Electrons is Reduction.'],
+  ['Order by oxidation: acid, alcohol, aldehyde', 'Alcohol < aldehyde < carboxylic acid.'],
+  ['Why does a C-O bond count as oxidation?', 'O is more electronegative, so carbon loses electron density.'],
+];
+
+let t = 0, run = 0, ended = false;
+function tick(s) { t = s; $('clock').textContent = `${mmss(s)} of 13:42`; $('bar').style.width = `${(s / LEN) * 100}%`; }
+function scrollDown() { const p = $('page'); p.scrollTop = p.scrollHeight; }
+function addIdea([s, text]) {
+  $('ideasEmpty')?.remove();
+  document.querySelectorAll('.idea.new').forEach((n) => n.classList.remove('new'));
+  const d = document.createElement('div');
+  d.className = 'idea new enter';
+  d.innerHTML = `<button class="t" aria-label="Jump the video to ${mmss(s)}">${mmss(s)}</button><p>${esc(text)}</p>`;
+  d.querySelector('.t').onclick = () => tick(s);
+  $('ideas').append(d); scrollDown();
+}
+function addQuestion() {
+  $('qsEmpty')?.remove();
+  const d = document.createElement('div');
+  d.className = 'card qa enter';
+  d.innerHTML = `<div class="q"><span>${esc(QA.q)}</span><button class="t">${mmss(QA.t)}</button></div><div class="a">${esc(QA.a)}</div>`;
+  $('qs').append(d); scrollDown();
+}
+let misses = [];
+function buildEnd() {
+  ended = true;
+  $('status').className = 'done-tag'; $('status').textContent = 'Finished';
+  $('end').hidden = false;
+  const quiz = $('quiz'); quiz.innerHTML = ''; misses = [];
+  QUIZ.forEach((item, i) => {
+    const c = document.createElement('div');
+    c.className = 'card quiz enter';
+    c.innerHTML = `<div class="q">${i + 1}. ${esc(item.q)}</div><div class="opts">${item.o.map((o, k) => `<button class="o" data-k="${k}">${esc(o)}</button>`).join('')}</div><div class="fb" aria-live="polite"></div>`;
+    c.querySelectorAll('.o').forEach((b) => b.onclick = () => answer(c, item, +b.dataset.k));
+    quiz.append(c);
+  });
+  $('cards').innerHTML = ''; // fresh card list each run
+  renderCards(); scrollDown();
+}
+function answer(c, item, k) {
+  if (c.dataset.done) return; c.dataset.done = '1';
+  const btns = c.querySelectorAll('.o');
+  btns[item.r].classList.add('right');
+  if (k !== item.r) { btns[k].classList.add('wrong'); misses.push(item); }
+  c.querySelector('.fb').textContent = (k === item.r ? 'Right. ' : 'Not quite. ') + item.why + (k === item.r ? '' : ' Added as a card.');
+  renderCards();
+  if (document.querySelectorAll('.quiz[data-done]').length === QUIZ.length) {
+    const s = document.createElement('div'); s.className = 'score';
+    s.textContent = `${QUIZ.length - misses.length} of ${QUIZ.length} right.`; $('quiz').append(s);
+  }
+}
+function renderCards() {
+  const all = [...CARDS.map(([f, b]) => ({ f, b })), ...misses.map((m) => ({ f: m.q, b: `${m.o[m.r]}. ${m.why}`, miss: true }))];
+  const keep = new Set([...document.querySelectorAll('.fc[aria-checked="false"]')].map((n) => n.dataset.f));
+  $('cards').innerHTML = all.map((c) => `<div class="fc" role="checkbox" tabindex="0" data-f="${esc(c.f)}" aria-checked="${!keep.has(c.f)}">
+    <span class="box"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <span>${c.miss ? '<div class="miss">From your quick check</div>' : ''}<div class="front">${esc(c.f)}</div><div class="back">${esc(c.b)}</div></span></div>`).join('');
+  $('cards').querySelectorAll('.fc').forEach((n) => {
+    const flip = () => { n.setAttribute('aria-checked', String(n.getAttribute('aria-checked') !== 'true')); foot(); };
+    n.onclick = flip; n.onkeydown = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } };
+  });
+  foot();
+}
+function foot() {
+  const n = document.querySelectorAll('.fc[aria-checked="true"]').length;
+  $('foot').innerHTML = `<b>${n} cards</b> go into tomorrow's review. Untick any you don't want.`;
+}
+function reset() {
+  ended = false; tick(0);
+  $('ideas').innerHTML = '<div class="empty" id="ideasEmpty">Every 10 minutes, Nibley writes down what the teacher covered.</div>';
+  $('qs').innerHTML = '<div class="empty" id="qsEmpty">Ask anything while you watch. It lands here with the video time.</div>';
+  $('end').hidden = true; $('status').className = 'live'; $('status').textContent = 'Watching'; $('sub').classList.remove('on');
+}
+async function playTo(to, me) { while (t < to && me === run) { tick(Math.min(to, t + 9)); await sleep(16); } }
+
+async function walkthrough() {
+  const me = ++run, alive = () => me === run, say = (s) => { $('note').textContent = s; };
+  reset();
+  say('1. A lecture starts. The Study tab opens a fresh page for this video.'); await sleep(1800); if (!alive()) return;
+  say('2. You ask a question out loud. Nibley answers on screen, and the question lands on the page with its time.');
+  await playTo(QA.t, me); if (!alive()) return;
+  $('sub').textContent = 'LEO means losing electrons is oxidation.'; $('sub').classList.add('on'); await sleep(1600); if (!alive()) return;
+  $('sub').classList.remove('on'); addQuestion(); await sleep(1600); if (!alive()) return;
+  say('3. At 10 minutes, Nibley writes down the key ideas so far, each with a time you can click.');
+  await playTo(600, me); if (!alive()) return;
+  for (const i of IDEAS) { addIdea(i); await sleep(900); if (!alive()) return; }
+  await sleep(800);
+  say('4. The video ends. Three quick questions, one tap each. A miss becomes a card.');
+  await playTo(LEN, me); if (!alive()) return;
+  buildEnd(); await sleep(1200); if (!alive()) return;
+  const qs = document.querySelectorAll('.quiz');
+  qs[0].querySelectorAll('.o')[0].click(); await sleep(900); if (!alive()) return;
+  qs[1].querySelectorAll('.o')[0].click(); await sleep(900); if (!alive()) return;
+  qs[2].querySelectorAll('.o')[1].click(); await sleep(1200); if (!alive()) return;
+  say('5. Your cards come ready, all ticked. Untick a bad one with one click. The rest go into tomorrow\'s review.');
+  scrollDown(); await sleep(1000); if (!alive()) return;
+  document.querySelector('.fc:nth-child(5)').click(); await sleep(1400); if (!alive()) return;
+  say('Done. Try the quick check and the cards yourself.');
+}
+$('playBtn').onclick = walkthrough;
+$('endBtn').onclick = () => { run++; reset(); addQuestion(); IDEAS.forEach(addIdea); tick(LEN); buildEnd(); $('note').textContent = 'End of the video: try the quick check and untick a card.'; };
+</script>
+</body>
+</html>

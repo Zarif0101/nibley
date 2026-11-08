@@ -71,7 +71,7 @@ Reply with ONLY one JSON object, no other text:
 
 function runClaude({ claudePath, system, input, timeoutMs = 90e3 }) {
   return new Promise((resolve, reject) => {
-    const file = path.join(os.tmpdir(), `nibley-learner-${process.pid}.md`);
+    const file = path.join(os.tmpdir(), `nibley-claude-${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.md`); // study calls can run beside the learner
     fs.writeFileSync(file, system);
     const c = spawn(claudePath, ['-p', '--model', 'haiku', '--setting-sources', '', '--strict-mcp-config', '--tools', '', '--disable-slash-commands',
       '--no-session-persistence', '--system-prompt-file', file, '--output-format', 'json'], { shell: false, windowsHide: true, env: cleanEnv() });
@@ -102,4 +102,4 @@ async function learn({ vault, claudePath, turns }) {
   };
 }
 
-module.exports = { addLearning, changeRules, undoLast, learn };
+module.exports = { addLearning, changeRules, undoLast, learn, runClaude };

@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ID = /^[\w-]{11}$/; // YouTube video ids; also keeps file names safe
 const MAX_BODY = 2e6, MAX_LINES = 20000;
-let tabs = new Map(), transcripts = new Map(), cfg = null, server = null;
+let tabs = new Map(), transcripts = new Map(), cfg = null, server = null, seekTo = null; // seekTo: {tabId, t}, sent back on that tab's next report
 
 const sameToken = (a, b) => typeof a === 'string' && a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const videoFile = (id) => path.join(cfg.vaultPath, 'nibley', 'videos', `${id}.json`);
@@ -45,8 +45,11 @@ function start(opts) {
     req.on('data', (c) => { size += c.length; if (size > MAX_BODY) { res.writeHead(413).end(); req.destroy(); } else chunks.push(c); });
     req.on('end', () => {
       if (res.writableEnded) return;
-      try { onMessage(JSON.parse(Buffer.concat(chunks))); } catch { res.writeHead(400).end(); return; }
-      res.writeHead(200, { 'content-type': 'application/json' }).end('{}');
+      let m;
+      try { m = JSON.parse(Buffer.concat(chunks)); onMessage(m); } catch { res.writeHead(400).end(); return; }
+      let reply = {};
+      if (seekTo && seekTo.tabId === m.tabId && m.kind === 'state') { reply = { seek: seekTo.t }; seekTo = null; }
+      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(reply));
     });
   });
   return new Promise((resolve, reject) => {
@@ -84,4 +87,13 @@ function context({ before = 120, after = 30 } = {}) {
   return `${head}\n[Transcript ${clock(s.t - before)}-${clock(s.t + after)}]\n${near.map(([t, x]) => `${clock(t)} ${x}`).join('\n')}`;
 }
 
-module.exports = { start, stop: () => server?.close(), current, context, clock };
+// Jump the video on screen to t seconds (study page time links). The extension gets it with its next report (1-3 s).
+function seek(t) {
+  let best = null;
+  for (const [tabId, s] of tabs) if (s.visible && (!best || s.at > best.s.at)) best = { tabId, s };
+  if (!best || !Number.isFinite(t)) return false;
+  seekTo = { tabId: best.tabId, t: Math.max(0, t) };
+  return true;
+}
+
+module.exports = { start, stop: () => server?.close(), current, context, clock, seek, transcript: transcriptOf };

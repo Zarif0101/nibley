@@ -3,12 +3,13 @@
 <head>
 <meta charset="utf-8">
 <title>Nibley</title>
-<!-- Floating sidebar (docs/DESIGN.md "Sidebar", mockup design/sidebar-mockup.html OK'd 2026-11-08). Settings + Lessons. -->
+<!-- Floating sidebar (docs/DESIGN.md "Sidebar", mockup design/sidebar-mockup.html OK'd 2026-11-08). Study + Lessons + Settings.
+     Study page: design/study-page-mockup.html (OK'd 2026-11-08), src/study.js. -->
 <style>
   @font-face { font-family: Inter; font-weight: 400; src: url(fonts/inter-latin-400-normal.woff2); }
   @font-face { font-family: Inter; font-weight: 600; src: url(fonts/inter-latin-600-normal.woff2); }
   @font-face { font-family: Inter; font-weight: 700; src: url(fonts/inter-latin-700-normal.woff2); }
-  :root { --ink: #2F8BFF; --deep: #1E6FEB; --sky: #4DA3FF; --text: #2B3A4B; --muted: #6B7A90; --bg: #F7FAFF; --line: #E6EEF8;
+  :root { --swipe: rgba(255,217,140,.45); --error: #FF8B7A; --ink: #2F8BFF; --deep: #1E6FEB; --sky: #4DA3FF; --text: #2B3A4B; --muted: #6B7A90; --bg: #F7FAFF; --line: #E6EEF8;
           --card-shadow: 0 1px 3px rgba(43,58,75,.08); --ease: cubic-bezier(.3,.7,.2,1); }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
@@ -49,7 +50,45 @@
   .lesson small { color: var(--muted); font-size: 12px; }
   .empty { margin-top: 24px; color: var(--muted); }
   .empty b { display: block; color: var(--text); font-weight: 600; }
-  @media (prefers-reduced-motion: reduce) { .m3d { animation: none; } .switch, .switch::after, .lesson { transition: none; } }
+  /* Study page */
+  .lec { margin: 12px 0 4px; font: 600 18px/24px Inter; user-select: text; }
+  .meta { display: flex; gap: 8px; color: var(--muted); font-size: 12px; line-height: 16px; margin-bottom: 4px; }
+  .live { color: var(--deep); font-weight: 600; display: inline-flex; align-items: center; gap: 6px; }
+  .live::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--deep); animation: pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 50% { opacity: .35; } }
+  h3 { font: 600 12px/16px Inter; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+  .note { color: var(--muted); font-size: 13px; }
+  .idea { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--line); user-select: text; }
+  .idea:last-child { border-bottom: 0; }
+  .idea.new span { background: linear-gradient(var(--swipe), var(--swipe)) no-repeat 0 100% / 0% 40%; animation: swipe 900ms 300ms var(--ease) forwards; }
+  @keyframes swipe { to { background-size: 100% 40%; } }
+  .t { font: 600 12px/20px Inter; color: var(--deep); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; align-self: start; }
+  .t:hover { text-decoration: underline; }
+  .card { background: #FFFFFF; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--card-shadow); padding: 12px; margin-bottom: 8px; user-select: text; }
+  .qa .q { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+  .qa .a { margin-top: 4px; }
+  .quiz .q { font-weight: 600; margin-bottom: 8px; }
+  .opts { display: flex; gap: 8px; }
+  .o { flex: 1; font: 600 14px/20px Inter; padding: 8px; border-radius: 8px; border: 1.5px solid var(--deep); background: #FFFFFF; color: var(--deep); cursor: pointer; }
+  .o:hover { border-color: var(--ink); }
+  .o.right { background: var(--deep); color: #FFFFFF; }
+  .o.wrong { border-color: var(--error); color: var(--text); }
+  .o:disabled { cursor: default; }
+  .fb { margin-top: 8px; font-size: 12px; line-height: 16px; color: var(--muted); }
+  .score { font-weight: 600; margin: 4px 0 0; }
+  .cards { padding: 0; }
+  .fc { display: grid; grid-template-columns: 24px 1fr; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+  .fc:last-child { border-bottom: 0; }
+  .box { width: 18px; height: 18px; margin-top: 1px; border-radius: 5px; border: 1.5px solid var(--deep); display: grid; place-items: center; }
+  .fc[aria-checked="true"] .box { background: var(--deep); }
+  .fc[aria-checked="false"] .box svg { display: none; }
+  .fc[aria-checked="false"] .f, .fc[aria-checked="false"] .b { color: var(--muted); text-decoration: line-through; }
+  .fc .f { font-weight: 600; }
+  .fc .b { font-size: 13px; }
+  .miss { font-size: 12px; line-height: 16px; color: var(--deep); font-weight: 600; }
+  .foot { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 16px; }
+  .foot b { color: var(--text); }
+  @media (prefers-reduced-motion: reduce) { .m3d, .live::before, .idea.new span { animation: none; } .idea.new span { background-size: 100% 40%; } .switch, .switch::after, .lesson { transition: none; } }
 </style>
 </head>
 <body>
@@ -61,11 +100,14 @@
     </button>
   </div>
   <div class="nav" role="tablist">
-    <button role="tab" id="t-settings" aria-selected="true" aria-controls="p-settings">Settings</button>
+    <button role="tab" id="t-study" aria-selected="true" aria-controls="p-study">Study</button>
     <button role="tab" id="t-lessons" aria-selected="false" aria-controls="p-lessons">Lessons</button>
+    <button role="tab" id="t-settings" aria-selected="false" aria-controls="p-settings">Settings</button>
   </div>
 
-  <div class="panel on" id="p-settings" role="tabpanel" aria-labelledby="t-settings">
+  <div class="panel on" id="p-study" role="tabpanel" aria-labelledby="t-study"><div id="study"></div></div>
+
+  <div class="panel" id="p-settings" role="tabpanel" aria-labelledby="t-settings">
     <div class="row">
       <div class="label">Model</div>
       <div class="seg" data-key="model"><button data-v="haiku">Haiku</button><button data-v="sonnet">Sonnet</button></div>
@@ -115,12 +157,13 @@ $('close').onclick = () => ipcRenderer.send('sidebar:toggle', 'x');
 addEventListener('keydown', (e) => { if (e.key === 'Escape') ipcRenderer.send('sidebar:toggle', 'esc'); });
 
 function tab(which) {
-  for (const t of ['settings', 'lessons']) {
+  for (const t of ['study', 'lessons', 'settings']) {
     $(`t-${t}`).setAttribute('aria-selected', String(t === which));
     $(`p-${t}`).classList.toggle('on', t === which);
   }
   if (which === 'lessons') lessons();
 }
+$('t-study').onclick = () => tab('study');
 $('t-settings').onclick = () => tab('settings');
 $('t-lessons').onclick = () => tab('lessons');
 
@@ -150,7 +193,91 @@ async function lessons() {
     return c;
   }));
 }
+// ---------- Study page (src/study.js sends the whole page on every change) ----------
+const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+const clock = (s) => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+const timeBtn = (t) => { const b = el('button', 't', clock(t)); b.setAttribute('aria-label', `Jump the video to ${clock(t)}`); b.onclick = () => ipcRenderer.send('study:seek', t); return b; };
+const TICK = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+let seenIdeas = null; // ideas already shown: only new ones get the highlighter swipe
+function study(p) {
+  const root = $('study');
+  if (!p) {
+    const e = el('div', 'empty');
+    e.append(el('b', null, 'No lecture yet.'), 'Play a lecture on YouTube. Its study page builds here while you watch.');
+    root.replaceChildren(e);
+    seenIdeas = null;
+    return;
+  }
+  const out = [el('div', 'lec', p.title)];
+  const meta = el('div', 'meta');
+  meta.append(p.ended ? el('span', null, 'Finished') : el('span', 'live', 'Watching'));
+  out.push(meta);
+
+  out.push(el('h3', null, 'Key ideas'));
+  if (!p.ideas.length) out.push(el('div', 'note', 'Every 10 minutes, Nibley writes down what the teacher covered.'));
+  for (const i of p.ideas) {
+    const row = el('div', `idea${!seenIdeas || seenIdeas.has(i.at) ? '' : ' new'}`);
+    row.append(timeBtn(i.t), el('span', null, i.text));
+    out.push(row);
+  }
+  seenIdeas = new Set(p.ideas.map((i) => i.at));
+
+  out.push(el('h3', null, 'Your questions'));
+  if (!p.questions.length) out.push(el('div', 'note', 'Ask anything while you watch. It lands here with the video time.'));
+  for (const q of p.questions) {
+    const c = el('div', 'card qa'), head = el('div', 'q');
+    head.append(el('span', null, q.q), timeBtn(q.t));
+    c.append(head, el('div', 'a', q.a));
+    out.push(c);
+  }
+
+  if (p.ended && (p.quiz.length || p.cards.length)) {
+    out.push(el('h3', null, 'Quick check'));
+    p.quiz.forEach((q, i) => {
+      const c = el('div', 'card quiz'), opts = el('div', 'opts');
+      c.append(el('div', 'q', `${i + 1}. ${q.q}`));
+      q.o.forEach((o, k) => {
+        const b = el('button', 'o', o); b.dataset.k = `o${i}-${k}`;
+        if (q.picked !== null) { b.disabled = true; if (k === q.r) b.classList.add('right'); else if (k === q.picked) b.classList.add('wrong'); }
+        b.onclick = () => ipcRenderer.send('study:answer', i, k);
+        opts.append(b);
+      });
+      c.append(opts);
+      if (q.picked !== null) c.append(el('div', 'fb', (q.picked === q.r ? 'Right. ' : 'Not quite. ') + q.why + (q.picked === q.r ? '' : ' Added as a card.')));
+      out.push(c);
+    });
+    if (p.quiz.length && p.quiz.every((q) => q.picked !== null)) out.push(el('div', 'score', `${p.quiz.filter((q) => q.picked === q.r).length} of ${p.quiz.length} right.`));
+
+    out.push(el('h3', null, 'Your cards'));
+    const list = el('div', 'card cards');
+    p.cards.forEach((c, i) => {
+      const row = el('div', 'fc'); row.dataset.k = `fc${i}`;
+      row.setAttribute('role', 'checkbox'); row.tabIndex = 0; row.setAttribute('aria-checked', String(c.keep));
+      const box = el('span', 'box'); box.innerHTML = TICK;
+      const txt = el('span');
+      if (c.miss) txt.append(el('div', 'miss', 'From your quick check'));
+      txt.append(el('div', 'f', c.f), el('div', 'b', c.b));
+      row.append(box, txt);
+      const flip = () => ipcRenderer.send('study:card', i);
+      row.onclick = flip; row.onkeydown = (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } };
+      list.append(row);
+    });
+    out.push(list);
+    const foot = el('div', 'foot'), n = p.cards.filter((c) => c.keep).length;
+    foot.append(el('b', null, `${n} card${n === 1 ? '' : 's'}`), " go into tomorrow's review. Untick any you don't want.");
+    out.push(foot);
+  }
+  const panel = $('p-study'), atBottom = panel.scrollHeight - panel.scrollTop - panel.clientHeight < 40;
+  const focused = document.activeElement?.dataset?.k; // keep keyboard focus across the re-render
+  root.replaceChildren(...out);
+  if (focused) root.querySelector(`[data-k="${focused}"]`)?.focus({ preventScroll: true });
+  if (atBottom && seenIdeas.size) panel.scrollTop = panel.scrollHeight; // follow new lines only when he was already at the bottom
+}
+ipcRenderer.on('study:page', (_e, p) => study(p));
+ipcRenderer.invoke('study:get').then(study);
+
 ipcRenderer.on('sidebar:section', (_e, which) => tab(which));
+
 ipcRenderer.on('settings:changed', load);
 load();
 </script>
