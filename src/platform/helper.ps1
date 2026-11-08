@@ -208,6 +208,31 @@ public static class Nib {
         object vp;
         return ",\"url\":" + Q(bar != null && bar.TryGetCurrentPattern(ValuePattern.Pattern, out vp) ? ((ValuePattern)vp).Current.Value : "");
       }
+      case "yt": { // the YouTube video in the top-most Brave/Chrome/Edge window, read like a screen reader (no extension)
+        foreach (AutomationElement w in AutomationElement.RootElement.FindAll(TreeScope.Children, new PropertyCondition(AutomationElement.ClassNameProperty, "Chrome_WidgetWin_1"))) {
+          string title = w.Current.Name;
+          if (!title.Contains(" - YouTube")) continue;
+          object wp;
+          if (w.TryGetCurrentPattern(WindowPattern.Pattern, out wp) && ((WindowPattern)wp).Current.WindowVisualState == WindowVisualState.Minimized) continue;
+          var seek = w.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Slider),
+            new PropertyCondition(AutomationElement.NameProperty, "Seek slider")));
+          if (seek == null) continue;
+          object rv, vp;
+          double t = 0, dur = 0;
+          if (seek.TryGetCurrentPattern(RangeValuePattern.Pattern, out rv)) { t = ((RangeValuePattern)rv).Current.Value; dur = ((RangeValuePattern)rv).Current.Maximum; }
+          var play = w.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Button),
+            new PropertyCondition(AutomationElement.NameProperty, "Play (k)")));
+          var bar = w.FindFirst(TreeScope.Descendants, new AndCondition(
+            new PropertyCondition(AutomationElement.ControlTypeProperty, ControlType.Edit),
+            new PropertyCondition(AutomationElement.NameProperty, "Address and search bar")));
+          string url = bar != null && bar.TryGetCurrentPattern(ValuePattern.Pattern, out vp) ? ((ValuePattern)vp).Current.Value : "";
+          return ",\"title\":" + Q(title) + ",\"url\":" + Q(url) + ",\"t\":" + t.ToString(System.Globalization.CultureInfo.InvariantCulture) +
+            ",\"duration\":" + dur.ToString(System.Globalization.CultureInfo.InvariantCulture) + ",\"paused\":" + (play != null ? "true" : "false");
+        }
+        return ",\"title\":\"\"";
+      }
       case "mic_users": { // apps Windows lists as using the microphone right now (LastUsedTimeStop = 0)
         var names = new System.Collections.Generic.List<string>();
         using (var root = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\CapabilityAccessManager\ConsentStore\microphone")) {

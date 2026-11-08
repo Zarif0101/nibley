@@ -4,7 +4,7 @@ const { clock } = require('./youtube');
 
 const BROWSER_TAIL = /\s+-\s+(Brave|Google Chrome|Microsoft​? Edge|Personal - Microsoft​? Edge)$/i;
 
-// fg: {title, exe, url} from the helper. video: youtube.current() (the extension's last report) or null.
+// fg: {title, exe, url} from the helper. video: youtube.current() (read from the browser window) or null.
 function sourceLine(fg, video) {
   const url = String(fg?.url || '').trim();
   const name = String(fg?.title || '').replace(BROWSER_TAIL, '').replace(/^\(\d+\)\s+/, '').trim(); // "(3) Lecture - YouTube": unread count

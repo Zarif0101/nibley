@@ -88,6 +88,18 @@
   .miss { font-size: 12px; line-height: 16px; color: var(--deep); font-weight: 600; }
   .foot { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 16px; }
   .foot b { color: var(--text); }
+  .analyze { padding: 14px; }
+  .analyze b { display: block; font-weight: 600; margin-bottom: 4px; }
+  .analyze p { margin: 0 0 12px; color: var(--muted); font-size: 13px; }
+  .go { font: 600 14px/20px Inter; padding: 8px 14px; border-radius: 8px; border: 0; background: var(--deep); color: #FFFFFF; cursor: pointer; }
+  .go:hover { background: var(--ink); }
+  .go:disabled { background: var(--line); color: var(--muted); cursor: default; }
+  .chap { padding: 8px 0; border-bottom: 1px solid var(--line); user-select: text; }
+  .chap:last-child { border-bottom: 0; }
+  .chap-head { display: grid; grid-template-columns: 52px 1fr; gap: 8px; font-weight: 600; }
+  .chap ul { margin: 4px 0 0 60px; padding: 0 0 0 14px; }
+  .chap li { margin: 2px 0; }
+  .basics { margin: 0; padding-left: 18px; user-select: text; }
   @media (prefers-reduced-motion: reduce) { .m3d, .live::before, .idea.new span { animation: none; } .idea.new span { background-size: 100% 40%; } .switch, .switch::after, .lesson { transition: none; } }
 </style>
 </head>
@@ -196,7 +208,7 @@ async function lessons() {
 // ---------- Study page (src/study.js sends the whole page on every change) ----------
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const clock = (s) => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
-const timeBtn = (t) => { const b = el('button', 't', clock(t)); b.setAttribute('aria-label', `Jump the video to ${clock(t)}`); b.onclick = () => ipcRenderer.send('study:seek', t); return b; };
+const timeBtn = (t) => { const b = el('button', 't', clock(t)); b.setAttribute('aria-label', `Open the video at ${clock(t)} in a new tab`); b.onclick = () => ipcRenderer.send('study:seek', t); return b; };
 const TICK = '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3 4.7-5" stroke="#FFFFFF" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 let seenIdeas = null; // ideas already shown: only new ones get the highlighter swipe
 function study(p) {
@@ -213,8 +225,33 @@ function study(p) {
   meta.append(p.ended ? el('span', null, 'Finished') : el('span', 'live', 'Watching'));
   out.push(meta);
 
-  out.push(el('h3', null, 'Key ideas'));
-  if (!p.ideas.length) out.push(el('div', 'note', 'Every 10 minutes, Nibley writes down what the teacher covered.'));
+  if (p.canAnalyze || p.analyzed === 'working') { // read the whole lecture now, before or while he watches
+    const c = el('div', 'card analyze'), go = el('button', 'go', p.analyzed === 'working' ? 'Reading the whole lecture...' : 'Analyze this video');
+    c.append(el('b', null, 'Know the whole lecture first'), el('p', null, 'Nibley reads the full video now: chapters, key ideas, what to know first and the tricky parts. About 30 seconds.'), go);
+    go.disabled = p.analyzed === 'working';
+    go.onclick = () => { go.disabled = true; go.textContent = 'Reading the whole lecture...'; ipcRenderer.send('study:analyze'); };
+    out.push(c);
+  }
+  if (p.analyzed === true) {
+    if (p.prereqs?.length) {
+      out.push(el('h3', null, 'Know this first'));
+      const ul = el('ul', 'basics'); p.prereqs.forEach((x) => ul.append(el('li', null, x))); out.push(ul);
+    }
+    out.push(el('h3', null, p.analyzedTo ? `Chapters (up to ${clock(p.analyzedTo)})` : 'Chapters'));
+    for (const ch of p.chapters) {
+      const c = el('div', 'chap'), head = el('div', 'chap-head'), ul = el('ul');
+      head.append(timeBtn(ch.t), el('span', null, ch.title));
+      ch.ideas.forEach((x) => ul.append(el('li', null, x)));
+      c.append(head, ul);
+      out.push(c);
+    }
+    if (p.tricky?.length) {
+      out.push(el('h3', null, 'Tricky parts'));
+      for (const x of p.tricky) { const row = el('div', 'idea'); row.append(timeBtn(x.t), el('span', null, x.text)); out.push(row); }
+    }
+  }
+  if (p.analyzed !== true || p.ideas.length) out.push(el('h3', null, 'Key ideas'));
+  if (!p.ideas.length && p.analyzed !== true) out.push(el('div', 'note', 'Every 10 minutes, Nibley writes down what the teacher covered.'));
   for (const i of p.ideas) {
     const row = el('div', `idea${!seenIdeas || seenIdeas.has(i.at) ? '' : ' new'}`);
     row.append(timeBtn(i.t), el('span', null, i.text));

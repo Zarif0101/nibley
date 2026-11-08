@@ -92,3 +92,39 @@ test('bad Claude output is logged, nothing breaks, the next tick tries again', a
   await s.tick(V(610));
   assert.equal(s.view().ideas.length, 2);
 });
+
+const MAP = { lecture: true, chapters: [{ t: 0, title: 'What redox means', ideas: ['Oxidation: more bonds to O.', 'Reduction: more bonds to H.'] },
+  { t: 480, title: 'Ranking by bonds to O', ideas: ['Alcohol < aldehyde < acid.'] }], prereqs: ['Counting bonds on carbon'], tricky: [{ t: 520, text: 'Why the C-O bond counts as losing electrons.' }] };
+
+test('analyze: one call over the whole transcript; chapters, basics, tricky parts; recaps stop; lecture map for questions', async () => {
+  const { s, calls, read } = setup([MAP]);
+  await s.tick(V(30));
+  assert.equal(s.view().canAnalyze, true);
+  assert.equal(await s.analyze(), true);
+  assert.equal(calls.length, 1);
+  assert.match(calls[0].input, /\n954 line 159\n?$/); // the whole transcript went in
+  const p = read('study/abcdefghijk.json');
+  assert.equal(p.analyzed, true);
+  assert.equal(p.analyzedTo, null);
+  assert.deepEqual(p.chapters.map((c) => c.title), ['What redox means', 'Ranking by bonds to O']);
+  assert.equal(p.tricky[0].t, 520);
+  assert.equal(s.view().canAnalyze, false);
+  assert.match(s.context('abcdefghijk'), /^\[Lecture map \(whole video\): 0:00 What redox means; 8:00 Ranking by bonds to O\]$/);
+  assert.equal(s.context('zzzzzzzzzzz'), null);
+  await s.tick(V(605)); await s.tick(V(900));
+  assert.equal(calls.length, 1); // no recaps after the analysis
+  assert.equal(await s.analyze(), false); // once
+});
+
+test('analyze: no transcript, nothing to analyze; a failed call puts the button back', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-study-'));
+  const none = study.create({ dir, transcript: () => null, run: async () => assert.fail('no call') });
+  await none.tick(V(30));
+  assert.equal(none.view().canAnalyze, false);
+  assert.equal(await none.analyze(), false);
+  const bad = study.create({ dir: fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-study-')), transcript: () => LINES, run: async () => 'oops' });
+  await bad.tick(V(30));
+  assert.equal(await bad.analyze(), false);
+  assert.equal(bad.view().analyzed, null);
+  assert.equal(bad.view().canAnalyze, true);
+});

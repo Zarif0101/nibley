@@ -3,5 +3,4 @@ node_modules/
 logs/
 settings.json
 piper/
-extension/config.js
 test/out/aim-*/

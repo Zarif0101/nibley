@@ -1,73 +1,83 @@
-// Bridge to the Chrome extension (docs/ARCHITECTURE-v2.md section 3): which YouTube video is on screen, where it is,
-// and its transcript. Listens on 127.0.0.1 only and accepts only the extension (secret token + extension origin).
-const crypto = require('node:crypto');
+// YouTube without any browser extension (Zarif 2026-11-08: learners install nothing but Nibley).
+// - Video on screen: the helper reads the top-most Brave/Chrome/Edge YouTube window like a screen reader does
+//   (address bar, "Seek slider" time + length, Play/Pause button), every 3 s while one is open.
+// - Transcript: fetched once per video straight from YouTube's player API (the phone app's way: no proof token
+//   needed), cached in <data>/nibley/videos/<id>.json. If YouTube changes this, the lecture ear (sound) still works.
+// - Time links: open the video at that time in a new tab (YouTube ignores outside seeks; tested 2026-11-08).
 const fs = require('node:fs');
-const http = require('node:http');
 const path = require('node:path');
 
 const ID = /^[\w-]{11}$/; // YouTube video ids; also keeps file names safe
-const MAX_BODY = 2e6, MAX_LINES = 20000;
-let tabs = new Map(), transcripts = new Map(), cfg = null, server = null, seekTo = null; // seekTo: {tabId, t}, sent back on that tab's next report
+const MAX_LINES = 20000, POLL_MS = 3000;
+let cfg = null, state = null, timer = null;
+const transcripts = new Map(), fetching = new Set();
 
-const sameToken = (a, b) => typeof a === 'string' && a.length === b.length && crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b));
 const videoFile = (id) => path.join(cfg.vaultPath, 'nibley', 'videos', `${id}.json`);
-const num = (v) => (Number.isFinite(v) ? v : 0);
+const idOf = (url) => { const m = String(url).match(/[?&]v=([\w-]{11})/); return m && ID.test(m[1]) ? m[1] : null; };
+const cleanTitle = (t) => String(t).replace(/\s+-\s+YouTube(\s+-\s+.*)?$/, '').replace(/^\(\d+\)\s+/, '').trim().slice(0, 200);
 
-function onMessage(m) {
-  if (!Number.isInteger(m.tabId)) return;
-  if (m.kind === 'gone') { tabs.delete(m.tabId); return; }
-  if (m.kind === 'state' && m.state && ID.test(m.state.videoId)) {
-    const s = m.state;
-    tabs.set(m.tabId, { videoId: s.videoId, title: String(s.title || '').slice(0, 200), t: num(s.t), paused: !!s.paused, duration: num(s.duration), rate: num(s.rate) || 1, visible: !!s.visible, at: Date.now() });
-  } else if (m.kind === 'transcript' && ID.test(m.videoId) && Array.isArray(m.lines)) {
-    const lines = m.lines.slice(0, MAX_LINES).filter((l) => Array.isArray(l) && Number.isFinite(l[0]) && typeof l[1] === 'string').map(([t, s]) => [t, s.slice(0, 500)]);
-    transcripts.set(m.videoId, lines);
-    const file = videoFile(m.videoId);
-    fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFile(file, JSON.stringify({ videoId: m.videoId, title: String(m.title || '').slice(0, 200), duration: num(m.duration), lang: String(m.lang || ''), auto: !!m.auto, saved: new Date().toISOString(), lines }), () => {});
-    cfg.log({ ev: 'transcript', videoId: m.videoId, lines: lines.length, auto: !!m.auto });
-  } else if (m.kind === 'no_transcript' && ID.test(m.videoId)) {
-    cfg.log({ ev: 'no_transcript', videoId: m.videoId, reason: String(m.reason || '').slice(0, 100) });
+// Caption tracks from the player API (ANDROID client returns plain caption URLs). Exported for tests.
+async function fetchTranscript(id, { fetchFn = fetch } = {}) {
+  const r = await fetchFn('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ videoId: id, context: { client: { clientName: 'ANDROID', clientVersion: '20.10.38', androidSdkVersion: 30, hl: 'en' } } }),
+  });
+  const j = await r.json();
+  const tracks = j.captions?.playerCaptionsTracklistRenderer?.captionTracks || [];
+  const track = tracks.find((t) => t.languageCode?.startsWith('en') && t.kind !== 'asr') || tracks.find((t) => t.languageCode?.startsWith('en')) || tracks[0];
+  if (!track?.baseUrl?.startsWith('https://www.youtube.com/')) return { reason: 'no captions' };
+  const c = await (await fetchFn(`${track.baseUrl.replace(/&fmt=[^&]*/, '')}&fmt=json3`)).json();
+  const lines = (c.events || []).filter((e) => e.segs).map((e) => [Math.round(e.tStartMs / 100) / 10, e.segs.map((s) => s.utf8).join('').replace(/\s+/g, ' ').trim()])
+    .filter((l) => l[1]).slice(0, MAX_LINES).map(([t, s]) => [t, s.slice(0, 500)]);
+  return lines.length ? { lines, lang: track.languageCode, auto: track.kind === 'asr', title: j.videoDetails?.title, duration: Number(j.videoDetails?.lengthSeconds) || 0 } : { reason: 'empty captions' };
+}
+
+function loadTranscript(id) {
+  if (transcripts.has(id) || fetching.has(id)) return;
+  try { transcripts.set(id, JSON.parse(fs.readFileSync(videoFile(id), 'utf8')).lines); return; } catch { /* not cached yet */ }
+  fetching.add(id);
+  cfg.fetchTranscript(id).then((r) => {
+    if (!r.lines) { cfg.log({ ev: 'no_transcript', videoId: id, reason: r.reason }); return; }
+    transcripts.set(id, r.lines);
+    fs.mkdirSync(path.dirname(videoFile(id)), { recursive: true });
+    fs.writeFile(videoFile(id), JSON.stringify({ videoId: id, title: r.title || '', duration: r.duration, lang: r.lang, auto: r.auto, saved: new Date().toISOString(), lines: r.lines }), () => {});
+    cfg.log({ ev: 'transcript', videoId: id, lines: r.lines.length, auto: r.auto });
+  }, (e) => cfg.log({ ev: 'no_transcript', videoId: id, reason: String(e.message).slice(0, 100) }))
+    .finally(() => fetching.delete(id));
+}
+
+async function poll() {
+  try {
+    const r = await cfg.platform.youtube();
+    const id = r && idOf(r.url);
+    if (!id) { state = null; return; }
+    state = { videoId: id, title: cleanTitle(r.title), t: r.t, duration: r.duration, paused: !!r.paused, rate: 1, visible: true, at: Date.now() };
+    loadTranscript(id);
+  } catch (e) {
+    if (!/timeout/.test(e.message)) cfg.log({ ev: 'yt_read_error', err: String(e.message).slice(0, 120) });
   }
 }
 
-// opts: {port, token, vaultPath, log}. Resolves with the port it listens on (port 0 = any free port, for tests).
+// opts: {platform, vaultPath (data root), log, fetchTranscript?}
 function start(opts) {
-  cfg = { log: () => {}, ...opts };
-  tabs = new Map();
-  transcripts = new Map();
-  server = http.createServer((req, res) => {
-    const ok = req.method === 'POST' && req.url === '/state' && sameToken(req.headers['x-nibley-token'], cfg.token)
-      && String(req.headers.origin || '').startsWith('chrome-extension://');
-    if (!ok) { res.writeHead(403).end(); req.resume(); return; }
-    const chunks = [];
-    let size = 0;
-    req.on('data', (c) => { size += c.length; if (size > MAX_BODY) { res.writeHead(413).end(); req.destroy(); } else chunks.push(c); });
-    req.on('end', () => {
-      if (res.writableEnded) return;
-      let m;
-      try { m = JSON.parse(Buffer.concat(chunks)); onMessage(m); } catch { res.writeHead(400).end(); return; }
-      let reply = {};
-      if (seekTo && seekTo.tabId === m.tabId && m.kind === 'state') { reply = { seek: seekTo.t }; seekTo = null; }
-      res.writeHead(200, { 'content-type': 'application/json' }).end(JSON.stringify(reply));
-    });
-  });
-  return new Promise((resolve, reject) => {
-    server.once('error', reject);
-    server.listen(cfg.port, '127.0.0.1', () => resolve(server.address().port));
-  });
+  cfg = { log: () => {}, fetchTranscript: (id) => fetchTranscript(id), ...opts };
+  state = null;
+  transcripts.clear();
+  clearInterval(timer);
+  timer = setInterval(poll, POLL_MS);
+  timer.unref?.();
+  return poll();
 }
 
-// The video on screen: the most recent tab whose last report says visible. Time moves on while it plays.
+// The video on screen. Time moves on between reads while it plays.
 function current() {
-  let best = null;
-  for (const s of tabs.values()) if (s.visible && (!best || s.at > best.at)) best = s;
-  if (!best) return null;
-  const t = best.paused ? best.t : Math.min(best.duration || Infinity, best.t + ((Date.now() - best.at) / 1000) * best.rate);
-  return { ...best, t };
+  if (!state) return null;
+  const t = state.paused ? state.t : Math.min(state.duration || Infinity, state.t + (Date.now() - state.at) / 1000);
+  return { ...state, t };
 }
 
 function transcriptOf(id) {
+  if (!ID.test(id || '')) return null;
   if (!transcripts.has(id)) {
     try { transcripts.set(id, JSON.parse(fs.readFileSync(videoFile(id), 'utf8')).lines); } catch { return null; }
   }
@@ -87,13 +97,11 @@ function context({ before = 120, after = 30 } = {}) {
   return `${head}\n[Transcript ${clock(s.t - before)}-${clock(s.t + after)}]\n${near.map(([t, x]) => `${clock(t)} ${x}`).join('\n')}`;
 }
 
-// Jump the video on screen to t seconds (study page time links). The extension gets it with its next report (1-3 s).
-function seek(t) {
-  let best = null;
-  for (const [tabId, s] of tabs) if (s.visible && (!best || s.at > best.s.at)) best = { tabId, s };
-  if (!best || !Number.isFinite(t)) return false;
-  seekTo = { tabId: best.tabId, t: Math.max(0, t) };
+// Time links on the study page: the video at that time, in a new tab.
+function seek(t, videoId = state?.videoId) {
+  if (!ID.test(videoId || '') || !Number.isFinite(t)) return false;
+  cfg.platform.openUrl(`https://www.youtube.com/watch?v=${videoId}&t=${Math.max(0, Math.floor(t))}s`).catch((e) => cfg.log({ ev: 'yt_seek_error', err: e.message }));
   return true;
 }
 
-module.exports = { start, stop: () => server?.close(), current, context, clock, seek, transcript: transcriptOf };
+module.exports = { start, stop: () => clearInterval(timer), current, context, clock, seek, transcript: transcriptOf, fetchTranscript, poll, idOf, cleanTitle };

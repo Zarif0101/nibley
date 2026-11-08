@@ -83,7 +83,8 @@ Every `say` line shows as a subtitle while its audio plays, then clears. Zarif: 
 ## Study page (Zarif OK'd the mockup 2026-11-08, `design/study-page-mockup.html`; code `src/study.js`)
 - First sidebar tab, **Study** (then Lessons, Settings). One page per YouTube lecture.
 - Page: lecture title Inter 600 18/24; "Watching" in `deep` with a pulsing 8 px dot, or "Finished" in `muted`. Section labels Inter 600 12/16 caps `muted`: Key ideas, Your questions, Quick check, Your cards.
-- Key ideas: rows with a `deep` time link (600 12/20, jumps the video) and the idea; a new idea gets the `swipe` highlighter once (900 ms).
+- Analyze card (before the analysis): white card, title "Know the whole lecture first" 600, one `muted` 13 px line, a `deep` filled button "Analyze this video" (radius 8); while working it reads "Reading the whole lecture..." on `line`. After: "Know this first" (bullets), "Chapters" (time link + title 600, idea bullets under it), "Tricky parts" (time link + line).
+- Key ideas: rows with a `deep` time link (600 12/20, opens the video at that time in a new tab) and the idea; a new idea gets the `swipe` highlighter once (900 ms).
 - Questions: white cards (radius 12, card shadow): question 600, time link right, answer below.
 - Quick check: 3 cards, 2 outlined `deep` buttons each; the right one fills `deep`, a wrong pick gets an `error` border; one line of why in `muted` 12/16. Score line after the third.
 - Cards: one white card with rows: an 18 px `deep` check box (filled = kept), front 600, back 13 px; unticked rows go `muted` with a strike. A quiz miss is marked "From your quick check" in `deep` 600 12/16. Footer: "N cards go into tomorrow's review."

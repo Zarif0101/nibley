@@ -1,6 +1,6 @@
 // "Now studying" live check (docs/NEXT-ROUND.md phase 1 step 5): opens 3 sources in Brave (a YouTube lecture, a course
 // site, a PDF), then reads the source line 3 times each with the real helper, like 3 questions. Target: right 9/9.
-// The YouTube time comes from the real extension, so the Nibley app must not be running (this script takes its port).
+// The YouTube time is read from Brave's window (no extension), like the app does.
 // Run: node test/source-check.js   (opens 3 Brave tabs; it can't close them: no keys are sent)
 const fs = require('node:fs');
 const os = require('node:os');
@@ -20,12 +20,13 @@ const SOURCES = [
 (async () => {
   await platform.start();
   const vault = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-src-'));
-  await youtube.start({ port: 47711, token: settings.bridgeToken, vaultPath: vault });
+  await youtube.start({ platform, vaultPath: vault });
   let pass = 0;
   const only = process.argv[2]; // e.g. "YouTube": run one source again
   for (const s of SOURCES.filter((x) => !only || x.name.includes(only))) {
     await platform.openUrl(s.url);
-    await sleep(9000); // page load + the extension's first report
+    await sleep(9000); // page load
+    await youtube.poll();
     for (let q = 1; q <= 3; q++) {
       const t0 = Date.now();
       const fg = await platform.foreground();

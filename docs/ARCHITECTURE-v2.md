@@ -21,7 +21,7 @@ Keeps everything in `ARCHITECTURE.md` (v1) unless this file says otherwise. Phas
 ```
 any app playing sound (Brave, Chrome, Firefox, Edge, VLC, Films, a call...)
   system audio loopback ──> ear.js: 30 s pieces, skip silence and Nibley's own voice ──> Groq ──┐
-optional: YouTube extension ──HTTP 127.0.0.1──> youtube.js (exact captions + video time) ────────┤
+YouTube window (UI Automation) + YouTube caption API ──> youtube.js (captions + video time) ────────┤
 foreground window title (which video, PDF or page) ─────────────────────────────────────────────┤
 hotkey hold ──> STT ──┐                                                                          v
 hotkey tap  ──> chat window ──┴──> handleText ──> brain (+ "heard in the last 2 min" block)
@@ -56,10 +56,11 @@ Prompt rules (built): use the transcript for what the lecturer said and the scre
 
 PDFs, slides, web pages without sound: the screenshot (v1) is already universal. The window title tells Claude which file or page it is.
 
-## 3b. Optional extra: YouTube extension (built 2026-11-04, not required)
-When the extension is loaded (Chromium browsers: Chrome, Brave, Edge), YouTube gets more than sound gives: the whole transcript ahead of time, exact video times ("at 4:12"), and later pause/seek commands. Nibley then uses the captions instead of the sound for that video. Without it, YouTube works through section 3 like every other site.
-- `extension/page.js` (in the page): video state every 1 s while playing and on events, nothing while paused, skips ads, transcript via the player's own caption request. `bridge.js` + `sw.js` pass it to `src/youtube.js` on 127.0.0.1:47711 (secret token + extension origin, 2 MB cap, video-id check before any file name). Transcripts cached in `nibley/videos/<id>.json`.
-- Tested: `test/youtube.test.js` 4/4, `page.js` on real YouTube in the built-in browser, `test/bridge-check.js` 7/7 in the app. Not tested in a real Brave install.
+## 3b. YouTube without an extension (2026-11-08; the 2026-11-04 extension is deleted)
+Zarif: learners install nothing but Nibley, so no browser extension in any form.
+- **Video on screen:** `helper.ps1` command `yt` reads the top-most Brave/Chrome/Edge window whose title has " - YouTube", the way a screen reader does: address bar (video id), "Seek slider" (time and length), "Play (k)" button (paused). About 160 ms per read, every 3 s (`src/youtube.js`); 0.6% of total CPU while a YouTube window is open. Works when Brave isn't in front; not when minimized.
+- **Transcript:** fetched once per video from YouTube's player API with the ANDROID client (plain caption URLs, no proof token), hand-made English track first, cached in `nibley/videos/<id>.json`. If YouTube changes this, section 3's sound path still works.
+- **Seeking:** YouTube ignores the slider's accessibility SetValue (tested), so study-page time links open `watch?v=ID&t=Ns` in a new tab.
 
 ## 4. Note paper
 - Drawn by the overlay (same see-through window), on the calmest side of the screen (same busy map as labels), never over a pen mark. Style goes into `DESIGN.md` and is shown to Zarif before building (like subtitles).
@@ -93,13 +94,13 @@ The screen is 1600x900; scripts use 1366x768 (the screenshot size). The overlay 
 |---|---|---|
 | `src/ear.js` + recorder in `overlay.js` | built 2026-11-04 | Section 3: system sound, pieces, silence and own-voice skip, call check, last 30 min, session file |
 | `src/platform/helper.ps1`, `windows.js`, `fake.js` | built 2026-11-04 | `fg` (foreground window title), `mic_users` (apps using the mic right now) |
-| `extension/*`, `src/youtube.js` | built 2026-11-04 | Section 3b, optional |
+| `src/youtube.js` | rebuilt 2026-11-08, no extension | Section 3b |
 | `src/content.js` | new | Content pack loader |
 | `src/chat/chat.html`, `chat.js` | new | Chat window |
 | `src/script.js` | changed | `write`, `draw`, `paper_close` |
 | `src/prompt.js` | changed | Transcript and note-paper rules, list of asset names |
 | `src/overlay/overlay.js`, `overlay.html` | changed | Note paper |
-| `src/main.js` | changed | Tap = chat (the existing tap branch in `onPtt`), "heard" context block (captions win when the extension has them), tray switch, carry on, screen-size conversion |
+| `src/main.js` | changed | Tap = chat (the existing tap branch in `onPtt`), "heard" context block (YouTube captions win when there are any), tray switch, carry on, screen-size conversion |
 | `docs/DESIGN.md` | changed | Note paper and chat window styles (Zarif OKs first) |
 | `test/ear.test.js`, `test/ear-check.js`, `test/script.test.js`, `test/paper-check.js` | new / changed | Section 9 |
 
@@ -117,7 +118,7 @@ The screen is 1600x900; scripts use 1366x768 (the screenshot size). The overlay 
 - **FSRS:** written in plain JS from the published formulas (no `ts-fsrs` dependency), checked against reference numbers in a unit test.
 - **Review queue and focus cards:** one focusable Electron window (it is also the "focus card" layout).
 - **Chapters:** made once per video by a one-shot Haiku call over the transcript, cached in the video file.
-- **Video position and control, universal:** Windows media session (the info behind the volume pop-up) gives title, position and play/pause for players that publish it (Chromium browsers incl. Brave, Firefox, Films & TV). Check VLC in phase 2. Fallback: the media play/pause key (v1). The extension adds exact seeking on YouTube.
+- **Video position and control, universal:** Windows media session (the info behind the volume pop-up) gives title, position and play/pause for players that publish it (Chromium browsers incl. Brave, Firefox, Films & TV). Check VLC in phase 2. Fallback: the media play/pause key (v1). YouTube time and paused state come from the window itself (section 3b).
 - **Pause quizzes:** a chapter end (from the transcript) or a long gap in the sound; Nibley pauses through the media session and asks.
 - **Confusion detector:** rewinds show as the same words heard twice (works everywhere) or a position jump in the media session; long pauses from silence.
 - **Buttons:** the overlay turns clicks on only while the mouse is over a button (Electron's `setIgnoreMouseEvents(true, { forward: true })`).
@@ -126,7 +127,7 @@ The screen is 1600x900; scripts use 1366x768 (the screenshot size). The overlay 
 ## 11. Risks
 - **Privacy:** lecture sound goes to Groq while something plays. Calls are skipped (mic-in-use check) and there is a tray off switch, but music, games and other sound also get sent when on. Only text is kept, never audio.
 - **Groq free limits:** 8 hours of audio a day shared with his spoken questions. Silence is never sent. If the limit is hit, Nibley says so once and falls back to screenshot only.
-- **Sound only knows what was said, not where the video is.** "At 4:12" needs the extension (YouTube) or the media session (phase 2). Phase 1 uses "1:50 ago".
+- **Sound only knows what was said, not where the video is.** "At 4:12" comes from the YouTube window (3b); other players need the media session (phase 2). Phase 1 uses "1:50 ago".
 - **Nibley's own voice** can leak into a piece if pausing is late; the speaking times are also used to drop matching lines.
 - **YouTube changes** can break the optional caption trick. Then YouTube falls back to sound like every other site.
 - **Prompt size:** the context block adds ~600 tokens per question. PRD test 6 measures the speed.

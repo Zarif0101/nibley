@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const fsrs = require('./learn/fsrs');
 
-const RECAP_S = 600, MIN_END_S = 300;
+const RECAP_S = 600, MIN_END_S = 300, ANALYZE_CHARS = 150000; // ~37k tokens of transcript per analysis
 const oneLine = (s, max) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const clock = (s) => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
 const json = (text) => JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
@@ -23,9 +23,19 @@ const END = `A student just finished a video lecture. Make a quick check and fla
 You get the lecture's key ideas, the student's questions, and the transcript.
 Reply with ONLY one JSON object, no other text:
 {"quiz": [{"q": "...", "o": ["...", "..."], "r": 0, "why": "..."}], "cards": [{"f": "...", "b": "...", "t": 120}]}
-- quiz: exactly 3 questions, each answered with one tap: q max 14 words, o = 2 short options (max 4 words each), r = index of the right one, why = one short sentence (max 14 words) saying why.
+- quiz: exactly 3 questions, each answered with one tap: q max 14 words, o = 2 short options (max 5 words each, never a sentence), r = index of the right one, why = one short sentence (max 14 words) saying why.
 - cards: CARD_COUNT flashcards on the ideas that matter most, including what the student asked about. f = a question (max 12 words), b = the answer (max 20 words), t = video time in seconds where it is taught.
 - Only what the lecture says. No invented numbers, names or formulas.`;
+
+const ANALYZE = `A student is about to watch a video lecture. Read its whole transcript and map it for them.
+Each transcript line starts with its time in the video, in seconds.
+Reply with ONLY one JSON object, no other text:
+{"lecture": true, "chapters": [{"t": 0, "title": "...", "ideas": ["...", "..."]}], "prereqs": ["..."], "tricky": [{"t": 754, "text": "..."}]}
+- chapters: the lecture's parts in order, about one per 5-10 minutes (3 to 12). t = where it starts (seconds, from the transcript). title max 5 words. ideas: 2 or 3 per chapter, each one plain sentence, max 20 words: the idea itself (a fact, rule or formula).
+- prereqs: 0 to 3 basics the student must already know to follow this lecture, each max 10 words. [] if none.
+- tricky: the 2 or 3 moments students most often get stuck on, with t and one short line (max 16 words) saying what is hard there.
+- Only what the transcript says. No invented numbers, names or formulas. Write in English even if the lecture is in another language.
+- If this is not teaching (music, a vlog, a game), reply {"lecture": false}.`;
 
 // opts: { dir: data root, run({system, input}) -> text (Claude, Haiku), transcript(videoId) -> [[t, text]] | null,
 //         onChange(page), log }
@@ -64,11 +74,11 @@ function create(opts) {
     cfg.onChange(view());
   }
 
-  async function call(kind, system, input) {
+  async function call(kind, system, input, timeoutMs) {
     busy = true;
     const t0 = Date.now();
     try {
-      const out = json(await cfg.run({ system, input }));
+      const out = json(await cfg.run({ system, input, timeoutMs }));
       cfg.log({ ev: 'study_call', kind, ms: Date.now() - t0 });
       return out;
     } catch (e) {
@@ -95,17 +105,18 @@ function create(opts) {
 
   async function finish() {
     page.ended = true;
-    if (!page.ideas.length && !page.questions.length) { save(); return; } // nothing studied here (music, a short clip)
+    if (!page.ideas.length && !page.questions.length && page.analyzed !== true) { save(); return; } // nothing studied here (music, a short clip)
     const id = page.id;
     const count = Math.min(25, Math.max(3, Math.round((page.duration / RECAP_S) * 5)));
     const transcript = (cfg.transcript(page.id) || []).map(([t, x]) => `${Math.round(t)} ${x}`).join('\n').slice(0, 40000);
-    const input = `Lecture: ${page.title}\n\nKey ideas:\n${page.ideas.map((i) => `${clock(i.t)} ${i.text}`).join('\n') || '(none)'}\n\n`
+    const ideas = [...(page.chapters || []).flatMap((c) => c.ideas.map((x) => `${clock(c.t)} ${x}`)), ...page.ideas.map((i) => `${clock(i.t)} ${i.text}`)];
+    const input = `Lecture: ${page.title}\n\nKey ideas:\n${ideas.join('\n') || '(none)'}\n\n`
       + `Student's questions:\n${page.questions.map((q) => `${clock(q.t)} ${q.q} -> ${q.a}`).join('\n') || '(none)'}\n\nTranscript:\n${transcript || '(none)'}`;
     const r = await call('end', END.replace('CARD_COUNT', String(count)), input);
     if (page?.id !== id) return;
     if (r) {
       page.quiz = (Array.isArray(r.quiz) ? r.quiz : []).filter((q) => q && Array.isArray(q.o) && q.o.length === 2 && [0, 1].includes(q.r)).slice(0, 3)
-        .map((q) => ({ q: oneLine(q.q, 160), o: q.o.map((o) => oneLine(o, 40)), r: q.r, why: oneLine(q.why, 160), picked: null }));
+        .map((q) => ({ q: oneLine(q.q, 160), o: q.o.map((o) => oneLine(o, 80)), r: q.r, why: oneLine(q.why, 160), picked: null }));
       page.cards = (Array.isArray(r.cards) ? r.cards : []).filter((c) => oneLine(c?.f, 1) && oneLine(c?.b, 1)).slice(0, 25)
         .map((c) => ({ f: oneLine(c.f, 160), b: oneLine(c.b, 240), t: Number.isFinite(c.t) ? c.t : null, keep: true }));
     }
@@ -118,6 +129,7 @@ function create(opts) {
     if (!v || !v.videoId) return null;
     if (page?.id !== v.videoId) open(v);
     if (v.duration) page.duration = v.duration;
+    if (canAnalyze() !== shownCan) cfg.onChange(view()); // the transcript arrived: the Analyze button can show
     if (busy || page.lecture === false || page.ended) return null;
     const nearEnd = page.duration >= MIN_END_S && v.t >= page.duration - 3;
     if (nearEnd) {
@@ -126,6 +138,7 @@ function create(opts) {
       await finish();
       return page.ended ? 'ended' : null;
     }
+    if (page.analyzed === true && v.t < (page.analyzedTo ?? Infinity)) return null; // the analysis already mapped this part
     if (v.t - page.recapTo > 2 * RECAP_S) page.recapTo = Math.floor(v.t - RECAP_S); // he skipped ahead: recap where he is, not every part he jumped over
     if (v.t - page.recapTo >= RECAP_S) await recap(page.recapTo, page.recapTo + RECAP_S);
     return null;
@@ -155,8 +168,43 @@ function create(opts) {
     save();
   }
 
-  const view = () => (page && page.lecture !== false ? page : null);
-  return { tick, addQuestion, answer, toggleCard, view, get busy() { return busy; } };
+  // "Analyze this video": one call over the whole transcript, before or while he watches.
+  const canAnalyze = () => !!page && !page.analyzed && page.lecture !== false && !!cfg.transcript(page.id)?.length;
+  let shownCan = false;
+  async function analyze() {
+    if (!canAnalyze() || busy) return false;
+    const id = page.id, lines = cfg.transcript(id);
+    let text = '', to = 0;
+    for (const [t, x] of lines) { const l = `${Math.round(t)} ${x}\n`; if (text.length + l.length > ANALYZE_CHARS) break; text += l; to = t; }
+    page.analyzed = 'working';
+    cfg.onChange(view());
+    const r = await call('analyze', ANALYZE, `Lecture: ${page.title}\n\nTranscript:\n${text}`, 240e3);
+    if (page?.id !== id) return false;
+    if (!r) { page.analyzed = null; cfg.onChange(view()); return false; }
+    if (r.lecture === false) { page.lecture = false; page.analyzed = null; save(); return false; }
+    page.lecture = true;
+    page.analyzed = true;
+    page.analyzedTo = to >= lines.at(-1)[0] ? null : to; // null: the whole video
+    page.chapters = (Array.isArray(r.chapters) ? r.chapters : []).filter((c) => oneLine(c?.title, 1)).slice(0, 12)
+      .map((c) => ({ t: Number.isFinite(c.t) ? c.t : 0, title: oneLine(c.title, 60), ideas: (Array.isArray(c.ideas) ? c.ideas : []).map((x) => oneLine(x, 200)).filter(Boolean).slice(0, 3) }));
+    page.prereqs = (Array.isArray(r.prereqs) ? r.prereqs : []).map((x) => oneLine(x, 120)).filter(Boolean).slice(0, 3);
+    page.tricky = (Array.isArray(r.tricky) ? r.tricky : []).filter((x) => oneLine(x?.text, 1)).slice(0, 3).map((x) => ({ t: Number.isFinite(x.t) ? x.t : 0, text: oneLine(x.text, 160) }));
+    save();
+    cfg.log({ ev: 'study_analyzed', video: id, chapters: page.chapters.length, covered: page.analyzedTo ?? 'all' });
+    return true;
+  }
+
+  // Lecture map for the question context: chapter titles with times, so Nibley knows what comes later.
+  function context(videoId) {
+    if (!page || page.id !== videoId || page.analyzed !== true || !page.chapters?.length) return null;
+    return `[Lecture map (whole video${page.analyzedTo ? ` up to ${clock(page.analyzedTo)}` : ''}): ${page.chapters.map((c) => `${clock(c.t)} ${c.title}`).join('; ')}]`;
+  }
+
+  const view = () => {
+    shownCan = canAnalyze();
+    return page && page.lecture !== false ? { ...page, canAnalyze: shownCan } : null;
+  };
+  return { tick, addQuestion, answer, toggleCard, analyze, context, view, get busy() { return busy; } };
 }
 
 module.exports = { create, RECAP_S };

@@ -1,6 +1,7 @@
-// Study page check in the real app (fake platform, fake extension over HTTP, Claude replaced by fixed replies).
+// Study page check in the real app (fake platform plays the browser window, Claude replaced by fixed replies, no extension).
 // A question lands with its video time, the 10-min recap adds ideas, the video's end opens the sidebar on Study with
-// the quick check + cards, a wrong answer becomes a card, untick updates cards.json, a time link reaches the extension.
+// the quick check + cards, a wrong answer becomes a card, untick updates cards.json, a time link opens the video there.
+// Second video: "Analyze this video" maps the whole lecture in one call and Nibley gets the map with questions.
 // Run: npx electron test/study-check.js     Saves test/out/study-sidebar.png
 const fs = require('node:fs');
 const os = require('node:os');
@@ -22,42 +23,50 @@ const REPLIES = {
     { f: 'Reduction in organic chemistry?', b: 'Carbon gains bonds to H or loses bonds to O.', t: 300 },
     { f: 'LEO GER', b: 'Losing electrons is oxidation, gaining electrons is reduction.', t: 308 }] },
 };
+REPLIES.analyze = { lecture: true, chapters: [{ t: 0, title: 'Gradients and slopes', ideas: ['A gradient points uphill.', 'Step the other way to go down.'] },
+  { t: 300, title: 'Learning rate', ideas: ['Too big a step overshoots the minimum.'] }], prereqs: ['Derivatives of one variable'], tricky: [{ t: 330, text: 'Why a large learning rate makes the loss jump.' }] };
 const calls = [];
-memory.runClaude = async ({ system }) => { const kind = /exactly 3 questions/.test(system) ? 'end' : 'recap'; calls.push(kind); return JSON.stringify(REPLIES[kind]); };
+memory.runClaude = async ({ system }) => {
+  const kind = /exactly 3 questions/.test(system) ? 'end' : /map it for them/.test(system) ? 'analyze' : 'recap';
+  calls.push(kind);
+  return JSON.stringify(REPLIES[kind]);
+};
 
 const { app } = require('electron');
 const brain = require('../src/brain');
 const main = require('../src/main');
 const sidebar = require('../src/sidebar');
+const youtube = require('../src/youtube');
+const platform = require('../src/platform'); // fake
 const SAY = 'say LEO means losing electrons is oxidation.\n';
-brain.ask = ({ onText, onEnd }) => { setTimeout(() => { onText(SAY); onEnd(SAY); }, 200); return { cancel() {} }; };
+let asked = null;
+brain.ask = ({ video, onText, onEnd }) => { asked = video; setTimeout(() => { onText(SAY); onEnd(SAY); }, 200); return { cancel() {} }; };
 
 const results = [];
 const check = (name, pass, detail = '') => { results.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const VID = 'bJMUKNbAsTY';
-const post = (body) => fetch('http://127.0.0.1:47712/state', {
-  method: 'POST', headers: { 'content-type': 'application/json', 'x-nibley-token': main.state.settings.bridgeToken, origin: 'chrome-extension://nibleytest' }, body: JSON.stringify(body),
-}).then((r) => r.json());
-const state = (t, paused = false) => post({ kind: 'state', tabId: 3, state: { videoId: VID, title: 'Organic oxidation-reduction reactions', t, paused, duration: 960, rate: 1, visible: true } });
+const VID = 'bJMUKNbAsTY', VID2 = 'IHZwWFHWa-w';
+const LINES = Array.from({ length: 160 }, (_, i) => [i * 6, `line ${i}`]);
+// The browser window Nibley reads (no extension): set what the fake YouTube tab shows, then read it.
+const show = (id, t, paused = false, title = 'Organic oxidation-reduction reactions') => { platform.ytNow = { title: `${title} - YouTube - Brave`, url: `youtube.com/watch?v=${id}`, t, duration: 960, paused }; return youtube.poll(); };
 const until = async (fn, ms = 9000) => { for (let i = 0; i < ms / 100; i++) { const v = await fn(); if (v) return v; await sleep(100); } return null; };
 const dom = (js) => sidebar.win.webContents.executeJavaScript(js);
 
 async function run() {
   await main.ready;
-  await sleep(500);
-  await post({ kind: 'transcript', tabId: 3, videoId: VID, title: 'Organic oxidation-reduction reactions', duration: 960, lines: Array.from({ length: 160 }, (_, i) => [i * 6, `redox line ${i}`]) });
+  await youtube.start({ platform, vaultPath: path.join(TMP, 'data'), log: () => {}, fetchTranscript: async () => ({ lines: LINES, lang: 'en', auto: false, duration: 960 }) });
+  await sleep(300);
 
-  await state(308, true);
+  await show(VID, 308, true);
   main.testTurn('what does LEO mean here?', fs.readFileSync(path.join(__dirname, 'fixtures', 'lecture.png')), { showShot: false });
   const q = await until(() => main.study.view()?.questions[0]);
   check('question lands on the page with its video time', q?.t === 308 && /LEO means/.test(q.a), JSON.stringify(q));
 
-  await state(605);
+  await show(VID, 605);
   const ideas = await until(() => main.study.view()?.ideas.length === 2);
   check('10-min recap adds 2 ideas (one Claude call)', ideas && calls.join() === 'recap', calls.join());
 
-  await state(958);
+  await show(VID, 958);
   const opened = await until(() => sidebar.isOpen() && main.study.view()?.ended);
   check('end of video: sidebar opens with the page finished', !!opened, calls.join());
   await sleep(400);
@@ -76,15 +85,38 @@ async function run() {
   const foot = await dom(`document.querySelector('.foot').textContent`);
   check('untick: cards.json keeps 3, footer says 3', cards.length === 3 && !cards.some((c) => c.front.startsWith('Oxidation in')) && /^3 cards/.test(foot), foot);
 
+  platform.calls.length = 0;
   await dom(`document.querySelector('.idea .t').click()`);
-  await sleep(200);
-  const reply = await state(958, true);
-  check('time link: the extension gets {seek: 42} on its next report', reply.seek === 42, JSON.stringify(reply));
-
+  await sleep(300);
+  check('time link opens the video at 0:42 in a new tab', platform.calls.some((c) => c[0] === 'openUrl' && c[1] === `https://www.youtube.com/watch?v=${VID}&t=42s`), JSON.stringify(platform.calls));
   fs.mkdirSync(path.join(__dirname, 'out'), { recursive: true });
   await dom(`document.getElementById('p-study').scrollTop = 0`);
   fs.writeFileSync(path.join(__dirname, 'out', 'study-sidebar.png'), (await sidebar.win.webContents.capturePage()).toPNG());
-  check('study page file in the app data folder', fs.existsSync(path.join(TMP, 'data', 'nibley', 'study', `${VID}.json`)));
+
+  // Second video: analyze it before watching
+  calls.length = 0;
+  await show(VID2, 5, true, 'Gradient descent');
+  await until(() => main.study.view()?.id === VID2 && main.study.view().canAnalyze);
+  sidebar.open('test', 'study');
+  await sleep(400);
+  const btn = await dom(`document.querySelector('.analyze .go')?.textContent`);
+  check('new lecture: "Analyze this video" button shows', btn === 'Analyze this video', btn);
+  await dom(`document.querySelector('.analyze .go').click()`);
+  const mapped = await until(() => main.study.view()?.analyzed === true);
+  await sleep(400);
+  const page = await dom(`({ chapters: document.querySelectorAll('.chap').length, basics: document.querySelectorAll('.basics li').length, button: !!document.querySelector('.analyze'),
+    tricky: [...document.querySelectorAll('h3')].some((h) => h.textContent === 'Tricky parts') })`);
+  check('analysis: one call; 2 chapters, 1 basic, tricky parts; button gone', mapped && calls.join() === 'analyze' && page.chapters === 2 && page.basics === 1 && page.tricky && !page.button, `${calls.join()} ${JSON.stringify(page)}`);
+  fs.writeFileSync(path.join(__dirname, 'out', 'study-analyzed.png'), (await sidebar.win.webContents.capturePage()).toPNG());
+
+  asked = null;
+  main.testTurn('will he explain the learning rate?', fs.readFileSync(path.join(__dirname, 'fixtures', 'lecture.png')), { showShot: false });
+  await until(() => asked);
+  check('questions now carry the lecture map', /\[Lecture map \(whole video\): 0:00 Gradients and slopes; 5:00 Learning rate\]/.test(asked || ''), (asked || '').split('\n').find((l) => l.startsWith('[Lecture map')));
+  await show(VID2, 700);
+  await sleep(6000);
+  check('no 10-min recap after the analysis', !calls.includes('recap'), calls.join());
+  check('study pages in the app data folder', fs.existsSync(path.join(TMP, 'data', 'nibley', 'study', `${VID}.json`)) && fs.existsSync(path.join(TMP, 'data', 'nibley', 'study', `${VID2}.json`)));
   console.log(`\n${results.filter(Boolean).length}/${results.length} pass`);
   app.exit(0);
 }

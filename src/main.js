@@ -50,11 +50,12 @@ if (settings.vaultPath) {
   if (fs.existsSync(from) && !fs.existsSync(to)) { fs.cpSync(from, to, { recursive: true }); log({ ev: 'data_moved', from, to }); }
   delete settings.vaultPath;
 }
+delete settings.bridgeToken; // the YouTube extension is gone (Zarif 2026-11-08: learners install nothing)
 saveSettings();
 // Study page per lecture (brainstorms/2026-11-08-study-page-format.md): recaps every 10 min, quiz + cards at the end.
 const study = studyMod.create({
   dir: DATA, log, transcript: youtube.transcript,
-  run: ({ system, input }) => memory.runClaude({ claudePath: settings.claudePath, system, input }),
+  run: ({ system, input, timeoutMs }) => memory.runClaude({ claudePath: settings.claudePath, system, input, timeoutMs }),
   onChange: (p) => { const w = sidebar.win; if (w && !w.isDestroyed()) w.webContents.send('study:page', p); },
 });
 const teacher = teacherMod.create(DATA); // teaching style per question + 'Makes sense?' limit (NEXT-ROUND C1)
@@ -390,8 +391,8 @@ async function ask(text, id) {
   const parser = createParser((cmd) => { chain = chain.then(() => onCmd(ctx, cmd)).catch((e) => log({ ev: 'cmd_error', err: e.message })); },
     { onBad: (b) => log({ ev: 'bad_line', line: b.line, why: b.why }) });
   ctx.handle = brain.ask({
-    // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when the extension has them, else the sound
-    png: s.png, text, turn: id, video: [teach.header, src, youtube.context() || ear.context()].filter(Boolean).join('\n'),
+    // What the lecturer said just now (ARCHITECTURE-v2 3): YouTube captions when there are any, else the sound
+    png: s.png, text, turn: id, video: [teach.header, src, study.context(youtube.current()?.videoId), youtube.context() || ear.context()].filter(Boolean).join('\n'),
     onText: (d) => { timing.claude_first_token ||= Date.now(); parser.push(d); },
     onEnd: (full) => { ctx.full = full; parser.end(); chain = chain.then(() => endTurn(ctx)); },
     onError: (kind, detail) => { chain = chain.then(() => brainError(ctx, kind, detail)); },
@@ -451,7 +452,7 @@ async function onAction(ctx, a) {
 }
 
 // The video pauses while Nibley explains and plays again after (NEXT-ROUND Q19, phase 1 step 8). Media key, like the
-// pause action; only when the extension says the YouTube video on screen is playing, so it never starts a paused one.
+// pause action; only when the YouTube video on screen reads as playing, so it never starts a paused one.
 const PLAY_PAUSE = /^(media_play_pause|k|space)$/;
 let pausedByUs = false;
 async function pauseVideo() {
@@ -662,6 +663,7 @@ setInterval(async () => {
 ipcMain.handle('study:get', () => study.view());
 ipcMain.on('study:answer', (_e, i, k) => study.answer(i, k));
 ipcMain.on('study:card', (_e, i) => study.toggleCard(i));
+ipcMain.on('study:analyze', () => study.analyze());
 ipcMain.on('study:seek', (_e, t) => { if (!youtube.seek(t)) log({ ev: 'study_seek_failed' }); });
 
 // ---------- learner: after 5 min idle with 2+ turns ----------
@@ -718,7 +720,7 @@ app.whenReady().then(async () => {
     buildPrompt: () => [prompt.build({ vaultPath: DATA, apps: settings.apps }), styles.section()].join('\n\n'), // same as the eval
     onFatal: (msg) => { setTray('Claude keeps crashing', true); speak(msg); },
   });
-  startBridge();
+  youtube.start({ platform, vaultPath: DATA, log }); // reads YouTube from the browser window, no extension
   if (!piper.start(path.join(ROOT, 'piper', 'piper.exe'), path.join(ROOT, 'piper', 'voices', 'en_US-lessac-medium.onnx'))) log({ ev: 'piper_missing' });
   await Promise.all([
     platform.start(),
@@ -731,16 +733,6 @@ app.whenReady().then(async () => {
 app.on('window-all-closed', () => {}); // keep running in the tray
 app.on('before-quit', () => { quitting = true; brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
 
-// Chrome extension bridge: the extension reads port + token from extension/config.js (gitignored), written here.
-const BRIDGE_PORT = process.env.NIBLEY_SETTINGS ? 47712 : 47711; // tests get their own port, so they never hit the running app
-function startBridge() {
-  if (!settings.bridgeToken) { settings.bridgeToken = require('node:crypto').randomBytes(16).toString('hex'); saveSettings(); }
-  if (!process.env.NIBLEY_SETTINGS) { // tests run with their own settings and must not change the real extension's token
-    fs.writeFileSync(path.join(ROOT, 'extension', 'config.js'), `// Written by Nibley at start. Do not commit.\nconst NIBLEY = ${JSON.stringify({ port: BRIDGE_PORT, token: settings.bridgeToken })};\n`);
-  }
-  youtube.start({ port: BRIDGE_PORT, token: settings.bridgeToken, vaultPath: DATA, log })
-    .then(() => log({ ev: 'bridge', port: BRIDGE_PORT }), (e) => log({ ev: 'bridge_error', err: e.message }));
-}
 
 // Test entry: one turn with a given screenshot instead of the hotkey, mic and screen capture.
 function testTurn(text, png, { showShot = true } = {}) {

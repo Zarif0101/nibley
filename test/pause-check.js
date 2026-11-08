@@ -1,5 +1,5 @@
 // Pause-while-talking check (docs/NEXT-ROUND.md phase 1 step 8, Q19), in the real app with the fake platform: the
-// extension's part is played over HTTP, keys are recorded instead of pressed. Canned answers (no Claude), real voice.
+// YouTube player is read from the fake platform (no extension), keys are recorded instead of pressed. Canned answers (no Claude), real voice.
 // Run: npx electron test/pause-check.js
 const fs = require('node:fs');
 const os = require('node:os');
@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-pause-'));
 fs.mkdirSync(path.join(TMP, 'vault', 'nibley'), { recursive: true });
-fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ dataPath: path.join(TMP, 'vault'), mode: 'ask', pendingQuestion: null, bridgeToken: 'pausecheck' }));
+fs.writeFileSync(path.join(TMP, 'settings.json'), JSON.stringify({ dataPath: path.join(TMP, 'vault'), mode: 'ask', pendingQuestion: null }));
 process.env.NIBLEY_FAKE = '1';
 process.env.NIBLEY_SETTINGS = path.join(TMP, 'settings.json');
 
@@ -15,6 +15,7 @@ const { app } = require('electron');
 const brain = require('../src/brain');
 const main = require('../src/main');
 const platform = require('../src/platform');
+const youtube = require('../src/youtube');
 
 let answer = '';
 brain.ask = ({ onText, onEnd }) => { const t = setTimeout(() => { onText(answer); onEnd(answer); }, 300); return { cancel() { clearTimeout(t); } }; };
@@ -24,11 +25,8 @@ const check = (name, pass, detail = '') => { results.push(pass); console.log(`${
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const shot = fs.readFileSync(path.join(__dirname, 'fixtures', 'player.png'));
 let paused = false;
-const state = () => fetch('http://127.0.0.1:47712/state', {
-  method: 'POST', headers: { 'content-type': 'application/json', 'x-nibley-token': 'pausecheck', origin: 'chrome-extension://nibleytest' },
-  body: JSON.stringify({ kind: 'state', tabId: 3, state: { videoId: 'IHZwWFHWa-w', title: 'Gradient descent', t: 100, paused, duration: 1233, rate: 1, visible: true } }),
-});
-// The fake media key flips the video like the real one would, and the extension reports it.
+const state = () => { platform.ytNow = { title: 'Gradient descent - YouTube - Brave', url: 'youtube.com/watch?v=IHZwWFHWa-w', t: 100, duration: 1233, paused }; return youtube.poll(); };
+// The fake media key flips the video like the real one would, and Nibley reads it from the browser window.
 const realKey = platform.key;
 platform.key = async (name) => { await realKey(name); if (name === 'media_play_pause') { paused = !paused; await state(); } };
 const keys = () => platform.calls.filter((c) => c[0] === 'key').map((c) => c[1]);

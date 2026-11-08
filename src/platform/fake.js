@@ -32,6 +32,8 @@ module.exports = {
   async foreground() { return { ...module.exports.foregroundWin }; },
   browserUrlNow: 'youtube.com/watch?v=fake0000000',
   async browserUrl() { return module.exports.browserUrlNow; },
+  ytNow: null, // tests: {title, url, t, duration, paused}
+  async youtube() { return module.exports.ytNow && { ...module.exports.ytNow }; },
   async micUsers() { return [...module.exports.micApps]; },
   async openUrl(url) { rec('openUrl', url); },
   async openApp(exe) { rec('openApp', exe); },
