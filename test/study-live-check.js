@@ -3,7 +3,7 @@
 // 2) A tech review video: should come back as not a lecture (or at worst, ideas; printed for a look).
 // 3) MIT lecture end pass (40 min): 3 two-option questions, ~20 cards with times.
 // 4) Transcript fetched live from YouTube (no extension), then "Analyze this video" on it: chapters, basics, tricky parts.
-// 5) Analyze a 4-hour Bangla HSC marathon (transcript capped at ~37k tokens): English chapters, says how far it covered.
+// 5) Analyze a 4-hour Bangla HSC marathon: split into 2 parts, English chapters, the whole video covered.
 // Run: node test/study-live-check.js     (about 6 Claude calls' worth of time, 1-2 min)
 const fs = require('node:fs');
 const os = require('node:os');
@@ -55,7 +55,7 @@ const check = (name, ok, detail = '') => { rows.push(ok); console.log(`${ok ? 'P
   t0 = Date.now();
   await hsc.analyze();
   p = hsc.view();
-  check('HSC marathon analysis: English chapters, partial coverage said', p?.analyzed === true && p.chapters.length >= 3 && Number.isFinite(p.analyzedTo),
+  check('HSC marathon analysis: English chapters, the whole 4 hours (2 parts)', p?.analyzed === true && p.chapters.length >= 3 && p.analyzedTo === null,
     `${Date.now() - t0} ms, covered to ${Math.round((p?.analyzedTo || 0) / 60)} min${(p?.chapters || []).map((c) => `\n    ${Math.round(c.t)}s ${c.title}`).join('')}`);
   console.log(`\n${rows.filter(Boolean).length}/${rows.length} pass`);
 })().catch((e) => { console.error('STUDY LIVE CHECK CRASH', e); process.exit(1); });

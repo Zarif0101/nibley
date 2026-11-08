@@ -128,3 +128,43 @@ test('analyze: no transcript, nothing to analyze; a failed call puts the button 
   assert.equal(bad.view().analyzed, null);
   assert.equal(bad.view().canAnalyze, true);
 });
+
+// A 4-hour lecture: 2,400 lines of ~90 characters = ~220k characters, more than one call takes.
+const LONG = Array.from({ length: 2400 }, (_, i) => [i * 6, `long line ${i} `.padEnd(80, 'x')]);
+const part = (t, title) => ({ lecture: true, chapters: [{ t, title, ideas: ['An idea.'] }], prereqs: ['A basic'], tricky: [{ t: t + 10, text: 'Hard bit.' }] });
+
+test('analyze a long video: 2 parts, 2 calls, the whole video covered, chapters in order, basics from part 1 only', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-study-'));
+  const calls = [];
+  const replies = [part(0, 'Start'), { ...part(9000, 'Second half'), prereqs: ['ignored'] }];
+  const s = study.create({ dir, transcript: () => LONG, run: async ({ input }) => { calls.push(input); return JSON.stringify(replies.shift()); } });
+  await s.tick(V(30, { duration: 14400 }));
+  assert.equal(await s.analyze(), true);
+  assert.equal(calls.length, 2);
+  assert.match(calls[0], /This is part 1 of 2/);
+  assert.match(calls[1], /This is part 2 of 2 .*Give prereqs as \[\]/);
+  assert.match(calls[1], /\n14394 long line 2399/); // the last line made it in
+  const p = s.view();
+  assert.equal(p.analyzedTo, null);
+  assert.deepEqual(p.chapters.map((c) => c.title), ['Start', 'Second half']);
+  assert.deepEqual(p.prereqs, ['A basic']);
+  assert.equal(p.tricky.length, 2);
+  assert.equal(p.canAnalyze, false);
+});
+
+test('a failed second part keeps the first; the page offers to analyze the rest, which reads only the rest', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nibley-study-'));
+  const calls = [];
+  const replies = [JSON.stringify(part(0, 'Start')), 'not json', JSON.stringify(part(9000, 'Second half'))];
+  const s = study.create({ dir, transcript: () => LONG, run: async ({ input }) => { calls.push(input); return replies.shift(); } });
+  await s.tick(V(30, { duration: 14400 }));
+  assert.equal(await s.analyze(), true);
+  let p = s.view();
+  assert.ok(p.analyzedTo > 0 && p.analyzedTo < 14394, `covered to ${p.analyzedTo}`);
+  assert.equal(p.canAnalyze, true); // "Analyze the rest"
+  assert.equal(await s.analyze(), true);
+  assert.doesNotMatch(calls[2], /\n0 long line 0 /); // only the rest went in
+  p = s.view();
+  assert.equal(p.analyzedTo, null);
+  assert.deepEqual(p.chapters.map((c) => c.title), ['Start', 'Second half']);
+});

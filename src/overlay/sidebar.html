@@ -226,13 +226,16 @@ function study(p) {
   out.push(meta);
 
   if (p.canAnalyze || p.analyzed === 'working') { // read the whole lecture now, before or while he watches
-    const c = el('div', 'card analyze'), go = el('button', 'go', p.analyzed === 'working' ? 'Reading the whole lecture...' : 'Analyze this video');
-    c.append(el('b', null, 'Know the whole lecture first'), el('p', null, 'Nibley reads the full video now: chapters, key ideas, what to know first and the tricky parts. About 30 seconds.'), go);
+    const rest = p.analyzed === true && p.analyzedTo != null; // read only partly: offer the rest
+    const busyText = p.analyzing && p.analyzing.of > 1 ? `Reading part ${p.analyzing.part} of ${p.analyzing.of}...` : 'Reading the whole lecture...';
+    const c = el('div', 'card analyze'), go = el('button', 'go', p.analyzed === 'working' ? busyText : rest ? `Analyze the rest (from ${clock(p.analyzedTo)})` : 'Analyze this video');
+    c.append(el('b', null, rest ? 'Part of this lecture is still unread' : 'Know the whole lecture first'),
+      el('p', null, rest ? 'Nibley read the start. Add the chapters for the rest of the video.' : 'Nibley reads the full video now: chapters, key ideas, what to know first and the tricky parts. About 15 seconds per hour of video.'), go);
     go.disabled = p.analyzed === 'working';
-    go.onclick = () => { go.disabled = true; go.textContent = 'Reading the whole lecture...'; ipcRenderer.send('study:analyze'); };
+    go.onclick = () => { go.disabled = true; go.textContent = busyText; ipcRenderer.send('study:analyze'); };
     out.push(c);
   }
-  if (p.analyzed === true) {
+  if (p.analyzed === true || p.chapters?.length) {
     if (p.prereqs?.length) {
       out.push(el('h3', null, 'Know this first'));
       const ul = el('ul', 'basics'); p.prereqs.forEach((x) => ul.append(el('li', null, x))); out.push(ul);

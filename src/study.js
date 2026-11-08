@@ -6,7 +6,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const fsrs = require('./learn/fsrs');
 
-const RECAP_S = 600, MIN_END_S = 300, ANALYZE_CHARS = 150000; // ~37k tokens of transcript per analysis
+const RECAP_S = 600, MIN_END_S = 300, ANALYZE_CHARS = 150000, MAX_PARTS = 6; // ~37k tokens of transcript per call; 6 parts = ~13 hours
 const oneLine = (s, max) => String(s ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 const clock = (s) => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
 const json = (text) => JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
@@ -168,29 +168,56 @@ function create(opts) {
     save();
   }
 
-  // "Analyze this video": one call over the whole transcript, before or while he watches.
-  const canAnalyze = () => !!page && !page.analyzed && page.lecture !== false && !!cfg.transcript(page.id)?.length;
+  // "Analyze this video": the whole transcript, before or while he watches. Long videos go in parts of ~37k tokens,
+  // one call each (a 4-hour marathon = 2 parts), so nothing is left out (Zarif 2026-11-08: "half of the video is missing").
+  // A page analyzed only partly (older cap, or a part that failed) can analyze the rest.
+  const canAnalyze = () => !!page && page.lecture !== false && page.analyzed !== 'working'
+    && (!page.analyzed || page.analyzedTo != null) && !!cfg.transcript(page.id)?.length;
   let shownCan = false;
   async function analyze() {
     if (!canAnalyze() || busy) return false;
-    const id = page.id, lines = cfg.transcript(id);
-    let text = '', to = 0;
-    for (const [t, x] of lines) { const l = `${Math.round(t)} ${x}\n`; if (text.length + l.length > ANALYZE_CHARS) break; text += l; to = t; }
-    page.analyzed = 'working';
-    cfg.onChange(view());
-    const r = await call('analyze', ANALYZE, `Lecture: ${page.title}\n\nTranscript:\n${text}`, 240e3);
-    if (page?.id !== id) return false;
-    if (!r) { page.analyzed = null; cfg.onChange(view()); return false; }
-    if (r.lecture === false) { page.lecture = false; page.analyzed = null; save(); return false; }
+    const id = page.id, lines = cfg.transcript(id), was = page.analyzed ?? null, first = was !== true;
+    const from = first ? -1 : page.analyzedTo;
+    const parts = [];
+    let text = '', a = null, b = 0;
+    for (const [t, x] of lines) {
+      if (t <= from) continue;
+      const l = `${Math.round(t)} ${x}\n`;
+      if (text && text.length + l.length > ANALYZE_CHARS) { parts.push({ text, a, b }); text = ''; a = null; }
+      if (a === null) a = t;
+      text += l; b = t;
+    }
+    if (text) parts.push({ text, a, b });
+    const todo = parts.slice(0, MAX_PARTS);
+    if (first) { page.chapters = []; page.prereqs = []; page.tricky = []; }
+    let done = 0;
+    for (const [i, part] of todo.entries()) {
+      page.analyzed = 'working';
+      page.analyzing = { part: i + 1, of: todo.length };
+      cfg.onChange(view());
+      const where = parts.length > 1 || !first
+        ? `\n\nThis is part ${i + 1} of ${todo.length} of the transcript (${clock(part.a)} to ${clock(part.b)}). Map only this part.${first && i === 0 ? '' : ' Give prereqs as [].'}`
+        : '';
+      const r = await call('analyze', ANALYZE, `Lecture: ${page.title}${where}\n\nTranscript:\n${part.text}`, 240e3);
+      if (page?.id !== id) return false;
+      if (!r) break;
+      if (r.lecture === false && first && i === 0) { page.lecture = false; page.analyzed = null; delete page.analyzing; save(); return false; }
+      page.chapters.push(...(Array.isArray(r.chapters) ? r.chapters : []).filter((c) => oneLine(c?.title, 1)).slice(0, 12)
+        .map((c) => ({ t: Number.isFinite(c.t) ? c.t : part.a, title: oneLine(c.title, 60), ideas: (Array.isArray(c.ideas) ? c.ideas : []).map((x) => oneLine(x, 200)).filter(Boolean).slice(0, 3) })));
+      if (first && i === 0) page.prereqs = (Array.isArray(r.prereqs) ? r.prereqs : []).map((x) => oneLine(x, 120)).filter(Boolean).slice(0, 3);
+      page.tricky.push(...(Array.isArray(r.tricky) ? r.tricky : []).filter((x) => oneLine(x?.text, 1)).slice(0, 3).map((x) => ({ t: Number.isFinite(x.t) ? x.t : part.a, text: oneLine(x.text, 160) })));
+      page.analyzedTo = part.b;
+      done++;
+    }
+    delete page.analyzing;
+    if (!done) { page.analyzed = was; cfg.onChange(view()); return false; }
     page.lecture = true;
     page.analyzed = true;
-    page.analyzedTo = to >= lines.at(-1)[0] ? null : to; // null: the whole video
-    page.chapters = (Array.isArray(r.chapters) ? r.chapters : []).filter((c) => oneLine(c?.title, 1)).slice(0, 12)
-      .map((c) => ({ t: Number.isFinite(c.t) ? c.t : 0, title: oneLine(c.title, 60), ideas: (Array.isArray(c.ideas) ? c.ideas : []).map((x) => oneLine(x, 200)).filter(Boolean).slice(0, 3) }));
-    page.prereqs = (Array.isArray(r.prereqs) ? r.prereqs : []).map((x) => oneLine(x, 120)).filter(Boolean).slice(0, 3);
-    page.tricky = (Array.isArray(r.tricky) ? r.tricky : []).filter((x) => oneLine(x?.text, 1)).slice(0, 3).map((x) => ({ t: Number.isFinite(x.t) ? x.t : 0, text: oneLine(x.text, 160) }));
+    page.chapters.sort((x, y) => x.t - y.t);
+    page.tricky.sort((x, y) => x.t - y.t);
+    if (page.analyzedTo >= lines.at(-1)[0]) page.analyzedTo = null; // null: the whole video
     save();
-    cfg.log({ ev: 'study_analyzed', video: id, chapters: page.chapters.length, covered: page.analyzedTo ?? 'all' });
+    cfg.log({ ev: 'study_analyzed', video: id, parts: `${done}/${parts.length}`, chapters: page.chapters.length, covered: page.analyzedTo ?? 'all' });
     return true;
   }
 
