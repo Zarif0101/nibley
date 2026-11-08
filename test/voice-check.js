@@ -85,7 +85,7 @@ async function run() {
   MsEdgeTTS.WSS_URL = url;
   await sleep(GAP);
   await step('back online Q8', 'what is this formula?', 'slide', 'edge');
-  console.log(`\n${rows.filter(Boolean).length}/${rows.length} pass. Log: logs/nibley-${new Date().toLocaleDateString('sv')}.log`);
+  console.log(`\n${rows.filter(Boolean).length}/${rows.length} pass. Log: logs/test/nibley-${new Date().toLocaleDateString('sv')}.log`);
   fs.rmSync(TMP, { recursive: true, force: true });
   app.quit();
 }

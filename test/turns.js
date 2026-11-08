@@ -1,7 +1,7 @@
 // Real turns for the scorecard (QUALITY-PLAN T0, SPEED-TOKEN-PLAN P0): real Claude, real Edge voice, real overlay,
 // fixture screenshots instead of the screen, typed questions instead of the mic, scratch vault.
 // Run: npx electron test/turns.js [count] [--switch N [--to voiceId]] [--offline N]   (GAP_S=20 between questions)
-// Then: node test/scorecard.js
+// Then: node test/scorecard.js logs/test/nibley-<date>.log --since <run start>   (test runs log to logs/test/)
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');

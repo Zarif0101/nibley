@@ -24,7 +24,7 @@ const check = (name, pass, detail = '') => { results.push(pass); console.log(`${
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const shot = fs.readFileSync(path.join(__dirname, 'fixtures', 'player.png'));
 let paused = false;
-const state = () => fetch('http://127.0.0.1:47711/state', {
+const state = () => fetch('http://127.0.0.1:47712/state', {
   method: 'POST', headers: { 'content-type': 'application/json', 'x-nibley-token': 'pausecheck', origin: 'chrome-extension://nibleytest' },
   body: JSON.stringify({ kind: 'state', tabId: 3, state: { videoId: 'IHZwWFHWa-w', title: 'Gradient descent', t: 100, paused, duration: 1233, rate: 1, visible: true } }),
 });

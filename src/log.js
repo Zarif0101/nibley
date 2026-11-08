@@ -2,7 +2,8 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
-const dir = path.join(__dirname, '..', 'logs');
+// Test runs (they set NIBLEY_SETTINGS) log to logs/test/, so the scorecard reads real study sessions only.
+const dir = path.join(__dirname, '..', 'logs', ...(process.env.NIBLEY_SETTINGS ? ['test'] : []));
 fs.mkdirSync(dir, { recursive: true });
 
 function log(obj) {

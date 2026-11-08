@@ -701,7 +701,7 @@ app.on('window-all-closed', () => {}); // keep running in the tray
 app.on('before-quit', () => { quitting = true; brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
 
 // Chrome extension bridge: the extension reads port + token from extension/config.js (gitignored), written here.
-const BRIDGE_PORT = 47711;
+const BRIDGE_PORT = process.env.NIBLEY_SETTINGS ? 47712 : 47711; // tests get their own port, so they never hit the running app
 function startBridge() {
   if (!settings.bridgeToken) { settings.bridgeToken = require('node:crypto').randomBytes(16).toString('hex'); saveSettings(); }
   if (!process.env.NIBLEY_SETTINGS) { // tests run with their own settings and must not change the real extension's token

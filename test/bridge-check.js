@@ -23,7 +23,7 @@ brain.ask = ({ text, video, onEnd }) => { asked = { text, video }; setTimeout(()
 
 const results = [];
 const check = (name, pass, detail = '') => { results.push(pass); console.log(`${pass ? 'PASS' : 'FAIL'}  ${name}  ${detail}`); };
-const post = (body, origin = 'chrome-extension://nibleytest') => fetch('http://127.0.0.1:47711/state', {
+const post = (body, origin = 'chrome-extension://nibleytest') => fetch('http://127.0.0.1:47712/state', {
   method: 'POST', headers: { 'content-type': 'application/json', 'x-nibley-token': main.state.settings.bridgeToken, origin }, body: JSON.stringify(body),
 }).then((r) => r.status);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -40,7 +40,8 @@ async function run() {
   for (let i = 0; i < 50 && !asked; i++) await sleep(100);
   const v = asked?.video || '';
   check('question keeps his words only', asked?.text === 'what did he just say?', JSON.stringify(asked?.text));
-  const [srcLine, videoLine] = v.split('\n');
+  const vLines = v.split('\n'); // the teacher header ([nibley] style=...) comes first since C1
+  const srcLine = vLines.find((l) => l.startsWith('[Source:')), videoLine = vLines.find((l) => l.startsWith('[Video:'));
   check('source line names page, link and video time', srcLine === '[Source: Gradient descent - YouTube | youtube.com/watch?v=IHZwWFHWa-w | 4:12 of 20:33]', srcLine);
   check('video block names the video and time', videoLine?.startsWith('[Video: "Gradient descent" at 4:12 of 20:33, paused]'), videoLine);
   check('transcript part is 2:12-4:42', v.includes('[Transcript 2:12-4:42]') && v.includes('2:12 gradient line 22') && v.includes('4:42 gradient line 47') && !v.includes('gradient line 48'), `${v.split('\n').length - 2} lines`);

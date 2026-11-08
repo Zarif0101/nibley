@@ -281,3 +281,10 @@ Newest at the bottom. A new session reads this to resume.
 - Eval (30 questions, 2 runs, styles on): 0.823 and 0.786 = mean 0.805, inside the 0.74-0.84 baseline. First line median 2.64-2.68 s. The scorer did not know `note` marks yet (S3 showed 0.06); fixed in `test/eval/score.js`, both runs rescored and saved.
 - Seen: one check came after a quick yes/no fact ("is the right molecule a carboxylic acid?"); the prompt says not to, Claude did once. Not fixed.
 - NEXT: Zarif tries it live. Then C2 voice pace/tone interview, then C3 course transcripts.
+
+## 2026-11-08 Test runs split from real use (audit item 4)
+- DONE. Any run with `NIBLEY_SETTINGS` set (all app-level checks: e2e, turns, cards, sidebar, teach, aim, pause, bridge, voice...) now logs to `logs/test/` (`src/log.js`) and opens the extension bridge on port 47712 instead of 47711 (`src/main.js`). The scorecard reads `logs/` only, so it now measures real study sessions. To score a test run: `node test/scorecard.js logs/test/nibley-<date>.log --since <start>`.
+- Why: the audit found the scorecard mixing test turns with real ones (Q1 voice showed 28%, mostly forced-Piper test lines), and 16 `EADDRINUSE 47711` errors from checks run while Zarif's app was open.
+- Tests, with Zarif's app running on 47711: unit 217/217; bridge-check 8/8; pause-check 5/5 (was 2/5 with the app open); real log got 0 test lines (only the live app's own `ear_sent`), `logs/test/` got 62.
+- Fixed in passing: bridge-check read the source line as the first line of the question block; since C1 the teacher header comes first. It now finds the `[Source:` and `[Video:` lines.
+- Left alone: `test/source-check.js` stays on 47711 on purpose (it needs the real extension; the app must be closed). Today's real log (2026-11-08) is still mixed from earlier runs; clean numbers start with tomorrow's log.
