@@ -154,6 +154,7 @@
       <div class="label"><span id="ear-label">Listen to the lecture</span><button class="switch" id="ear" role="switch" aria-labelledby="ear-label"></button></div>
       <div class="hint">Nibley hears the last minute of the video, so it knows what the teacher just said.</div>
     </div>
+    <div class="row"><div class="hint" id="version"></div></div>
   </div>
 
   <div class="panel" id="p-lessons" role="tabpanel" aria-labelledby="t-lessons"><div id="list"></div></div>
@@ -177,6 +178,7 @@ function render() {
   $('voice').value = s.voice;
   $('ear').setAttribute('aria-checked', String(s.ear !== false));
   $('model-row').hidden = s.brain === 'gemini'; // Haiku/Sonnet are Claude models
+  $('version').textContent = `Nibley ${s.version}. Updates install by themselves.`;
 }
 async function load() {
   s = await ipcRenderer.invoke('settings:get');

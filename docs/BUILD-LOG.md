@@ -335,3 +335,17 @@ Newest at the bottom. A new session reads this to resume.
 - Bugs found by running setup in a fresh copy: PowerShell 5.1 treats a native tool's warnings as fatal (now run through `cmd /c ... 2>&1`); npm 11 skipped Electron's binary download (now `node node_modules/electron/install.js` when missing); settings must be written without a BOM; Google's "high demand" 503 looked like "not signed in" (now told apart).
 - Tests: unit 231/231 (+3 feedback). App: feedback 4/4, sidebar 14/14, study 12/12, youtube 10/10, pause 5/5. Fresh copy: setup -> all OK except the Groq key TODO; the fresh install's app starts and passes feedback-check 4/4.
 - Not checked: a real Gemini answer inside the running app (today's free quota is used up); Gemini with a paid plan; the setup on the cousin's PC; a signed-out Gemini CLI (setup should show the sign-in TODO); real email delivery (needs activation); Windows prompt for mic access on a fresh PC.
+
+## 2026-11-09 PRD v3 draft: soul + any subject (brainstorm 2026-11-09-nibley-soul-and-any-subject, Q1-Q7)
+- `docs/PRD-v3.md` drafted; approved by Zarif 2026-11-09. Soul (character + awareness + relationship), auto role switch coach/friend/mentor, soul grows from sessions on a small fixed seed, shared base + personal layer, core/topic-pack split, first packs Claude CLI + cold calling.
+- Research behind it: `Second Brain/research/2026-11-09-learning-psychology-soul.md`.
+- No code changed. Next: decide order vs NEXT-ROUND, then architecture.
+
+## 2026-11-09 Automatic updates to marked releases (brainstorm 2026-11-09-auto-update: "only marked releases", "automatically")
+- `src/updater.js`: a user's copy sits on a release tag; at start (+30 s) and every 6 h Nibley fetches tags, takes the newest `vX.Y.Z` above package.json's version, checks it out, runs `npm install` only if package files changed (+ Electron download fallback), runs `npm test`; failing tests -> back to the old commit. A copy on a branch (Zarif's dev copy on main) is never updated. Test runs never update.
+- `src/main.js`: after an update, restarts when nothing happened for 60 s and no lesson replay is open; on the next start says "I've been updated to version X" + the first sentence of the release notes. Settings shows "Nibley X. Updates install by themselves."
+- `scripts/release.js X.Y.Z "notes"`: on main, clean tree, version above current, tests pass -> bump version, commit, annotated tag with the notes, push main + tag. Only when Zarif says so (rule added to CLAUDE.md).
+- `setup.ps1` step 1b: a fresh clone moves to the newest release before installing (`-Dev` keeps the branch). Without any release yet it stays on main and does not self-update.
+- Tests: `test/updater.test.js` 5/5 with real git repos (marked release updates + notes, untagged work doesn't, failing tests roll back and settings.json is untouched, branch copy never updates, origin gone = failed with nothing changed). Unit 236/236 (suite now ~42 s: the updater tests make real repos). Sidebar 14/14, feedback 4/4.
+- Not checked: the restart + "I've been updated" line in the running app; an update that changes package.json (npm install path) on a real user PC.
+- No release exists yet: the cousin's setup would stay on main and never update until the first `scripts/release.js` run.

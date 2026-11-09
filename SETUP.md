@@ -33,3 +33,4 @@ Your agent installs everything. You only do 2 things yourself:
 - Ask: hold **Win + `**, talk, let go. With Gemini the answer starts after about 10 seconds; with Claude about 2.
 - Study: open a YouTube lecture in Brave, Chrome or Edge, open the sidebar (click the tab) and press **Analyze this video**.
 - Problems or ideas: click **Feedback** at the top of the sidebar. It goes straight to Nibley's maker.
+- Updates: Nibley updates itself when a new version is out, restarts once and tells you what's new. Nothing to do.

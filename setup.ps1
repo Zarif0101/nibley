@@ -6,7 +6,8 @@
 param(
   [Parameter(Mandatory = $true)][string]$Name,
   [ValidateSet('claude', 'gemini')][string]$Brain = 'claude',
-  [switch]$NoShortcut # for test runs in a scratch copy
+  [switch]$NoShortcut, # for test runs in a scratch copy
+  [switch]$Dev # stay on branch main (developers only): no automatic updates
 )
 $ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath $PSScriptRoot
@@ -23,6 +24,17 @@ if (-not $node) { throw 'Node.js is missing. Install the LTS version from https:
 $major = [int]((node --version).TrimStart('v').Split('.')[0])
 if ($major -lt 22) { throw "Node.js $major is too old. Install Node.js 22 or newer from https://nodejs.org." }
 Ok "Windows, Node.js $(node --version)"
+
+Step '1b. Newest release'
+# Users run the newest marked release (a vX.Y.Z tag); Nibley then updates itself to each new one (src/updater.js).
+if ($Dev) { Ok 'developer copy: staying on the current branch' }
+elseif (-not (Test-Path '.git')) { Todo 'This folder was not made with git clone, so Nibley cannot update itself. Reinstall with: git clone https://github.com/Zarif0101/nibley.git' }
+else {
+  cmd /c 'git fetch --tags --force --quiet origin 2>&1' | Out-Null
+  $tag = (cmd /c 'git tag -l "v*" --sort=-v:refname 2>nul' | Select-Object -First 1)
+  if ($tag) { cmd /c "git -c advice.detachedHead=false checkout -f --quiet tags/$tag 2>&1" | Out-Null; Ok "on release $tag (updates install by themselves)" }
+  else { Ok 'no release marked yet: staying on the latest code (it will not update by itself until a release exists)' }
+}
 
 Step '2. App files (npm install)'
 if (-not (Test-Path 'node_modules\electron\dist\electron.exe')) { cmd /c 'npm install --no-fund --no-audit 2>&1'; if ($LASTEXITCODE) { throw 'npm install failed.' } }

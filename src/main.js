@@ -22,6 +22,7 @@ const lessons = require('./lessons');
 const youtube = require('./youtube');
 const studyMod = require('./study');
 const feedback = require('./feedback');
+const updater = require('./updater');
 const { sourceLine } = require('./source');
 const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
@@ -668,7 +669,7 @@ ipcMain.on('mic', (_e, r) => { log({ ev: 'mic', ...r }); if (!r.ok) { setTray('m
 ipcMain.handle('lessons:list', () => lessons.list(DATA).map((l) => ({
   ...l, thumb: nativeImage.createFromPath(path.join(l.dir, 'shot.png')).resize({ width: 192 }).toDataURL(),
 })));
-ipcMain.handle('settings:get', () => ({ brain: settings.brain || 'claude', model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
+ipcMain.handle('settings:get', () => ({ version: updater.version(ROOT), brain: settings.brain || 'claude', model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }));
 ipcMain.handle('settings:set', (_e, key, value) => { setSetting(key, value); return { brain: settings.brain || 'claude', model: settings.model, mode: settings.mode, voice: settings.voice, ear: settings.ear !== false, voices: VOICES }; });
 ipcMain.on('voice:sample', () => speak('Hi, this is how I sound.'));
 ipcMain.on('sidebar:toggle', (_e, how) => sidebar.toggle(how));
@@ -676,6 +677,25 @@ ipcMain.on('lessons:play', (_e, dir) => {
   const rel = path.relative(lessons.root(DATA), path.resolve(dir));
   if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) playLesson(dir);
 });
+
+// ---------- automatic updates to marked releases (src/updater.js, brainstorm 2026-11-09-auto-update) ----------
+let updating = false;
+async function checkUpdate() {
+  if (updating) return;
+  updating = true;
+  const r = await updater.check({ root: ROOT, log }).catch((e) => ({ state: 'failed', why: e.message }));
+  log({ ev: 'update_check', state: r.state, from: r.from, to: r.to, why: r.why });
+  if (r.state !== 'updated') { updating = false; return; }
+  settings.whatsNew = { version: r.to, notes: r.notes };
+  saveSettings();
+  const restartWhenQuiet = setInterval(() => { // never in the middle of an answer or a lesson replay
+    if (replaying || Date.now() - lastActivity < 60e3) return;
+    clearInterval(restartWhenQuiet);
+    log({ ev: 'update_restart', to: r.to });
+    app.relaunch();
+    app.exit(0);
+  }, 5000);
+}
 
 // ---------- study page: every 5 s while a YouTube video is on screen ----------
 let studying = false;
@@ -769,6 +789,13 @@ app.whenReady().then(async () => {
   setTray('ready', !groqKey());
   log({ ev: 'ready', ms: Math.round(process.uptime() * 1000) });
   events.emit('ready');
+  if (settings.whatsNew) { // first start after an automatic update
+    const w = settings.whatsNew;
+    delete settings.whatsNew;
+    saveSettings();
+    setTimeout(() => speak(`I've been updated to version ${w.version}. ${String(w.notes || '').split(/(?<=[.!?])\s/)[0]}`), 3000);
+  }
+  if (!process.env.NIBLEY_SETTINGS) { setTimeout(checkUpdate, 30e3); setInterval(checkUpdate, 6 * 3600e3).unref(); } // tests never update
 });
 app.on('window-all-closed', () => {}); // keep running in the tray
 app.on('before-quit', () => { quitting = true; brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });

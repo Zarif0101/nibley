@@ -29,6 +29,7 @@ You are helping a person install **Nibley** (a Windows voice study buddy) on the
    - Double-click **Nibley** on the desktop. The first time, Windows may ask for microphone access: allow it (Settings > Privacy > Microphone > "Let desktop apps access your microphone" must be on).
    - Hold **Win + `** (key left of 1), ask a question, let go.
    - **Feedback** at the top of the sidebar sends problems straight to Nibley's maker.
+   - Nibley updates itself to each new release. Keep the folder where it is, and don't edit files in it (that would block updates).
 
 ## If something goes wrong
 | What they see | What to do |
