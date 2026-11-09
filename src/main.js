@@ -23,6 +23,7 @@ const youtube = require('./youtube');
 const studyMod = require('./study');
 const feedback = require('./feedback');
 const updater = require('./updater');
+const insights = require('./insights');
 const { sourceLine } = require('./source');
 const ear = require('./ear');
 const { log, dir: logDir } = require('./log');
@@ -360,7 +361,7 @@ async function handleText(text, id) {
       log({ ev: 'rating', helpful: good, turn: r.turn });
       say('none');
       if (good) return;
-      feedback.send({ kind: 'not helpful', message: `Question: ${r.q}\n\nNibley's answer: ${r.a}`, png: r.png, name: settings.name, brain: settings.brain, logDir })
+      feedback.send({ kind: 'not helpful', message: `Question: ${r.q}\n\nNibley's answer: ${r.a}`, png: minor() ? null : r.png, name: settings.name, brain: settings.brain, logDir }) // under 18: no automatic screenshots
         .then((res) => log({ ev: 'feedback_sent', kind: 'not helpful', ok: res.ok }));
       return speak("Thanks. I've sent that to Nibley's maker, so it gets fixed.");
     }
@@ -678,6 +679,26 @@ ipcMain.on('lessons:play', (_e, dir) => {
   if (rel && !rel.startsWith('..') && !path.isAbsolute(rel)) playLesson(dir);
 });
 
+// ---------- daily usage report, only with his yes (src/insights.js, brainstorm 2026-11-09-user-insights) ----------
+const minor = () => settings.profile?.age === 'under 18';
+function sendReports() {
+  return insights.sendDue({
+    settings, save: saveSettings, logDir, version: updater.version(ROOT), log,
+    send: (kind, message) => feedback.send({ kind, message, name: `user ${settings.installId}`, brain: settings.brain }),
+  }).catch((e) => log({ ev: 'report_error', err: e.message }));
+}
+const insightsState = () => ({ shareReports: settings.shareReports ?? null, profile: settings.profile || {}, minor: minor(),
+  example: insights.example(logDir, { brain: settings.brain, version: updater.version(ROOT) }) });
+ipcMain.handle('insights:get', () => insightsState());
+ipcMain.handle('insights:set', (_e, { shareReports, profile }) => {
+  if (typeof shareReports === 'boolean') { settings.shareReports = shareReports; log({ ev: 'report_consent', yes: shareReports }); }
+  const ok = { studying: ['HSC', 'SSC', 'University', 'Self-learning', 'Other'], age: ['under 18', '18-24', '25+'], heard: ['A friend or family', 'Social media', 'Other'] };
+  if (profile) settings.profile = Object.fromEntries(Object.entries(ok).map(([k, vals]) => [k, vals.includes(profile[k]) ? profile[k] : null])); // only known answers
+  saveSettings();
+  if (settings.shareReports) sendReports();
+  return insightsState();
+});
+
 // ---------- automatic updates to marked releases (src/updater.js, brainstorm 2026-11-09-auto-update) ----------
 let updating = false;
 async function checkUpdate() {
@@ -795,7 +816,11 @@ app.whenReady().then(async () => {
     saveSettings();
     setTimeout(() => speak(`I've been updated to version ${w.version}. ${String(w.notes || '').split(/(?<=[.!?])\s/)[0]}`), 3000);
   }
-  if (!process.env.NIBLEY_SETTINGS) { setTimeout(checkUpdate, 30e3); setInterval(checkUpdate, 6 * 3600e3).unref(); } // tests never update
+  if (!process.env.NIBLEY_SETTINGS) { // tests never update, report or show the welcome by themselves
+    setTimeout(checkUpdate, 30e3); setInterval(checkUpdate, 6 * 3600e3).unref();
+    setTimeout(sendReports, 60e3); setInterval(sendReports, 3600e3).unref();
+    if (settings.shareReports === undefined) setTimeout(() => sidebar.open('welcome', 'welcome'), 1500); // first start: ask once
+  }
 });
 app.on('window-all-closed', () => {}); // keep running in the tray
 app.on('before-quit', () => { quitting = true; brain.stop(); platform.stop(); tts.close(); piper.stop(); youtube.stop(); });
@@ -813,6 +838,6 @@ function testTurn(text, png, { showShot = true } = {}) {
   return handleText(text, turnId);
 }
 
-module.exports = { events, groqKey, study, testTurn, captureClean, setVoice, VOICES, handleText, playLesson, closeReplay, onPtt, ready: new Promise((r) => events.once('ready', r)),
+module.exports = { events, groqKey, study, sendReports, testTurn, captureClean, setVoice, VOICES, handleText, playLesson, closeReplay, onPtt, ready: new Promise((r) => events.once('ready', r)),
   get overlay() { return overlay; }, get tray() { return tray; }, sidebar,
   get state() { return { turnId, lastDone, pendingAsk, replaying, timing, ttsBackup, settings }; } };

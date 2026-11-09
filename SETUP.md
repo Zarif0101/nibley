@@ -34,3 +34,4 @@ Your agent installs everything. You only do 2 things yourself:
 - Study: open a YouTube lecture in Brave, Chrome or Edge, open the sidebar (click the tab) and press **Analyze this video**.
 - Problems or ideas: click **Feedback** at the top of the sidebar. It goes straight to Nibley's maker.
 - Updates: Nibley updates itself when a new version is out, restarts once and tells you what's new. Nothing to do.
+- Privacy: the first time, Nibley asks if it may send its maker a short daily usage report (how often, how fast, what broke). It never sends your questions, screen or what you study. Change it any time in Settings.

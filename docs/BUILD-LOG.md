@@ -339,7 +339,7 @@ Newest at the bottom. A new session reads this to resume.
 ## 2026-11-09 PRD v3 draft: soul + any subject (brainstorm 2026-11-09-nibley-soul-and-any-subject, Q1-Q7)
 - `docs/PRD-v3.md` drafted; approved by Zarif 2026-11-09. Soul (character + awareness + relationship), auto role switch coach/friend/mentor, soul grows from sessions on a small fixed seed, shared base + personal layer, core/topic-pack split, first packs Claude CLI + cold calling.
 - Research behind it: `Second Brain/research/2026-11-09-learning-psychology-soul.md`.
-- No code changed. Next: decide order vs NEXT-ROUND, then architecture.
+- No code changed. Order decided: soul first, NEXT-ROUND paused. `docs/ARCHITECTURE-v3.md` drafted (seed, role.js, soul.md, packs, 6 build steps); waits for Zarif OK.
 
 ## 2026-11-09 Automatic updates to marked releases (brainstorm 2026-11-09-auto-update: "only marked releases", "automatically")
 - `src/updater.js`: a user's copy sits on a release tag; at start (+30 s) and every 6 h Nibley fetches tags, takes the newest `vX.Y.Z` above package.json's version, checks it out, runs `npm install` only if package files changed (+ Electron download fallback), runs `npm test`; failing tests -> back to the old commit. A copy on a branch (Zarif's dev copy on main) is never updated. Test runs never update.
@@ -349,3 +349,11 @@ Newest at the bottom. A new session reads this to resume.
 - Tests: `test/updater.test.js` 5/5 with real git repos (marked release updates + notes, untagged work doesn't, failing tests roll back and settings.json is untouched, branch copy never updates, origin gone = failed with nothing changed). Unit 236/236 (suite now ~42 s: the updater tests make real repos). Sidebar 14/14, feedback 4/4.
 - Not checked: the restart + "I've been updated" line in the running app; an update that changes package.json (npm install path) on a real user PC.
 - No release exists yet: the cousin's setup would stay on main and never update until the first `scripts/release.js` run.
+
+## 2026-11-09 Daily usage report with consent + 3 optional questions (brainstorm 2026-11-09-user-insights, Q1-Q3)
+- Zarif: usage and problems only (not what they study); 3 optional questions; daily for now.
+- `src/insights.js`: one finished day's local log -> counts only (starts, questions, answer start median/slowest, problems by event+kind, voices, features used, ratings). No question text, titles, error text or name; a random 6-hex install id names the user. Sent through FormSubmit like feedback, max 3 past days per run, at start +60 s and hourly; offline days stay pending. The profile (studying for / age range / heard from, each skippable, only known values kept) goes once.
+- Sidebar: Welcome panel on first start (no default: "Yes, send reports" / "No thanks", "See exactly what's sent" shows the real report text), then the 3 questions as chips with Skip. Settings: "Daily usage report" switch. Tests never auto-open the welcome or send.
+- Under 18 (Claude's take on "more careful", from Q2): "Not helpful" sends no screenshot; the Feedback picture box starts unticked.
+- Tests: `test/insights.test.js` 3/3 (no titles/error text in the report; nothing without a yes; profile + each day once; offline retry). `test/welcome-check.js` 7/7 in the real app. Unit 239/239, sidebar 14/14, feedback 4/4, study 12/12.
+- Not checked: a real daily email arriving (first one goes the day after he uses it); the welcome on his real first start.
