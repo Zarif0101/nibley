@@ -16,7 +16,7 @@ const notes = rest.join(' ').trim();
 if (!/^\d+\.\d+\.\d+$/.test(v || '') || !notes) stop('usage: node scripts/release.js 1.1.0 "What\'s new, one plain sentence."');
 if (sh('git', ['rev-parse', '--abbrev-ref', 'HEAD']) !== 'main') stop('not on branch main');
 // Uncommitted code would be tested but not released: refuse. Uncommitted docs (e.g. another session's notes) are left out.
-const dirty = sh('git', ['status', '--porcelain', '--untracked-files=no']).split('\n').filter(Boolean).map((l) => l.replace(/^\S{1,2}\s+/, '')); // sh() trims, so the first line lost its leading space
+const dirty = sh('git', ['status', '--porcelain', '--untracked-files=no']).split('\n').filter(Boolean).map((l) => l.replace(/^\s*\S{1,2}\s+/, '')); // sh() trims, so the first line lost its leading space
 const code = dirty.filter((f) => !/\.md$/i.test(f));
 if (code.length) stop(`uncommitted changes in ${code.join(', ')}; commit them first`);
 if (dirty.length) console.log(`Left out of the release (not committed): ${dirty.join(', ')}`);
