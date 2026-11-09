@@ -9,8 +9,8 @@ Nibley = Zarif's voice study buddy for Windows. Hold Win+` and ask; it reads the
 2. `docs/ARCHITECTURE.md`: how it fits together, measured numbers.
 3. `docs/BUILD-PLAN.md`: file tree, every known problem + fix, tests, stop rules, summary format.
 4. `docs/DESIGN.md`: the only allowed look. Zarif hates AI slop; no styles outside it.
-5. `docs/PRD-v3.md`: soul + any subject (approved 2026-11-09). Architecture not written yet; build waits for it and for the order decision (section 9.4).
-6. `docs/NEXT-ROUND.md`: the current work (approved 2026-11-05; start at phase 1 step 0). Background: `docs/QUALITY-PLAN.md` (scorecard + blueprints T0-T11), with `docs/SPEED-TOKEN-PLAN.md` (P0-P8: speed and token use). `docs/TEACHING-BIBLE.md` and `docs/LEARNING-ENGINE.md`: inputs to PRD v2, not built yet.
+5. `docs/PRD-v3.md`: soul + any subject (approved 2026-11-09). **Current work: goes before NEXT-ROUND** (Zarif 2026-11-09). How: `docs/ARCHITECTURE-v3.md` (approved 2026-11-09; build its section 9 in order).
+6. `docs/NEXT-ROUND.md`: paused until PRD v3 section 8 is built (approved 2026-11-05). Background: `docs/QUALITY-PLAN.md` (scorecard + blueprints T0-T11), with `docs/SPEED-TOKEN-PLAN.md` (P0-P8: speed and token use). `docs/TEACHING-BIBLE.md` and `docs/LEARNING-ENGINE.md`: inputs to PRD v2, not built yet.
 
 ## Rules
 - Follow BUILD-PLAN.md. If you must deviate, write why in `docs/BUILD-LOG.md` and in the final summary.
